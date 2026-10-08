@@ -1,0 +1,87 @@
+{
+  "at": "2026-10-08T11:41:02.758Z",
+  "passed": true,
+  "notebookId": "E82AEA36D1571FD1B0E1A42371F0C628",
+  "runId": "E82AEA36D1571FD1B0E1A42371F2A628",
+  "checks": [
+    "leaf cell deletion keeps original snapshot/output",
+    "dangling dependencies rejected",
+    "revision conflict rejected",
+    "active execution blocks deletion",
+    "deleted notebook hidden and blocked",
+    "bound handler blocked",
+    "historical versions and outputs unchanged",
+    "lightweight list responses"
+  ],
+  "output": {
+    "runId": "E82AEA36D1571FD1B0E1A42371F2A628",
+    "cellId": "apply",
+    "revision": 1,
+    "total": 1,
+    "offset": 0,
+    "limit": 20,
+    "schema": [
+      {
+        "name": "key",
+        "type": "string"
+      },
+      {
+        "name": "amount",
+        "type": "decimal"
+      }
+    ],
+    "rows": [
+      {
+        "key": "preserved",
+        "amount": 154
+      }
+    ]
+  },
+  "navigationBefore": [
+    {
+      "path": "/notebooks",
+      "ms": 220,
+      "bytes": 109573
+    },
+    {
+      "path": "/notebook?id=E82AEA36D1571FD1B0E0A54AE4C24538",
+      "ms": 11144,
+      "bytes": 8976
+    },
+    {
+      "path": "/runs?notebookId=E82AEA36D1571FD1B0E0A54AE4C24538",
+      "ms": 143,
+      "bytes": 42748
+    }
+  ],
+  "navigationAfter": [
+    {
+      "path": "/notebooks",
+      "ms": 631,
+      "bytes": 5734
+    },
+    {
+      "path": "/notebook?id=E82AEA36D1571FD1B0E0A54AE4C24538",
+      "ms": 152,
+      "bytes": 8976
+    },
+    {
+      "path": "/runs?notebookId=E82AEA36D1571FD1B0E0A54AE4C24538",
+      "ms": 93,
+      "bytes": 3900
+    }
+  ],
+  "scriptLogicRegression": "BNRUN|E82AEA36D1571FD1B0E1BCEEB8D9863F",
+  "nativeUnitTests": 6,
+  "browser": {
+    "passed": true,
+    "checks": [
+      "superseded notebook response ignored",
+      "transitive cell deletion confirmed and saved",
+      "history retains original cells",
+      "Save permits new notebook creation",
+      "Discard permits creation without saving edits",
+      "delete removes notebook from sidebar"
+    ]
+  }
+}

@@ -118,6 +118,7 @@ CLASS zcl_bn_logic IMPLEMENTATION.
     IF handler-environment <> environment OR handler-model <> model.
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'LOGIC_CONTEXT' detail = 'Handler environment/model must match the Script Logic caller'.
     ENDIF.
+    zcl_bn_store=>lock_notebook( handler-notebook_id ).
     DATA(payload) = zcl_bn_store=>read( kind = 'N' id = handler-notebook_id revision = handler-notebook_revision ).
     IF zcl_bn_types=>hash( payload ) <> handler-checksum.
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'LOGIC_INTEGRITY' detail = 'Pinned handler notebook checksum mismatch'.

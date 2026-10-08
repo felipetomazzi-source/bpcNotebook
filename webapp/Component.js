@@ -188,6 +188,7 @@ sap.ui.define(
                 self.renderNotebook(); self.mark();
               }); },
             }),
+            new m.Button({text:"Delete notebook",icon:"sap-icon://delete",press:function () { self.deleteNotebook(self.notebook); }}),
             new m.Button({text:"Script Logic",icon:"sap-icon://source-code",press:function () { self.logicHandler(); }}),
             new m.Button({text:"BPC code", icon:"sap-icon://source-code", press:function () { self.codeAssistant(); }}),
             new m.Button({
@@ -208,7 +209,7 @@ sap.ui.define(
             }),
           ],
         }).addStyleClass("notebookToolbar");
-        var main = new m.VBox({
+        var main = this.workspace = new m.VBox({
           width: "100%",
           items: [this.title, this.meta, toolbar, this.inputs, this.cells, this.resultBox],
         }).addStyleClass("main");
@@ -261,7 +262,7 @@ sap.ui.define(
       refresh: function () {
         var self = this;
         return Api.request("/notebooks").then(function (list) {
-          self.list.removeAllItems();
+          self.list.destroyItems();
           list.forEach(function (n) {
             self.list.addItem(
               new m.CustomListItem({tooltip: n.title, content: [
@@ -271,46 +272,96 @@ sap.ui.define(
                     new m.Text({wrapping:true}).setText(n.title),
                     new m.ObjectStatus({text:"Revision " + n.revision})
                   ]})
+                  ,new m.Button({icon:"sap-icon://delete",type:"Transparent",tooltip:"Delete " + n.title,press:function () { self.deleteNotebook(n); }})
                 ]}).addStyleClass("sapUiSmallMargin")
               ]}).data("id", n.id),
             );
           });
         });
       },
-      create: function (isDemo) {
+      leaveNotebook: function (next) {
         var self = this;
-        if (this.dirty) {
-          MessageBox.warning("Save the current notebook before creating another.");
-          return;
+        if (!this.dirty) { next(); return; }
+        MessageBox.warning("This notebook has unsaved changes.", {actions:["Save","Discard",MessageBox.Action.CANCEL],
+          emphasizedAction:"Save",onClose:function (action) {
+            if (action === "Discard") { next(); }
+            else if (action === "Save") { self.save().then(function () { if (!self.dirty) { next(); } }).catch(function () {}); }
+            else { self.list.getItems().forEach(function (item) { if (self.notebook && item.data("id") === self.notebook.id) { self.list.setSelectedItem(item,true); } }); }
+          }});
+      },
+      removeCell: function (id) {
+        var self = this, notebook = this.notebook;
+        if (!notebook) { return; }
+        var removed = [id], changed = true;
+        while (changed) {
+          changed = false;
+          notebook.cells.forEach(function (cell) {
+            if (removed.indexOf(cell.id) < 0 && cell.dependencies.some(function (dep) { return removed.indexOf(dep) >= 0; })) {
+              removed.push(cell.id); changed = true;
+            }
+          });
         }
+        var titles = notebook.cells.filter(function (cell) { return removed.indexOf(cell.id) >= 0; }).map(function (cell) { return cell.title; });
+        var action = removed.length > 1 ? "Delete " + removed.length + " cells" : "Delete cell";
+        MessageBox.warning((removed.length > 1 ? "The dependent cells must also be removed:\n" : "Delete this cell?\n") + titles.join("\n") +
+          "\n\nSave version applies this change. Previous versions and executions are retained.", {actions:[action,MessageBox.Action.CANCEL],onClose:function (choice) {
+            if (choice !== action || self.notebook !== notebook) { return; }
+            notebook.cells = notebook.cells.filter(function (cell) { return removed.indexOf(cell.id) < 0; });
+            removed.forEach(function (cellId) { delete self.scriptDrafts[cellId]; });
+            self.activeCell = null; self.renderNotebook(); self.mark();
+          }});
+      },
+      clearNotebook: function () {
+        this.resetReview(); this.notebook = null; this.scriptNotebook = null; this.scriptDrafts = {}; this.dirty = false;
+        this.cells.destroyItems(); this.inputs.destroyItems(); this.title.setText("Select a notebook or create one"); this.meta.setText("");
+      },
+      deleteNotebook: function (notebook) {
+        var self = this;
+        if (!notebook) { return; }
+        MessageBox.warning("Delete “" + notebook.title + "”?\nIt will be removed from your notebook list. Saved versions and executions are retained; bound Script Logic handlers will stop running it." +
+          (self.notebook && self.notebook.id === notebook.id && self.dirty ? "\nUnsaved changes will be discarded." : ""),
+          {actions:["Delete notebook",MessageBox.Action.CANCEL],onClose:function (action) {
+            if (action !== "Delete notebook") { return; }
+            Api.request("/delete-notebook","POST",{notebookId:notebook.id,expectedRevision:notebook.revision}).then(function () {
+              if (self.notebook && self.notebook.id === notebook.id) { self.clearNotebook(); }
+              self.refresh(); MessageToast.show("Notebook deleted");
+            }).catch(self.error.bind(self));
+          }});
+      },
+      create: function (isDemo, confirmed) {
+        var self = this;
+        if (!confirmed) { this.leaveNotebook(function () { self.create(isDemo,true); }); return; }
         var data = isDemo ? { demo: true } : { title: "Untitled calculation", inputs: [], cells: [] };
-        function create(data) { return Api.request("/notebooks", "POST", data)
+        function create(data) {
+          var token = self.navigationToken = (self.navigationToken || 0) + 1;
+          self.workspace.setBusy(true); self.resetReview();
+          return Api.request("/notebooks", "POST", data)
           .then(function (n) {
-            self.resetReview();
+            if (self.navigationToken !== token) { return; }
             self.notebook = n; self.scriptNotebook = null;
             self.renderNotebook();
             self.refresh();
           })
-          .catch(self.error.bind(self)); }
+          .catch(function (error) { if (self.navigationToken === token) { self.error(error); } })
+          .finally(function () { if (self.navigationToken === token) { self.workspace.setBusy(false); } }); }
         if (isDemo && !Api.local) {
           this.chooseContext(function (ctx) { data.environment = ctx.environment; data.model = ctx.model; create(data); });
         } else { create(data); }
       },
-      open: function (id) {
+      open: function (id, confirmed) {
         var self = this;
-        if (this.dirty) {
-          MessageBox.warning("Save the current notebook before switching.");
-          return;
-        }
+        if (!confirmed) { this.leaveNotebook(function () { self.open(id,true); }); return; }
+        if (this.notebook && this.notebook.id === id && !this.dirty) { return; }
+        var token = this.navigationToken = (this.navigationToken || 0) + 1;
+        this.workspace.setBusy(true); this.resetReview();
         Api.request("/notebook?id=" + encodeURIComponent(id))
           .then(function (n) {
-            self.resetReview();
+            if (self.navigationToken !== token) { return; }
             self.notebook = n; self.scriptNotebook = null;
-            self.runId = null;
-            self.renderNotebook();
-            self.loadRuns();
+            self.renderNotebook(); self.loadRuns().catch(self.error.bind(self));
           })
-          .catch(this.error.bind(this));
+          .catch(function (error) { if (self.navigationToken === token) { self.error(error); } })
+          .finally(function () { if (self.navigationToken === token) { self.workspace.setBusy(false); } });
       },
       mark: function () {
         this.dirty = true;
@@ -348,7 +399,7 @@ sap.ui.define(
         this.meta.setText(
           "Revision " + n.revision + " · " + n.cells.length + " cells · " + n.author + " · " + displayTime(n.savedAt),
         );
-        this.inputs.removeAllItems();
+        this.inputs.destroyItems();
         if (n.environment) {
           this.inputs.addItem(new m.VBox({items:[new m.Label({text:"BPC context"}),
             new m.Text({text:n.environment + " / " + n.model})]}));
@@ -414,6 +465,7 @@ sap.ui.define(
                   }).setValue(c.title).addStyleClass("cellTitle"),
                   state,
                   new m.ToolbarSpacer(),
+                  new m.Button({icon:"sap-icon://delete",tooltip:"Delete cell " + c.title,press:function () { self.removeCell(c.id); }}),
                   new m.Button({
                     icon: "sap-icon://navigation-up-arrow",
                     tooltip: "Move cell up",

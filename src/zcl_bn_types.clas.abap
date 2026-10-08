@@ -30,7 +30,7 @@ CLASS zcl_bn_types DEFINITION PUBLIC FINAL CREATE PUBLIC.
            tt_messages TYPE STANDARD TABLE OF ty_message WITH DEFAULT KEY.
     TYPES: BEGIN OF ty_result,
              cell_id TYPE string, run_id TYPE string, revision TYPE i,
-             row_count TYPE i, duration_ms TYPE i, checksum TYPE string,
+             row_count TYPE i, duration_ms TYPE i, checksum TYPE string, created_at TYPE string,
            END OF ty_result,
            tt_results TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY.
     TYPES: BEGIN OF ty_binding,

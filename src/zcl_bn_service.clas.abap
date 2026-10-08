@@ -29,6 +29,25 @@ CLASS zcl_bn_service DEFINITION PUBLIC FINAL CREATE PUBLIC.
       RETURNING VALUE(run) TYPE zcl_bn_types=>ty_run RAISING zcx_bn.
     CLASS-METHODS work IMPORTING id TYPE string RAISING zcx_bn.
   PRIVATE SECTION.
+    TYPES: BEGIN OF ty_notebook_header,
+             id TYPE string, title TYPE string, revision TYPE i, author TYPE string, saved_at TYPE string,
+           END OF ty_notebook_header,
+           tt_notebook_headers TYPE STANDARD TABLE OF ty_notebook_header WITH DEFAULT KEY,
+           BEGIN OF ty_run_header,
+             id TYPE string, notebook_id TYPE string, state TYPE string, scope TYPE string,
+             created_at TYPE string, finished_at TYPE string, results TYPE zcl_bn_types=>tt_results,
+           END OF ty_run_header,
+           tt_run_headers TYPE STANDARD TABLE OF ty_run_header WITH DEFAULT KEY,
+           BEGIN OF ty_dataset_header,
+             run_id TYPE string, cell_id TYPE string, revision TYPE i, notebook_id TYPE string,
+             fingerprint TYPE string, created_at TYPE string, row_count TYPE i, logic_call TYPE abap_bool,
+             bindings TYPE zcl_bn_types=>tt_bindings,
+           END OF ty_dataset_header,
+           tt_dataset_headers TYPE HASHED TABLE OF ty_dataset_header WITH UNIQUE KEY cell_id.
+    CLASS-DATA mv_cached_notebook TYPE string.
+    CLASS-DATA mt_latest TYPE tt_dataset_headers.
+    CLASS-METHODS run_headers IMPORTING notebook_id TYPE string RETURNING VALUE(result) TYPE tt_run_headers RAISING zcx_bn.
+    CLASS-METHODS delete_notebook IMPORTING id TYPE string expected TYPE i RAISING zcx_bn.
     TYPES: BEGIN OF ty_request,
              id TYPE string, notebook_id TYPE string, expected_revision TYPE i,
              handler TYPE string, handler_revision TYPE i,
@@ -76,6 +95,9 @@ CLASS zcl_bn_service IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
   METHOD get_notebook.
+    IF zcl_bn_store=>current( kind = 'A' id = id ) > 0.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'NOTEBOOK_DELETED' detail = 'Notebook has been deleted' status = 410.
+    ENDIF.
     DATA(payload) = zcl_bn_store=>read( kind = 'N' id = id ).
     /ui2/cl_json=>deserialize( EXPORTING json = payload pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = notebook ).
   ENDMETHOD.
@@ -140,22 +162,67 @@ CLASS zcl_bn_service IMPLEMENTATION.
     ENDLOOP.
     result = zcl_bn_types=>hash( text ).
   ENDMETHOD.
-  METHOD latest.
-    DATA ids TYPE zcl_bn_types=>tt_ids.
-    ids = zcl_bn_store=>heads( 'D' ).
-    LOOP AT ids INTO DATA(id).
-      DATA(payload) = zcl_bn_store=>read( kind = 'D' id = id ).
-      DATA candidate TYPE ty_dataset.
-      CLEAR candidate.
-      /ui2/cl_json=>deserialize( EXPORTING json = payload pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = candidate ).
-      IF candidate-notebook_id = notebook-id AND candidate-cell_id = cell_id AND candidate-created_at > dataset-created_at.
-        dataset = candidate.
+  METHOD run_headers.
+    LOOP AT zcl_bn_store=>documents( 'R' ) INTO DATA(document).
+      DATA header TYPE ty_run_header.
+      CLEAR header.
+      /ui2/cl_json=>deserialize( EXPORTING json = document-payload pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = header ).
+      IF header-notebook_id = notebook_id. APPEND header TO result. ENDIF.
+    ENDLOOP.
+    SORT result BY created_at DESCENDING id DESCENDING.
+  ENDMETHOD.
+  METHOD delete_notebook.
+    authorize( '02' ).
+    DATA(revision) = zcl_bn_store=>lock_notebook( id ).
+    IF revision <> expected.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'CONFLICT' detail = 'Notebook changed; reload before deleting' status = 409.
+    ENDIF.
+    LOOP AT run_headers( id ) INTO DATA(header).
+      IF header-state = 'queued' OR header-state = 'running'.
+        DATA(run) = get_run( header-id ).
+        reconcile( CHANGING run = run ).
+        IF run-state = 'queued' OR run-state = 'running'.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'NOTEBOOK_BUSY'
+            detail = 'Cancel or finish active executions before deleting this notebook' status = 409.
+        ENDIF.
       ENDIF.
     ENDLOOP.
+    TYPES: BEGIN OF ty_deletion,
+             notebook_id TYPE string, notebook_revision TYPE i, deleted_at TYPE string, deleted_by TYPE syuname,
+           END OF ty_deletion.
+    zcl_bn_store=>write( kind = 'A' id = id expected = 0 payload = zcl_bn_types=>json(
+      VALUE ty_deletion( notebook_id = id notebook_revision = revision deleted_at = zcl_bn_types=>timestamp( ) deleted_by = sy-uname ) ) ).
+  ENDMETHOD.
+  METHOD latest.
+    IF mv_cached_notebook <> notebook-id.
+      CLEAR mt_latest. mv_cached_notebook = notebook-id.
+      FIELD-SYMBOLS <latest> TYPE ty_dataset_header.
+      LOOP AT run_headers( notebook-id ) INTO DATA(header).
+        LOOP AT header-results INTO DATA(result).
+          UNASSIGN <latest>.
+          READ TABLE mt_latest ASSIGNING <latest> WITH KEY cell_id = result-cell_id.
+          IF sy-subrc = 0 AND result-created_at IS NOT INITIAL AND result-created_at <= <latest>-created_at. CONTINUE. ENDIF.
+          DATA(payload) = zcl_bn_store=>read( kind = 'D' id = |{ result-run_id }:{ result-cell_id }| revision = result-revision ).
+          DATA candidate TYPE ty_dataset_header.
+          CLEAR candidate.
+          /ui2/cl_json=>deserialize( EXPORTING json = payload pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = candidate ).
+          IF candidate-notebook_id <> notebook-id. CONTINUE. ENDIF.
+          IF <latest> IS ASSIGNED.
+            IF candidate-created_at > <latest>-created_at. <latest> = candidate. ENDIF.
+          ELSE.
+            INSERT candidate INTO TABLE mt_latest.
+          ENDIF.
+          UNASSIGN <latest>.
+        ENDLOOP.
+      ENDLOOP.
+    ENDIF.
+    READ TABLE mt_latest INTO DATA(found) WITH KEY cell_id = cell_id.
+    IF sy-subrc = 0. dataset = CORRESPONDING #( found ). ENDIF.
   ENDMETHOD.
   METHOD save.
     authorize( '02' ).
     notebook-id = request-id.
+    IF notebook-id IS NOT INITIAL. zcl_bn_store=>lock_notebook( notebook-id ). ENDIF.
     IF notebook-id IS INITIAL.
       notebook-id = zcl_bn_types=>uuid( ).
     ENDIF.
@@ -262,9 +329,11 @@ CLASS zcl_bn_service IMPLEMENTATION.
     DATA original TYPE zcl_bn_types=>ty_run.
     IF request-retry_run_id IS NOT INITIAL.
       original = get_run( request-retry_run_id ).
+      zcl_bn_store=>lock_notebook( original-notebook_id ).
       DATA(original_json) = zcl_bn_store=>read( kind = 'N' id = original-notebook_id revision = original-snapshot-revision ).
       /ui2/cl_json=>deserialize( EXPORTING json = original_json pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = notebook ).
     ELSE.
+      zcl_bn_store=>lock_notebook( request-notebook_id ).
       notebook = get_notebook( request-notebook_id ).
     ENDIF.
     IF notebook-revision <> request-expected_revision.
@@ -441,7 +510,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
       APPEND VALUE #( cell_id = cell-id run_id = run-id revision = 1 ) TO run-bindings.
       APPEND VALUE #( cell_id = cell-id run_id = run-id revision = 1 row_count = dataset-row_count
         duration_ms = cl_abap_tstmp=>subtract( tstmp1 = stamp tstmp2 = cell_started ) * 1000
-        checksum = zcl_bn_types=>hash( zcl_bn_types=>json( dataset ) ) ) TO run-results.
+        checksum = zcl_bn_types=>hash( zcl_bn_types=>json( dataset ) ) created_at = dataset-created_at ) TO run-results.
       APPEND LINES OF context->messages TO run-messages.
     ENDLOOP.
     " Stage records only after every cell succeeds. Script Logic owns commit/rollback.
@@ -455,6 +524,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
     zcl_bn_store=>write( kind = 'R' id = run-id payload = zcl_bn_types=>json( run ) expected = 0 ).
   ENDMETHOD.
   METHOD work.
+    CLEAR: mv_cached_notebook, mt_latest.
     authorize( '16' ).
     DATA run TYPE zcl_bn_types=>ty_run.
     DATA rev TYPE i.
@@ -533,7 +603,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
           APPEND VALUE #( cell_id = cell-id run_id = id revision = 1 ) TO run-bindings.
           APPEND VALUE #( cell_id = cell-id run_id = id revision = 1 row_count = dataset-row_count
             duration_ms = cl_abap_tstmp=>subtract( tstmp1 = stamp tstmp2 = cell_started ) * 1000
-            checksum = zcl_bn_types=>hash( zcl_bn_types=>json( dataset ) ) ) TO run-results.
+            checksum = zcl_bn_types=>hash( zcl_bn_types=>json( dataset ) ) created_at = dataset-created_at ) TO run-results.
           APPEND LINES OF context->messages TO run-messages.
           run-progress = lines( run-results ) / lines( run-snapshot-cells ).
           " A concurrent cancellation changes the head: retry state publication without losing it.
@@ -565,6 +635,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
     COMMIT WORK AND WAIT.
   ENDMETHOD.
   METHOD dispatch.
+    CLEAR: mv_cached_notebook, mt_latest.
     authorize( '03' ).
     DATA request TYPE ty_request.
     IF body IS NOT INITIAL.
@@ -582,11 +653,20 @@ CLASS zcl_bn_service IMPLEMENTATION.
         json = zcl_bn_types=>json( zcl_bn_bpc=>metadata( kind = request-kind environment = request-environment
           model = request-model dimension = request-dimension hierarchy = request-hierarchy
           search = request-search offset = request-offset ) ).
+      WHEN 'POST /delete-notebook'.
+        delete_notebook( id = request-notebook_id expected = request-expected_revision ).
+        json = '{"deleted":true}'.
       WHEN 'GET /notebooks'.
-        DATA notebooks TYPE zcl_bn_types=>tt_notebooks.
-        LOOP AT zcl_bn_store=>heads( 'N' ) INTO DATA(nid).
-          APPEND get_notebook( nid ) TO notebooks.
+        DATA notebooks TYPE tt_notebook_headers.
+        DATA(deleted) = zcl_bn_store=>heads( 'A' ).
+        LOOP AT zcl_bn_store=>documents( 'N' ) INTO DATA(document).
+          IF line_exists( deleted[ table_line = document-id ] ). CONTINUE. ENDIF.
+          DATA listing TYPE ty_notebook_header.
+          CLEAR listing.
+          /ui2/cl_json=>deserialize( EXPORTING json = document-payload pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = listing ).
+          APPEND listing TO notebooks.
         ENDLOOP.
+        SORT notebooks BY saved_at DESCENDING id.
         json = zcl_bn_types=>json( notebooks ).
       WHEN 'POST /notebooks'.
         IF request-demo = abap_true. request = demo( environment = request-environment model = request-model ). ENDIF.
@@ -645,14 +725,12 @@ CLASS zcl_bn_service IMPLEMENTATION.
         json = zcl_bn_types=>json( submit( request ) ).
       WHEN 'GET /runs'.
         notebook = get_notebook( notebook_id ).
-        DATA runs TYPE zcl_bn_types=>tt_runs.
-        LOOP AT zcl_bn_store=>heads( 'R' ) INTO DATA(rid).
-          run = get_run( rid ).
-          IF run-notebook_id = notebook_id.
-            reconcile( CHANGING run = run ). APPEND run TO runs.
-          ENDIF.
+        DATA(runs) = run_headers( notebook_id ).
+        LOOP AT runs ASSIGNING FIELD-SYMBOL(<header>) WHERE state = 'queued' OR state = 'running'.
+          run = get_run( <header>-id ). reconcile( CHANGING run = run ).
+          <header>-state = run-state. <header>-finished_at = run-finished_at.
         ENDLOOP.
-        SORT runs BY created_at DESCENDING. json = zcl_bn_types=>json( runs ).
+        json = zcl_bn_types=>json( runs ).
       WHEN 'GET /run'.
         run = get_run( id ). reconcile( CHANGING run = run ). json = zcl_bn_types=>json( run ).
       WHEN 'POST /cancel'.

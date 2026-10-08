@@ -18,6 +18,7 @@ The local service **simulates two demo cell bodies**. The SAP DEV version is dep
 - [BPC selections, frozen parameters and calculation adapters](docs/bpc-inputs.md)
 - [Notebook Script and metadata completion](docs/notebook-script.md)
 - [Notebook handlers in BPC Script Logic](docs/notebook-script-logic.md)
+- [Notebook deletion and loading performance](docs/notebook-management.md)
 - [API contract](docs/API.md)
 - [Native activation/test evidence](docs/evidence/native-check.json)
 - [Encoding conventions and SAP round-trip evidence](docs/evidence/ENCODING.md)
