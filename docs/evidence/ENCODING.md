@@ -1,6 +1,6 @@
 # Encoding and SAP serialization verification
 
-The connected SAP system imported and serialized all **37 repository artifacts** on 2026-10-08. Every serialized byte matches its actual Git clean-filter blob. [Machine-readable results](sap-roundtrip.json) record the Git blob identity, SAP SHA-256, byte length and comparison for every file. This covers 8 classes and their test includes, 2 reports, 3 tables, BSP application metadata and 7 page bodies, SICF metadata, package metadata and `.abapgit.xml`.
+The connected SAP system imported and serialized all **38 repository artifacts** on 2026-10-08. Every serialized byte matches its actual Git clean-filter blob. [Machine-readable results](sap-roundtrip.json) record the Git blob identity, SAP SHA-256, byte length and comparison for every file. This covers 8 classes and their test includes, 2 reports, 3 tables, BSP application metadata and 7 page bodies, SICF metadata, package metadata and `.abapgit.xml`.
 
 ## Conventions verified against BPCIO
 
@@ -24,8 +24,12 @@ node tools/sap-roundtrip.cjs --codex-env --import --output=.local/sap-final
 npm test
 ```
 
-The runner executes SAP's installed `ZCL_ABAPGIT_OBJECT_*` deserializers and `ZCL_ABAPGIT_OBJECTS=>SERIALIZE` through a development-only `$TMP` class, `ZCL_BN_SERIALIZE_CHECK`. Repository configuration also passes through `ZCL_ABAPGIT_DOT_ABAPGIT` deserialize/serialize. Input is a ZIP of actual local Git blobs; it never uploads credentials or pushes Git. Final comparison: **37/37 identical; no missing files**. The local suite passes 16 tests, including packaging idempotence and hashes against this real SAP export.
+The runner executes SAP's installed `ZCL_ABAPGIT_OBJECT_*` deserializers and `ZCL_ABAPGIT_OBJECTS=>SERIALIZE` through a development-only `$TMP` class, `ZCL_BN_SERIALIZE_CHECK`. Repository configuration also passes through `ZCL_ABAPGIT_DOT_ABAPGIT` deserialize/serialize. Input is a ZIP of actual local Git blobs; it never uploads credentials or pushes Git. Final comparison: **38/38 identical; no missing files**. The local suite passes 16 tests, including packaging idempotence and hashes against this real SAP export.
 
 Application objects were verified in `$TMP`. Package metadata was independently imported into `$BN_ROUNDTRIP` to avoid modifying `$TMP`'s description; abapGit package metadata intentionally allows installation-package remapping. SICF `/sap/bc/zbpc_notebook` was imported with its normal handler and activated by the abapGit deserializer. No trusted-user execution enablement was added. These verification objects remain available for inspection.
 
 This verifies actual SAP import/serialization against Git; it does not claim a network pull from the remote branch or installation into the transportable `ZBPC_NOTEBOOK` package. Those deployment checks, SAP UI5 browser acceptance and background execution acceptance remain documented in `INSTALL.md`. Re-run the comparison after changing any native source, metadata or BSP body; the recorded hashes deliberately invalidate stale evidence.
+
+## Deployment follow-up
+
+At the user’s request, code was pushed to main and pulled through SAP abapGit using transport NPLK900126. A second SICF object for the SAP UI5 launch URL is now included. The newest machine-readable comparison imports all 38 files against package ZBPC_NOTEBOOK; every file passes. Browser testing on installed SAP UI5 found and fixed its unsupported ObjectStatus Information value state and the empty native error structure. DEVELOPER is enabled in DEV client 001. The real background allocation succeeded and returned CC100 = 66,000. Earlier paragraphs describe the initial local-package verification; this follow-up supersedes its deployment limitations.

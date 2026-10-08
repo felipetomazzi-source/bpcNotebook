@@ -201,7 +201,7 @@ sap.ui.define(
                   text: Api.local
                     ? "Local prototype"
                     : "SAP client " + (new URLSearchParams(location.search).get("sap-client") || "current"),
-                  state: "Information",
+                  state: "None",
                 }),
               ],
             }).addStyleClass("topbar"),
@@ -611,7 +611,7 @@ sap.ui.define(
             self.currentRun = r;
             self.runStatus.setText(r.state + " · " + Math.round(r.progress * 100) + "%");
             self.runStatus.setState(
-              r.state === "failed" ? "Error" : r.state === "succeeded" ? "Success" : "Information",
+              r.state === "failed" ? "Error" : r.state === "succeeded" ? "Success" : "None",
             );
             self.runDetails.setText(
               "Frozen revision " +

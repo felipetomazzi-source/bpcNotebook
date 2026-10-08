@@ -2,11 +2,15 @@ const fs=require('node:fs');
 const {spawnSync,execFileSync}=require('node:child_process');
 const {createHash}=require('node:crypto');
 const expected=new Map();
-const evidence={at:new Date().toISOString(),method:'abapGit object deserializers and serializers through ADT classrun',objectPackage:'$TMP',packageMetadataTarget:'$BN_ROUNDTRIP',gitComparison:'Git clean-filter blobs (not the index or HEAD)',files:[],messages:[],passed:false};
+const target=process.argv.find(a=>a.startsWith('--package='))?.slice(10)||'$TMP';
+const packageTarget=target==='$TMP'?'$BN_ROUNDTRIP':target;
+const transport=process.argv.find(a=>a.startsWith('--transport='))?.slice(12)||'';
+if(!/^[$A-Z0-9_]+$/.test(target)||!/^[$A-Z0-9_]*$/.test(transport))throw Error('Invalid package/transport');
+const evidence={at:new Date().toISOString(),method:'abapGit object deserializers and serializers through ADT classrun',objectPackage:target,packageMetadataTarget:packageTarget,gitComparison:'Git clean-filter blobs (not the index or HEAD)',files:[],messages:[],passed:false};
 const client=require('./adt-config.cjs')();
 const mode=process.argv.includes('--import')?'import':'serialize';
 const dir=process.argv.find(a=>a.startsWith('--output='))?.slice(9)||'.local/sap-serialized';
-const objects=fs.readdirSync('src').filter(n=>/\.(clas|prog|tabl|wapa|sicf|devc)\.xml$/.test(n)).map(n=>({filename:n,type:n.split('.').at(-2).toUpperCase(),name:n.endsWith('.devc.xml')?'$BN_ROUNDTRIP':n.split('.')[0].toUpperCase()}));
+const objects=fs.readdirSync('src').filter(n=>/\.(clas|prog|tabl|wapa|sicf|devc)\.xml$/.test(n)).map(n=>({filename:n,type:n.split('.').at(-2).toUpperCase(),name:n.endsWith('.devc.xml')?packageTarget:n.split('.')[0].toUpperCase()}));
 const imported=objects;
 const selected=process.argv.includes('--native-only')?objects.filter(o=>['CLAS','PROG','TABL'].includes(o.type)):imported;
 const q=s=>"'"+s.replaceAll("'","''")+"'";
@@ -24,16 +28,17 @@ if(mode==='import'){
 
  const zip=spawnSync('python',['-c',"import zipfile,pathlib; z=zipfile.ZipFile('.local/roundtrip-input.zip','w',zipfile.ZIP_DEFLATED); z.write('.local/git-input/.abapgit.xml','.abapgit.xml'); [z.write(p,'src/'+p.name) for p in pathlib.Path('.local/git-input/src').iterdir() if p.is_file()]; z.close()"],{encoding:'utf8'});if(zip.status)throw Error(zip.stderr);
  const b64=fs.readFileSync('.local/roundtrip-input.zip').toString('base64');
- setup=`DATA lv_zip64 TYPE string.\n${b64.match(/.{1,180}/g).map(s=>`lv_zip64 = lv_zip64 && '${s}'.`).join('\n')}\nDATA(lt_files) = zcl_abapgit_zip=>load( cl_http_utility=>decode_x_base64( lv_zip64 ) ).\nDATA(lo_log) = NEW zcl_abapgit_log( ).\nzcl_abapgit_objects_activation=>clear( ).\n`;
- for(const o of selected)actions+=`\nls_item = VALUE #( obj_type = '${o.type}' obj_name = ${q(o.name)} devclass = '${o.type==='DEVC'?'$BN_ROUNDTRIP':'$TMP'}' origlang = 'E' ).
-${o.type==='SICF'?`SELECT SINGLE icfparguid FROM icfservice INTO @ls_item-obj_name+15 WHERE icf_name = 'ZBPC_NOTEBOOK'.`:''}
+ setup=`DATA lv_zip64 TYPE string.\n${b64.match(/.{1,180}/g).map(s=>`lv_zip64 = lv_zip64 && '${s}'.`).join('\n')}\nDATA(lt_files) = zcl_abapgit_zip=>load( cl_http_utility=>decode_x_base64( lv_zip64 ) ).\nDATA(lo_log) = NEW zcl_abapgit_log( ).
+${transport?`zcl_abapgit_factory=>get_default_transport( )->set( '${transport}' ).`:''}\nzcl_abapgit_objects_activation=>clear( ).\n`;
+ for(const o of selected)actions+=`\nls_item = VALUE #( obj_type = '${o.type}' obj_name = ${q(o.name)} devclass = '${o.type==='DEVC'?packageTarget:target}' origlang = 'E' ).
+${o.type==='SICF'?`zcl_abapgit_object_sicf=>zif_abapgit_object~map_filename_to_object( EXPORTING iv_item_part_of_filename = ${q(o.filename.split('.')[0])} CHANGING cs_item = ls_item ).`:''}
 lo_files = zcl_abapgit_objects_files=>new( is_item = ls_item iv_path = '/src/' ).
 lo_files->set_files( lt_files ).
 CREATE OBJECT lo_obj TYPE zcl_abapgit_object_${o.type.toLowerCase()} EXPORTING is_item = ls_item iv_language = 'E' io_files = lo_files.
 READ TABLE lt_files INTO DATA(ls_input_${selected.indexOf(o)}) WITH KEY filename = ${q(o.filename)}.
 lo_xml = NEW zcl_abapgit_xml_input( zcl_abapgit_convert=>xstring_to_string_utf8( ls_input_${selected.indexOf(o)}-data ) ).
 LOOP AT lo_obj->get_deserialize_steps( ) INTO DATA(lv_step_${selected.indexOf(o)}).
- lo_obj->deserialize( iv_package = '${o.type==='DEVC'?'$BN_ROUNDTRIP':'$TMP'}' io_xml = lo_xml iv_step = lv_step_${selected.indexOf(o)} ii_log = lo_log iv_transport = '' ).
+ lo_obj->deserialize( iv_package = '${o.type==='DEVC'?packageTarget:target}' io_xml = lo_xml iv_step = lv_step_${selected.indexOf(o)} ii_log = lo_log iv_transport = '${transport}' ).
 ENDLOOP.
 out->write( 'BNIMPORTED|${o.type}|${o.name}' ).\n`;
  actions+=`READ TABLE lt_files INTO DATA(ls_dot) WITH KEY filename = '.abapgit.xml'.
@@ -56,8 +61,8 @@ LOOP AT lo_log->zif_abapgit_log~get_messages( ) INTO DATA(ls_message).
  out->write( |BNLOG| && ls_message-type && '|' && ls_message-text ).
 ENDLOOP.\n`;
 }
-for(const o of selected)actions+=`\nls_item = VALUE #( obj_type = '${o.type}' obj_name = ${q(o.name)} devclass = '${o.type==='DEVC'?'$BN_ROUNDTRIP':'$TMP'}' origlang = 'E' ).
-${o.type==='SICF'?`SELECT SINGLE icfparguid FROM icfservice INTO @ls_item-obj_name+15 WHERE icf_name = 'ZBPC_NOTEBOOK'.`:''}
+for(const o of selected)actions+=`\nls_item = VALUE #( obj_type = '${o.type}' obj_name = ${q(o.name)} devclass = '${o.type==='DEVC'?packageTarget:target}' origlang = 'E' ).
+${o.type==='SICF'?`zcl_abapgit_object_sicf=>zif_abapgit_object~map_filename_to_object( EXPORTING iv_item_part_of_filename = ${q(o.filename.split('.')[0])} CHANGING cs_item = ls_item ).`:''}
 ls_serial = zcl_abapgit_objects=>serialize( is_item = ls_item io_i18n_params = zcl_abapgit_i18n_params=>new( iv_main_language = 'E' iv_main_language_only = abap_true ) ).
 LOOP AT ls_serial-files INTO ls_file.
  out->write( 'BNFILE|' && ls_file-filename && '|' && cl_http_utility=>encode_x_base64( ls_file-data ) ).

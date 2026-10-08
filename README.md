@@ -9,7 +9,9 @@ npm test
 npm run pack:sap
 ```
 
-The local service **simulates two demo cell bodies**. Edited ABAP requires SAP. Native tables, service classes and the worker report were activated on **ABAP 7.52 SP04** in `$TMP`; native compiler/runtime-contract tests pass. **Background integration is not yet proven**: the client's ABAP Unit risk policy blocks background tests. The real SAP abapGit round trip passes for all 37 repository artifacts, including BSP/ICF and repository configuration. Transportable package installation, browser acceptance and trusted-user enablement remain. Production execution is blocked.
+The local service **simulates two demo cell bodies**. The SAP DEV version is deployed on the connected ABAP system, client **001**, with access enabled for **DEVELOPER**. The browser allocation demo completed as a real SAP background job and produced CC100 = **66,000**. Code was pushed to `main` and pulled through SAP abapGit using transport `NPLK900126`. All **38** repository artifacts pass actual SAP import/serialization comparison. Automated dangerous ABAP Unit tests remain blocked by the client risk policy. Production execution remains blocked.
+
+[Open the deployed SAP notebook](http://vhcalnplci:8000/sap/bc/ui5_ui5/sap/zbpc_notebook/index.html?sap-client=001). Log in as DEVELOPER, choose **Open allocation demo**, then **Run all** and select **allocate**.
 
 - [Design and runtime contract](docs/DESIGN.md)
 - [Installation and remaining production requirements](docs/INSTALL.md)

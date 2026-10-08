@@ -1,8 +1,8 @@
 {
-  "at": "2026-10-08T07:08:26.530Z",
+  "at": "2026-10-08T07:20:47.625Z",
   "method": "abapGit object deserializers and serializers through ADT classrun",
-  "objectPackage": "$TMP",
-  "packageMetadataTarget": "$BN_ROUNDTRIP",
+  "objectPackage": "ZBPC_NOTEBOOK",
+  "packageMetadataTarget": "ZBPC_NOTEBOOK",
   "gitComparison": "Git clean-filter blobs (not the index or HEAD)",
   "files": [
     {
@@ -69,6 +69,13 @@
       "equal": true
     },
     {
+      "filename": "zbpc_notebook  5e4418e53da389321d0411cea.sicf.xml",
+      "gitBlob": "8fbae0fed21f3d9c31e7c75525606395eeef8661",
+      "sapSha256": "d40d85bf06bb53fe34024987be9dcdf0d037a37ee4e8e51b605166a34b1fd6ae",
+      "bytes": 545,
+      "equal": true
+    },
+    {
       "filename": "zbpc_notebook  ed75b3bc30cb2971582627d6a.sicf.xml",
       "gitBlob": "02ffef0f0e9aee2fd5832b297f5720297fe6e904",
       "sapSha256": "17b6e7800e4c126589e5c0f382e5edc533020ea4ebe292eb730296d2c66a0988",
@@ -77,8 +84,8 @@
     },
     {
       "filename": "zbpc_notebook.wapa.component.js",
-      "gitBlob": "e2f6f1872a9f22f4ca069be7d52256bf8865d22e",
-      "sapSha256": "3197a88e4e66089295a4da69222df01fcf6599ab80679485bf78a74a6138aca9",
+      "gitBlob": "63f37d94894ccfd62126745dd63d8ae1e17ae12d",
+      "sapSha256": "ff40785896e01b35202eb6c2c0475e9dff4731bcce61cc95c53cb872de557a98",
       "bytes": 214039,
       "equal": true
     },
@@ -112,9 +119,9 @@
     },
     {
       "filename": "zbpc_notebook.wapa.model_-api.js",
-      "gitBlob": "140d0407f53aafe9b9600700bfcbdf47015f4e6d",
-      "sapSha256": "da92d356e1ace8f78cf9a5c7a2dc435e69a87b6c059a89f944622ea945ba3afa",
-      "bytes": 17407,
+      "gitBlob": "ca2afd5b49d310ac89e18f245eabae918182d1fe",
+      "sapSha256": "6cbae8392b6ae52a2e6ca26a7e5bc5114aee855ff3867fce5b2a6acbe0ac0bba",
+      "bytes": 18175,
       "equal": true
     },
     {
@@ -266,12 +273,13 @@
     }
   ],
   "messages": [
-    "BNIMPORTED|DEVC|$BN_ROUNDTRIP",
+    "BNIMPORTED|DEVC|ZBPC_NOTEBOOK",
     "BNIMPORTED|TABL|ZBN_DOC",
     "BNIMPORTED|TABL|ZBN_HEAD",
     "BNIMPORTED|PROG|ZBN_JOB",
     "BNIMPORTED|PROG|ZBN_PROBE_JOB",
     "BNIMPORTED|TABL|ZBN_SRC",
+    "BNIMPORTED|SICF|ZBPC_NOTEBOOK  5E4418E53DA389321D0411CEA",
     "BNIMPORTED|SICF|ZBPC_NOTEBOOK  ED75B3BC30CB2971582627D6A",
     "BNIMPORTED|WAPA|ZBPC_NOTEBOOK",
     "BNIMPORTED|CLAS|ZCL_BN_COMPILER",
@@ -283,8 +291,8 @@
     "BNIMPORTED|CLAS|ZCL_BN_TYPES",
     "BNIMPORTED|CLAS|ZCX_BN",
     "BNLOGI|> Mass activating 6 DDIC objects",
-    "BNLOGI|Log name: ABAPGIT_20261008_200834",
-    "BNLOGI|> Activating 8 objects "
+    "BNLOGI|Log name: ABAPGIT_20261008_202058",
+    "BNLOGI|> Activating 9 objects "
   ],
   "passed": true,
   "missing": []
