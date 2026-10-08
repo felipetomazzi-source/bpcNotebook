@@ -32,7 +32,7 @@ sap.ui.define(
           },
         }).addStyleClass("notebookList");
         this.sidebar = new m.VBox({
-          width: "252px",
+          width: "336px",
           items: [
             new m.Title({ text: "WORKSPACE", level: "H5" }),
             new m.Text({ text: "My notebooks" }).addStyleClass("sideTitle"),
@@ -251,10 +251,10 @@ sap.ui.define(
           list.forEach(function (n) {
             self.list.addItem(
               new m.StandardListItem({
-                title: n.title,
+                tooltip: n.title,
                 description: "Revision " + n.revision,
                 icon: "sap-icon://document-text",
-              }).data("id", n.id),
+              }).setTitle(n.title).data("id", n.id),
             );
           });
         });
