@@ -4,11 +4,19 @@ CLASS zcl_bn_context DEFINITION PUBLIC FINAL CREATE PUBLIC.
              key TYPE string, amount TYPE decfloat34,
            END OF ty_row,
            tt_rows TYPE STANDARD TABLE OF ty_row WITH DEFAULT KEY.
+    DATA environment TYPE uj_appset_id READ-ONLY.
+    DATA model TYPE uj_appl_id READ-ONLY.
     DATA outputs TYPE tt_rows READ-ONLY.
     DATA messages TYPE zcl_bn_types=>tt_messages READ-ONLY.
     METHODS constructor IMPORTING inputs TYPE zcl_bn_types=>tt_inputs
-      bindings TYPE zcl_bn_types=>tt_bindings dependencies TYPE zcl_bn_types=>tt_ids cell_id TYPE string.
+      bindings TYPE zcl_bn_types=>tt_bindings dependencies TYPE zcl_bn_types=>tt_ids cell_id TYPE string
+      environment TYPE string DEFAULT '' model TYPE string DEFAULT ''.
     METHODS input IMPORTING name TYPE string RETURNING VALUE(value) TYPE string RAISING zcx_bn.
+    METHODS member IMPORTING name TYPE string RETURNING VALUE(value) TYPE uj_dim_member RAISING zcx_bn.
+    METHODS selection IMPORTING name TYPE string RETURNING VALUE(value) TYPE zcl_bn_types=>tt_ids RAISING zcx_bn.
+    METHODS range IMPORTING name TYPE string RETURNING VALUE(value) TYPE uja_t_dim_member RAISING zcx_bn.
+    METHODS current_view RETURNING VALUE(value) TYPE ujk_t_cv RAISING zcx_bn.
+    METHODS script_parameters RETURNING VALUE(value) TYPE ujk_t_script_logic_hashtable RAISING zcx_bn.
     METHODS read IMPORTING dependency TYPE string RETURNING VALUE(rows) TYPE tt_rows RAISING zcx_bn.
     METHODS emit IMPORTING rows TYPE tt_rows RAISING zcx_bn.
     METHODS message IMPORTING text TYPE string.
@@ -20,6 +28,7 @@ CLASS zcl_bn_context DEFINITION PUBLIC FINAL CREATE PUBLIC.
 ENDCLASS.
 CLASS zcl_bn_context IMPLEMENTATION.
   METHOD constructor.
+    me->environment = environment. me->model = model.
     mt_inputs = inputs. mt_bindings = bindings. mt_dependencies = dependencies. mv_cell_id = cell_id.
   ENDMETHOD.
   METHOD input.
@@ -27,7 +36,37 @@ CLASS zcl_bn_context IMPLEMENTATION.
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'INPUT' detail = |Unknown input { name }|.
     ENDIF.
+    IF parameter-type = 'member' OR parameter-type = 'range'.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'INPUT_TYPE' detail = 'Use member(), selection() or range() for BPC inputs'.
+    ENDIF.
     value = parameter-value.
+  ENDMETHOD.
+  METHOD member.
+    READ TABLE mt_inputs INTO DATA(parameter) WITH KEY name = name.
+    IF sy-subrc <> 0 OR parameter-type <> 'member' OR lines( parameter-selected ) <> 1.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'INPUT_TYPE' detail = 'Expected a selected single member'.
+    ENDIF.
+    value = parameter-selected[ 1 ].
+  ENDMETHOD.
+  METHOD selection.
+    READ TABLE mt_inputs INTO DATA(parameter) WITH KEY name = name.
+    IF sy-subrc <> 0 OR ( parameter-type <> 'member' AND parameter-type <> 'range' ).
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'INPUT_TYPE' detail = 'Expected a BPC selection'.
+    ENDIF.
+    value = parameter-selected.
+  ENDMETHOD.
+  METHOD range.
+    READ TABLE mt_inputs INTO DATA(parameter) WITH KEY name = name.
+    IF sy-subrc <> 0 OR ( parameter-type <> 'member' AND parameter-type <> 'range' ).
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'INPUT_TYPE' detail = 'Expected a BPC selection'.
+    ENDIF.
+    LOOP AT parameter-resolved INTO DATA(id). APPEND CONV uj_dim_member( id ) TO value. ENDLOOP.
+  ENDMETHOD.
+  METHOD current_view.
+    value = zcl_bn_bpc=>current_view( mt_inputs ).
+  ENDMETHOD.
+  METHOD script_parameters.
+    value = zcl_bn_bpc=>script_parameters( mt_inputs ).
   ENDMETHOD.
   METHOD read.
     IF NOT line_exists( mt_dependencies[ table_line = dependency ] ).

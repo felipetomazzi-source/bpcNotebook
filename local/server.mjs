@@ -22,6 +22,7 @@ export function createServer(engine = new Engine({file: resolve('.local/store.js
         }
         const p = url.searchParams; const path = url.pathname.slice(4);
         let value;
+        if (path === '/metadata') throw new Fault(501,'SAP_REQUIRED','BPC metadata requires the SAP backend');
         if (path === '/notebooks' && req.method === 'GET') value = engine.list(user);
         else if (path === '/notebooks' && req.method === 'POST') value = engine.create(body.demo ? demo() : body,user);
         else if (path === '/notebook' && req.method === 'GET') value = engine.get(p.get('id'),user);

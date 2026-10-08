@@ -1,0 +1,34 @@
+[
+  {
+    "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_bpc/includes/testclasses#type=CLAS%2FOCL;name=LTCL_INPUTS",
+    "adtcore:type": "CLAS/OL",
+    "adtcore:name": "LTCL_INPUTS",
+    "uriType": "semantic",
+    "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_bpc/includes/testclasses#type=CLAS%2FOCL;name=LTCL_INPUTS",
+    "durationCategory": "short",
+    "riskLevel": "harmless",
+    "alerts": [],
+    "testmethods": [
+      {
+        "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_bpc/includes/testclasses#type=CLAS%2FOLD;name=LTCL_INPUTS%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20ADAPTERS",
+        "adtcore:type": "CLAS/OLI",
+        "adtcore:name": "ADAPTERS",
+        "executionTime": 0,
+        "uriType": "semantic",
+        "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_bpc/includes/testclasses#type=CLAS%2FOLD;name=LTCL_INPUTS%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20ADAPTERS",
+        "unit": "s",
+        "alerts": []
+      },
+      {
+        "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_bpc/includes/testclasses#type=CLAS%2FOLD;name=LTCL_INPUTS%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20TYPED_ACCESS",
+        "adtcore:type": "CLAS/OLI",
+        "adtcore:name": "TYPED_ACCESS",
+        "executionTime": 0,
+        "uriType": "semantic",
+        "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_bpc/includes/testclasses#type=CLAS%2FOLD;name=LTCL_INPUTS%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20TYPED_ACCESS",
+        "unit": "s",
+        "alerts": []
+      }
+    ]
+  }
+]

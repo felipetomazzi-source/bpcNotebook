@@ -69,6 +69,7 @@ export class Engine {
     for (const p of n.inputs) {
       if (!/^[a-zA-Z][a-zA-Z0-9_]{0,29}$/.test(p.name) || names.has(p.name)) fail(400, 'INPUT_NAME', 'Input names must be unique identifiers');
       names.add(p.name);
+      if (p.type === 'member' || p.type === 'range') fail(501, 'SAP_REQUIRED', 'BPC member metadata and authorization require the SAP backend');
       if (!['number', 'string', 'boolean'].includes(p.type) || typeof p.value !== p.type || (p.type === 'number' && !Number.isFinite(p.value)))
         fail(400, 'INPUT_TYPE', 'Input value must match its declared type');
     }
@@ -96,7 +97,7 @@ export class Engine {
       const checksum = hash(c.source);
       return {...copy(c), checksum, sourceVersion: (previous?.sourceVersion || 0) + (previous?.checksum === checksum ? 0 : 1)};
     });
-    const version = {id, title: data.title.trim(), inputs: copy(data.inputs), cells,
+    const version = {id, title: data.title.trim(), environment: data.environment || '', model: data.model || '', inputs: copy(data.inputs), cells,
       revision: n.current + 1, author: user, savedAt: now()};
     version.checksum = hash(version); n.versions.push(version); n.current++;
     this.audit(user, 'SAVE', id); this.persist(); return this.get(id, user);
@@ -106,7 +107,7 @@ export class Engine {
   }); }
   fingerprint(n, cellId) {
     const c = n.cells.find(c => c.id === cellId);
-    return hash({id: c.id, sequence:n.cells.findIndex(c=>c.id===cellId),source: c.checksum, inputs: n.inputs,
+    return hash({id: c.id, sequence:n.cells.findIndex(c=>c.id===cellId),source: c.checksum, environment:n.environment, model:n.model, inputs: n.inputs,
       dependencies: c.dependencies.map(d => [d, this.fingerprint(n, d)])});
   }
   latest(n, cellId, user) {

@@ -1,10 +1,12 @@
 CLASS zcl_bn_types DEFINITION PUBLIC FINAL CREATE PUBLIC.
   PUBLIC SECTION.
+    TYPES tt_ids TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
     TYPES: BEGIN OF ty_input,
              name TYPE string, type TYPE string, value TYPE string,
+             dimension TYPE string, hierarchy TYPE string, required TYPE abap_bool,
+             selected TYPE tt_ids, resolved TYPE tt_ids,
            END OF ty_input,
-           tt_inputs TYPE STANDARD TABLE OF ty_input WITH DEFAULT KEY,
-           tt_ids TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
+           tt_inputs TYPE STANDARD TABLE OF ty_input WITH DEFAULT KEY.
     TYPES: BEGIN OF ty_ref,
              run_id TYPE string, cell_id TYPE string, revision TYPE i,
              row_count TYPE i, stale TYPE abap_bool,
@@ -17,6 +19,7 @@ CLASS zcl_bn_types DEFINITION PUBLIC FINAL CREATE PUBLIC.
            tt_cells TYPE STANDARD TABLE OF ty_cell WITH DEFAULT KEY.
     TYPES: BEGIN OF ty_notebook,
              id TYPE string, title TYPE string, revision TYPE i,
+             environment TYPE string, model TYPE string,
              author TYPE string, saved_at TYPE string,
              checksum TYPE string, inputs TYPE tt_inputs, cells TYPE tt_cells,
            END OF ty_notebook,

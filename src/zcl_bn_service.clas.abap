@@ -30,6 +30,8 @@ CLASS zcl_bn_service DEFINITION PUBLIC FINAL CREATE PUBLIC.
              title TYPE string, cells TYPE zcl_bn_types=>tt_cells,
              inputs TYPE zcl_bn_types=>tt_inputs, demo TYPE abap_bool,
              retry_run_id TYPE string,
+             environment TYPE string, model TYPE string, kind TYPE string,
+             dimension TYPE string, hierarchy TYPE string, search TYPE string, offset TYPE i,
            END OF ty_request.
     CLASS-METHODS save IMPORTING request TYPE ty_request
       RETURNING VALUE(notebook) TYPE zcl_bn_types=>ty_notebook RAISING zcx_bn.
@@ -43,7 +45,8 @@ CLASS zcl_bn_service DEFINITION PUBLIC FINAL CREATE PUBLIC.
     CLASS-METHODS is_current IMPORTING notebook TYPE zcl_bn_types=>ty_notebook dataset TYPE ty_dataset
       RETURNING VALUE(result) TYPE abap_bool RAISING zcx_bn.
     CLASS-METHODS reconcile CHANGING run TYPE zcl_bn_types=>ty_run RAISING zcx_bn.
-    CLASS-METHODS demo RETURNING VALUE(request) TYPE ty_request.
+    CLASS-METHODS demo IMPORTING environment TYPE string DEFAULT '' model TYPE string DEFAULT ''
+      RETURNING VALUE(request) TYPE ty_request RAISING zcx_bn.
 ENDCLASS.
 CLASS zcl_bn_service IMPLEMENTATION.
   METHOD authorize.
@@ -95,9 +98,9 @@ CLASS zcl_bn_service IMPLEMENTATION.
           IF parameter-value <> 'true' AND parameter-value <> 'false'.
             RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'INPUT_TYPE' detail = 'Boolean input must be true or false'.
           ENDIF.
-        WHEN 'string'.
+        WHEN 'string' OR 'member' OR 'range'.
         WHEN OTHERS.
-          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'INPUT_TYPE' detail = 'Supported input types: number, string, boolean'.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'INPUT_TYPE' detail = 'Supported input types: number, string, boolean, member, range'.
       ENDCASE.
       APPEND parameter-name TO seen.
     ENDLOOP.
@@ -125,7 +128,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
     ENDIF.
     DATA(sequence) = sy-tabix.
     DATA text TYPE string.
-    text = |{ cell-id }:{ sequence }:{ cell-checksum }:{ zcl_bn_types=>json( notebook-inputs ) }|.
+    text = |{ cell-id }:{ sequence }:{ cell-checksum }:{ notebook-environment }:{ notebook-model }:{ zcl_bn_types=>json( notebook-inputs ) }|.
     LOOP AT cell-dependencies INTO DATA(dependency).
       text = |{ text }:{ fingerprint( notebook = notebook cell_id = dependency ) }|.
     ENDLOOP.
@@ -151,8 +154,10 @@ CLASS zcl_bn_service IMPLEMENTATION.
       notebook-id = zcl_bn_types=>uuid( ).
     ENDIF.
     notebook-title = request-title. notebook-cells = request-cells.
+    notebook-environment = request-environment. notebook-model = request-model.
     notebook-inputs = zcl_bn_types=>normalize_inputs( request-inputs ).
     check_definition( notebook ).
+    zcl_bn_bpc=>resolve( CHANGING notebook = notebook ).
     DATA previous TYPE zcl_bn_types=>ty_notebook.
     IF request-expected_revision > 0.
       previous = get_notebook( notebook-id ).
@@ -239,6 +244,17 @@ CLASS zcl_bn_service IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'CONFLICT' detail = 'Notebook revision changed' status = 409.
     ENDIF.
     check_definition( notebook ).
+    IF original-id IS NOT INITIAL.
+      notebook-inputs = original-snapshot-inputs.
+      zcl_bn_bpc=>validate_frozen( notebook ).
+    ELSE.
+      DATA(before) = zcl_bn_types=>json( notebook-inputs ).
+      zcl_bn_bpc=>resolve( EXPORTING complete = abap_true CHANGING notebook = notebook ).
+      IF before <> zcl_bn_types=>json( notebook-inputs ).
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_METADATA_CHANGED'
+          detail = 'Hierarchy changed since save; save again to review current base members' status = 409.
+      ENDIF.
+    ENDIF.
     DATA selected TYPE zcl_bn_types=>tt_cells.
     DATA index TYPE i.
     READ TABLE notebook-cells TRANSPORTING NO FIELDS WITH KEY id = request-cell_id.
@@ -357,6 +373,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
     DATA started TYPE timestampl.
     GET TIME STAMP FIELD started.
     TRY.
+        zcl_bn_bpc=>validate_frozen( run-snapshot ).
         " Read the full immutable notebook revision for recursive fingerprints (one-cell scope).
         DATA(full_json) = zcl_bn_store=>read( kind = 'N' id = run-notebook_id revision = run-snapshot-revision ).
         DATA full TYPE zcl_bn_types=>ty_notebook.
@@ -390,7 +407,8 @@ CLASS zcl_bn_service IMPLEMENTATION.
             RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'SYNTAX' detail = 'Cell compilation failed; see diagnostics'.
           ENDIF.
           DATA(context) = NEW zcl_bn_context( inputs = run-snapshot-inputs bindings = run-bindings
-            dependencies = cell-dependencies cell_id = cell-id ).
+            dependencies = cell-dependencies cell_id = cell-id
+            environment = run-snapshot-environment model = run-snapshot-model ).
           DATA cell_started TYPE timestampl.
           GET TIME STAMP FIELD cell_started.
           PERFORM execute IN PROGRAM (pool) USING context.
@@ -453,6 +471,10 @@ CLASS zcl_bn_service IMPLEMENTATION.
     DATA notebook TYPE zcl_bn_types=>ty_notebook.
     DATA run TYPE zcl_bn_types=>ty_run.
     CASE |{ method } { path }|.
+      WHEN 'POST /metadata'.
+        json = zcl_bn_types=>json( zcl_bn_bpc=>metadata( kind = request-kind environment = request-environment
+          model = request-model dimension = request-dimension hierarchy = request-hierarchy
+          search = request-search offset = request-offset ) ).
       WHEN 'GET /notebooks'.
         DATA notebooks TYPE zcl_bn_types=>tt_notebooks.
         LOOP AT zcl_bn_store=>heads( 'N' ) INTO DATA(nid).
@@ -460,7 +482,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
         ENDLOOP.
         json = zcl_bn_types=>json( notebooks ).
       WHEN 'POST /notebooks'.
-        IF request-demo = abap_true. request = demo( ). ENDIF.
+        IF request-demo = abap_true. request = demo( environment = request-environment model = request-model ). ENDIF.
         CLEAR: request-id, request-expected_revision.
         json = zcl_bn_types=>json( save( request ) ).
       WHEN 'PUT /notebook'.
@@ -561,7 +583,24 @@ CLASS zcl_bn_service IMPLEMENTATION.
   METHOD demo.
     DATA nl TYPE string VALUE cl_abap_char_utilities=>newline.
     request-title = 'Allocation - operating expenses'.
+    request-environment = environment. request-model = model.
     request-inputs = VALUE #( ( name = 'total' type = 'number' value = '120000' ) ( name = 'factor' type = 'number' value = '1.1' ) ).
+    IF environment IS NOT INITIAL AND model IS NOT INITIAL.
+      DATA(dimensions) = zcl_bn_bpc=>metadata( kind = 'dimensions' environment = environment model = model
+        dimension = '' hierarchy = '' search = '' ).
+      READ TABLE dimensions-items INTO DATA(category_dim) WITH KEY dim_type = 'C'.
+      READ TABLE dimensions-items INTO DATA(time_dim) WITH KEY dim_type = 'T'.
+      IF category_dim-id IS INITIAL OR time_dim-id IS INITIAL.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_DIMENSION' detail = 'Allocation example requires category and time dimensions'.
+      ENDIF.
+      DATA(times) = zcl_bn_bpc=>metadata( kind = 'members' environment = environment model = model
+        dimension = time_dim-id hierarchy = '' search = '' ).
+      DATA hierarchy TYPE string.
+      IF times-hierarchies IS NOT INITIAL. hierarchy = times-hierarchies[ 1 ]. ENDIF.
+      APPEND VALUE #( name = 'CATEGORY' type = 'member' dimension = category_dim-id required = abap_true ) TO request-inputs.
+      APPEND VALUE #( name = 'TIME' type = 'range' dimension = time_dim-id hierarchy = hierarchy required = abap_true ) TO request-inputs.
+      APPEND VALUE #( name = 'suppressZero' type = 'boolean' value = 'true' ) TO request-inputs.
+    ENDIF.
     APPEND VALUE #( id = 'seed' title = '01 - Prepare cost centres' source =
       |DATA rows TYPE zcl_bn_context=>tt_rows.{ nl }DATA total TYPE decfloat34.{ nl }total = io->input( 'total' ).{ nl }| &&
       |APPEND VALUE #( key = 'CC100' amount = total * '0.5' ) TO rows.{ nl }| &&
@@ -572,5 +611,16 @@ CLASS zcl_bn_service IMPLEMENTATION.
       |DATA rows TYPE zcl_bn_context=>tt_rows.{ nl }DATA factor TYPE decfloat34.{ nl }rows = io->read( 'seed' ).{ nl }| &&
       |factor = io->input( 'factor' ).{ nl }LOOP AT rows ASSIGNING FIELD-SYMBOL(<row>).{ nl }| &&
       |  <row>-amount = <row>-amount * factor.{ nl }ENDLOOP.{ nl }io->emit( rows ).{ nl }io->message( 'Planning factor applied' ).| ) TO request-cells.
+    IF environment IS NOT INITIAL.
+      LOOP AT request-cells ASSIGNING FIELD-SYMBOL(<cell>).
+        <cell>-source = |DATA category TYPE uj_dim_member.{ nl }category = io->member( 'CATEGORY' ).{ nl }| &&
+          |DATA periods TYPE uja_t_dim_member.{ nl }periods = io->range( 'TIME' ).{ nl }| &&
+          |DATA cv TYPE ujk_t_cv.{ nl }cv = io->current_view( ).{ nl }| &&
+          |DATA params TYPE ujk_t_script_logic_hashtable.{ nl }params = io->script_parameters( ).{ nl }| &&
+          |io->message( category && ': ' && CONV string( lines( periods ) ) && ' frozen periods' ).{ nl }| && <cell>-source.
+        <cell>-source = <cell>-source && |{ nl }IF io->input( 'suppressZero' ) = 'true'.{ nl }| &&
+          |DELETE rows WHERE amount = 0.{ nl }io->emit( rows ).{ nl }ENDIF.|.
+      ENDLOOP.
+    ENDIF.
   ENDMETHOD.
 ENDCLASS.

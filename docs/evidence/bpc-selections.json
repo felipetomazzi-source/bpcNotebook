@@ -1,0 +1,84 @@
+{
+  "at": "2026-10-08T07:59:43.016Z",
+  "notebookId": "E82AEA36D1571FD1B0DDC6B8A58B4293",
+  "runId": "E82AEA36D1571FD1B0DDC6D7BC6F0293",
+  "retryId": "E82AEA36D1571FD1B0DDC704959D0293",
+  "passed": true,
+  "checks": [
+    "required selections",
+    "real SAP hierarchy expansion",
+    "backend base members exclude selected parent",
+    "forged resolved values discarded",
+    "all cells share frozen selections",
+    "editing selections marks outputs stale",
+    "invalid member rejected",
+    "retry retains original snapshot"
+  ],
+  "context": {
+    "environment": "CH_PLANNING",
+    "model": "ALLOC_OPEX"
+  },
+  "selected": [
+    {
+      "name": "CATEGORY",
+      "type": "member",
+      "value": "",
+      "dimension": "CATEGORY",
+      "hierarchy": "",
+      "required": true,
+      "selected": [
+        "Actual"
+      ],
+      "resolved": [
+        "Actual"
+      ]
+    },
+    {
+      "name": "TIME",
+      "type": "range",
+      "value": "",
+      "dimension": "TIME",
+      "hierarchy": "PARENTH1",
+      "required": true,
+      "selected": [
+        "2012.TOTAL"
+      ],
+      "resolved": [
+        "2012.001",
+        "2012.002",
+        "2012.003",
+        "2012.004",
+        "2012.005",
+        "2012.006",
+        "2012.007",
+        "2012.008",
+        "2012.009",
+        "2012.010",
+        "2012.011",
+        "2012.012"
+      ]
+    }
+  ],
+  "messages": [
+    {
+      "cellId": "seed",
+      "severity": "Information",
+      "text": "Actual:12  frozen periods"
+    },
+    {
+      "cellId": "seed",
+      "severity": "Information",
+      "text": "Prepared three cost centres"
+    },
+    {
+      "cellId": "allocate",
+      "severity": "Information",
+      "text": "Actual:12  frozen periods"
+    },
+    {
+      "cellId": "allocate",
+      "severity": "Information",
+      "text": "Planning factor applied"
+    }
+  ]
+}
