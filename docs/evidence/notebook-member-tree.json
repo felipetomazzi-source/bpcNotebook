@@ -1,0 +1,23 @@
+{
+  "checkedAt": "2026-10-08T23:15:52.696Z",
+  "system": "SAP DEV client 001",
+  "ui5Runtime": "1.120.40",
+  "dialogWidth": "60rem",
+  "resizable": true,
+  "standardTree": true,
+  "selectedMembersPanel": true,
+  "timeHierarchy": "PARENTH1",
+  "timeRoots": 311,
+  "timeRelationships": 836,
+  "selectionAcrossSearch": [
+    "2012.001",
+    "2012.002"
+  ],
+  "applyPreservesIdsAndHierarchy": true,
+  "idOnlyDisplay": true,
+  "alternateHierarchy": "PARENTH2",
+  "clearRemovesSelection": true,
+  "cancelClosesWithoutApplying": true,
+  "localTestsPassed": 32,
+  "sapSerializedFilesMatched": 56
+}
