@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-08T09:13:26.015Z",
+  "at": "2026-10-08T09:26:09.249Z",
   "method": "abapGit object deserializers and serializers through ADT classrun",
   "objectPackage": "ZBPC_NOTEBOOK",
   "packageMetadataTarget": "ZBPC_NOTEBOOK",
@@ -84,9 +84,9 @@
     },
     {
       "filename": "zbpc_notebook.wapa.component.js",
-      "gitBlob": "deca4f31f6956181e9d8e901172c73dccab7f507",
-      "sapSha256": "fe16aadd7a0b5be1d773145880976d7b3f97b870a6455c7649a0273b21071483",
-      "bytes": 251417,
+      "gitBlob": "598129bf9db4c346c02140ddac983f9bd650043b",
+      "sapSha256": "584bfc1be96f3d938d9f9f1e453969113154701d0b79b4a5a870f22a36fb0196",
+      "bytes": 253977,
       "equal": true
     },
     {
@@ -98,22 +98,22 @@
     },
     {
       "filename": "zbpc_notebook.wapa.css_-style.css",
-      "gitBlob": "f7333e4dacc41e3d1c546f9ecfdbcf77540d2537",
-      "sapSha256": "e8989bc0350ba41973bf1c6031d963fc2b6e70c89b2c55b54aed8ac670dfe40e",
-      "bytes": 50943,
+      "gitBlob": "b68fe8e9e501d7ed10907925ac35277b9c958633",
+      "sapSha256": "7c9c1595cb47921fc0eba84f814ab4155055c818f752483d51598e3d24a6770c",
+      "bytes": 4351,
       "equal": true
     },
     {
       "filename": "zbpc_notebook.wapa.index.html",
-      "gitBlob": "bcf7318f6fed4b71701ba0d3693eca477b30bad5",
-      "sapSha256": "dd6598e5832f72db4d65adead23f75eddda8f62e0a39707a869491b15e0998a2",
+      "gitBlob": "b29575c5a2ac398dccd9271beee0cf960909dd4a",
+      "sapSha256": "501be2b8d411a92e95583b0e34795d394eb55eb2b3b497984161f97664203848",
       "bytes": 6143,
       "equal": true
     },
     {
       "filename": "zbpc_notebook.wapa.manifest.json",
-      "gitBlob": "50d4c1e2a0b30bedf2b9cfd4a2ebbfd60d51a54b",
-      "sapSha256": "c5f8042d8204286b253ec1ccc9111daa88e742b14cb1fce7b5fc8ecf39dae008",
+      "gitBlob": "579163a83ff2b97b430919236c760bb2c9cfcec4",
+      "sapSha256": "f8e7020715f3e0e8898cc1847e6ce10a91810833bbbb47a3844fe0fedbc4434d",
       "bytes": 3839,
       "equal": true
     },
@@ -313,7 +313,7 @@
     "BNIMPORTED|CLAS|ZCL_BN_TYPES",
     "BNIMPORTED|CLAS|ZCX_BN",
     "BNLOGI|> Mass activating 6 DDIC objects",
-    "BNLOGI|Log name: ABAPGIT_20261008_221334",
+    "BNLOGI|Log name: ABAPGIT_20261008_222618",
     "BNLOGI|> Activating 9 objects "
   ],
   "passed": true,

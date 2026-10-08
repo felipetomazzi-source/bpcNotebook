@@ -38,6 +38,7 @@ sap.ui.define(
             new m.Text({ text: "My notebooks" }).addStyleClass("sideTitle"),
             new m.Button({
               text: "New notebook",
+              type: "Emphasized",
               icon: "sap-icon://add",
               width: "100%",
               press: function () {
@@ -58,7 +59,7 @@ sap.ui.define(
             ),
           ],
         }).addStyleClass("sidebar");
-        this.title = new m.Title({ text: "Your next calculation starts here", level: "H1" }).addStyleClass("notebookTitle");
+        this.title = new m.Title({ text: "Your next calculation starts here", level: "H1", titleStyle: "H2", wrapping: true }).addStyleClass("notebookTitle");
         this.meta = new m.Text({ text: "A workspace for ideas, calculations, and results you can trust." }).addStyleClass("notebookMeta");
         this.inputs = new m.HBox({ wrap: "Wrap" }).addStyleClass("inputs");
         this.cells = new m.VBox().addStyleClass("cells");
@@ -88,9 +89,9 @@ sap.ui.define(
           ],
         });
         this.pageLabel = new m.Text({ text: "No output selected" });
-        this.resultBox = new m.VBox({
-          items: [
-            new m.Title({ text: "Execution review", level: "H3" }),
+        this.resultBox = new m.Panel({
+          content: [
+            new m.Title({ text: "Execution review", level: "H3", titleStyle: "H3" }),
             this.runList,
             new m.HBox({
               items: [
@@ -149,7 +150,7 @@ sap.ui.define(
             }),
           ],
         }).addStyleClass("results");
-        var toolbar = new m.Toolbar({
+        var toolbar = new m.OverflowToolbar({
           content: [
             new m.Button({
               text: "Save version",
@@ -214,12 +215,17 @@ sap.ui.define(
         var page = new m.Page({
           showHeader: false,
           content: [
-            new m.Toolbar({
+            new m.OverflowToolbar({
               content: [
-                new sap.ui.core.Icon({ src: "sap-icon://document-text" }).addStyleClass("brandMark"),
+                new m.Avatar({ initials: "BN", displaySize: "XS", backgroundColor: "Accent5" }),
                 new m.Title({ text: "BPC Notebook" }),
-                new m.Text({ text: "CALCULATION WORKSPACE" }),
                 new m.ToolbarSpacer(),
+                new m.Select({
+                  tooltip: "Appearance", selectedKey: sap.ui.getCore().getConfiguration().getTheme(),
+                  items: [new sap.ui.core.Item({key:"sap_horizon_dark",text:"Horizon Dark"}),
+                    new sap.ui.core.Item({key:"sap_horizon",text:"Horizon Light"})],
+                  change: function(e) { sap.ui.getCore().applyTheme(e.getSource().getSelectedKey()); }
+                }),
                 new m.ObjectStatus({
                   text: Api.local
                     ? "Local prototype"
@@ -250,11 +256,15 @@ sap.ui.define(
           self.list.removeAllItems();
           list.forEach(function (n) {
             self.list.addItem(
-              new m.StandardListItem({
-                tooltip: n.title,
-                description: "Revision " + n.revision,
-                icon: "sap-icon://document-text",
-              }).setTitle(n.title).data("id", n.id),
+              new m.CustomListItem({tooltip: n.title, content: [
+                new m.HBox({alignItems:"Center", items:[
+                  new sap.ui.core.Icon({src:"sap-icon://document-text"}).addStyleClass("sapUiSmallMarginEnd"),
+                  new m.VBox({width:"100%", items:[
+                    new m.Text({wrapping:true}).setText(n.title),
+                    new m.ObjectStatus({text:"Revision " + n.revision})
+                  ]})
+                ]}).addStyleClass("sapUiSmallMargin")
+              ]}).data("id", n.id),
             );
           });
         });
@@ -360,9 +370,9 @@ sap.ui.define(
               : "Not executed",
             state: c.output ? (c.output.stale ? "Warning" : "Success") : "None",
           }).addStyleClass("cellStatus");
-          var box = new m.VBox({
-            items: [
-              new m.Toolbar({
+          var box = new m.Panel({
+            content: [
+              new m.OverflowToolbar({
                 content: [
                   new m.Input({
                     value: c.title,
