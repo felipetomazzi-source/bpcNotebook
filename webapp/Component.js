@@ -9,6 +9,13 @@ sap.ui.define(
   function (UIComponent, library, MessageBox, MessageToast, Api) {
     "use strict";
     var m = sap.m;
+    function displayTime(value) {
+      var stamp = String(value || "").replace(",", ".").replace(/(\.\d{3})\d+/, "$1");
+      var date = new Date(stamp);
+      return isNaN(date.getTime()) ? value : date.toLocaleString(undefined, {
+        month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
+      });
+    }
     return UIComponent.extend("bpc.notebook.Component", {
       metadata: { manifest: "json" },
       createContent: function () {
@@ -25,7 +32,7 @@ sap.ui.define(
           },
         }).addStyleClass("notebookList");
         this.sidebar = new m.VBox({
-          width: "260px",
+          width: "252px",
           items: [
             new m.Title({ text: "WORKSPACE", level: "H5" }),
             new m.Text({ text: "My notebooks" }).addStyleClass("sideTitle"),
@@ -36,7 +43,7 @@ sap.ui.define(
               press: function () {
                 self.create(false);
               },
-            }),
+            }).addStyleClass("newNotebookButton"),
             new m.Button({
               text: "Open allocation demo",
               icon: "sap-icon://activity-items",
@@ -51,8 +58,8 @@ sap.ui.define(
             ),
           ],
         }).addStyleClass("sidebar");
-        this.title = new m.Title({ text: "Start with a notebook", level: "H1" });
-        this.meta = new m.Text({ text: "ABAP calculations · explicit dependencies · preserved results" });
+        this.title = new m.Title({ text: "Your next calculation starts here", level: "H1" }).addStyleClass("notebookTitle");
+        this.meta = new m.Text({ text: "A workspace for ideas, calculations, and results you can trust." }).addStyleClass("notebookMeta");
         this.inputs = new m.HBox({ wrap: "Wrap" }).addStyleClass("inputs");
         this.cells = new m.VBox().addStyleClass("cells");
         this.runList = new m.Select({
@@ -61,8 +68,8 @@ sap.ui.define(
             self.inspect(e.getSource().getSelectedKey());
           },
         });
-        this.runStatus = new m.ObjectStatus({ text: "No executions yet" });
-        this.runDetails = new m.Text();
+        this.runStatus = new m.ObjectStatus({ text: "No executions yet" }).addStyleClass("runStatus");
+        this.runDetails = new m.Text().addStyleClass("runDetails");
         this.runMessages = new m.VBox();
         this.outputSelect = new m.Select({
           change: function () {
@@ -176,7 +183,7 @@ sap.ui.define(
               },
             }),
           ],
-        });
+        }).addStyleClass("notebookToolbar");
         var main = new m.VBox({
           width: "100%",
           items: [this.title, this.meta, toolbar, this.inputs, this.cells, this.resultBox],
@@ -188,12 +195,13 @@ sap.ui.define(
             : "SAP DEV PROTOTYPE · Trusted authors only. Calculation outputs do not write live BPC data.",
           type: "Information",
           showIcon: true,
-        });
+        }).addStyleClass("environmentBanner");
         var page = new m.Page({
           showHeader: false,
           content: [
             new m.Toolbar({
               content: [
+                new sap.ui.core.Icon({ src: "sap-icon://document-text" }).addStyleClass("brandMark"),
                 new m.Title({ text: "BPC Notebook" }),
                 new m.Text({ text: "CALCULATION WORKSPACE" }),
                 new m.ToolbarSpacer(),
@@ -298,7 +306,7 @@ sap.ui.define(
         this.dirty = false;
         this.title.setText(n.title);
         this.meta.setText(
-          "Revision " + n.revision + " · " + n.cells.length + " cells · " + n.author + " · " + n.savedAt,
+          "Revision " + n.revision + " · " + n.cells.length + " cells · " + n.author + " · " + displayTime(n.savedAt),
         );
         this.inputs.removeAllItems();
         n.inputs.forEach(function (p) {
@@ -329,19 +337,19 @@ sap.ui.define(
                 : c.output.rowCount + " rows · current"
               : "Not executed",
             state: c.output ? (c.output.stale ? "Warning" : "Success") : "None",
-          });
+          }).addStyleClass("cellStatus");
           var box = new m.VBox({
             items: [
               new m.Toolbar({
                 content: [
                   new m.Input({
                     value: c.title,
-                    width: "40%",
+                    width: "52%",
                     change: function (e) {
                       c.title = e.getSource().getValue();
                       self.mark();
                     },
-                  }),
+                  }).addStyleClass("cellTitle"),
                   state,
                   new m.ToolbarSpacer(),
                   new m.Button({
@@ -585,7 +593,7 @@ sap.ui.define(
           self.runList.removeAllItems();
           runs.forEach(function (r) {
             self.runList.addItem(
-              new sap.ui.core.Item({ key: r.id, text: r.createdAt + " · " + r.state + " · " + r.scope }),
+              new sap.ui.core.Item({ key: r.id, text: displayTime(r.createdAt) + " · " + r.state + " · " + r.scope }),
             );
           });
           if (self.runId) {
