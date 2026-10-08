@@ -35,6 +35,7 @@ CLASS zcl_bn_http IMPLEMENTATION.
           id = server->request->get_form_field( 'id' )
           notebook_id = server->request->get_form_field( 'notebookId' )
           run_id = server->request->get_form_field( 'runId' ) cell_id = server->request->get_form_field( 'cellId' )
+          table_name = server->request->get_form_field( 'table' )
           revision = CONV i( server->request->get_form_field( 'revision' ) )
           offset = CONV i( server->request->get_form_field( 'offset' ) )
           page_size = CONV i( server->request->get_form_field( 'limit' ) ) ).
@@ -53,3 +54,5 @@ CLASS zcl_bn_http IMPLEMENTATION.
     ENDTRY.
   ENDMETHOD.
 ENDCLASS.
+
+

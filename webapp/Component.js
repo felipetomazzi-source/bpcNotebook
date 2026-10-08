@@ -74,9 +74,13 @@ sap.ui.define(
         this.outputSelect = new m.Select({
           change: function () {
             self.pageOffset = 0;
+            self.tableName = "";
             self.preview();
           },
         });
+        this.datasetSelect = new m.Select({ visible: false, change: function(e) {
+          self.tableName = e.getSource().getSelectedKey(); self.pageOffset = 0; self.preview();
+        }});
         this.table = new m.Table({
           columns: [
             new m.Column({ header: new m.Label({ text: "Cost centre" }) }),
@@ -117,6 +121,7 @@ sap.ui.define(
             this.runDetails,
             this.runMessages,
             this.outputSelect,
+            this.datasetSelect,
             this.table,
             new m.HBox({
               alignItems: "Center",
@@ -891,22 +896,28 @@ sap.ui.define(
             encodeURIComponent(id) +
             "&revision=1&offset=" +
             this.pageOffset +
-            "&limit=2",
+            "&limit=2&table=" + encodeURIComponent(this.tableName || ""),
         )
           .then(function (page) {
             self.total = page.total;
             self.table.removeAllItems();
+            self.table.destroyColumns();
+            (page.schema || []).forEach(function(column) {
+              self.table.addColumn(new m.Column({header: new m.Label({text: column.name})}));
+            });
+            self.datasetSelect.removeAllItems();
+            self.datasetSelect.setVisible(!!(page.tables && page.tables.length));
+            (page.tables || []).forEach(function(t) {
+              self.datasetSelect.addItem(new sap.ui.core.Item({key:t.name,text:t.name + " · " + t.totalCount + " rows"}));
+            });
+            self.tableName = page.tableName || "";
+            self.datasetSelect.setSelectedKey(self.tableName);
             page.rows.forEach(function (row) {
-              self.table.addItem(
-                new m.ColumnListItem({
-                  cells: [
-                    new m.Text({ text: row.key }),
-                    new m.Text({
-                      text: Number(row.amount).toLocaleString(undefined, { maximumFractionDigits: 2 }),
-                    }),
-                  ],
-                }),
-              );
+              self.table.addItem(new m.ColumnListItem({cells: (page.schema || []).map(function(column,index) {
+                // Keep exact decimal text and member IDs; avoid JavaScript numeric rounding.
+                var value = row.values ? row.values[index] : row[column.name];
+                return new m.Text({text: value == null ? "" : String(value)});
+              })}));
             });
             self.pageLabel.setText(
               page.offset +
@@ -916,7 +927,7 @@ sap.ui.define(
                 " of " +
                 page.total +
                 " · output revision " +
-                page.revision,
+                page.revision + (page.truncated ? " · preview of " + page.sourceTotal + " source rows" : ""),
             );
           })
           .catch(self.error.bind(self));

@@ -1,0 +1,270 @@
+{
+  "at": "2026-10-08T08:26:36.077Z",
+  "passed": true,
+  "synthetic": true,
+  "notebookId": "E82AEA36D1571FD1B0DE3F30E0EF8307",
+  "runId": "E82AEA36D1571FD1B0DE3F30E0EFE307",
+  "page": {
+    "runId": "E82AEA36D1571FD1B0DE3F30E0EFE307",
+    "cellId": "preview",
+    "revision": 1,
+    "total": 1,
+    "sourceTotal": 10,
+    "offset": 0,
+    "limit": 2,
+    "truncated": true,
+    "tableName": "FLAGS",
+    "tables": [
+      {
+        "name": "FLAGS",
+        "rowCount": 1,
+        "totalCount": 10,
+        "truncated": true,
+        "elapsedUs": 0
+      },
+      {
+        "name": "EMPTY",
+        "rowCount": 0,
+        "totalCount": 0,
+        "truncated": false,
+        "elapsedUs": 0
+      }
+    ],
+    "schema": [
+      {
+        "name": "account",
+        "type": "string"
+      },
+      {
+        "name": "audittrail",
+        "type": "string"
+      },
+      {
+        "name": "category",
+        "type": "string"
+      },
+      {
+        "name": "costcentre",
+        "type": "string"
+      },
+      {
+        "name": "demrevid_kfs",
+        "type": "string"
+      },
+      {
+        "name": "fflas",
+        "type": "string"
+      },
+      {
+        "name": "fflas_subset",
+        "type": "string"
+      },
+      {
+        "name": "matconn",
+        "type": "string"
+      },
+      {
+        "name": "time",
+        "type": "string"
+      },
+      {
+        "name": "product_type",
+        "type": "string"
+      },
+      {
+        "name": "geo_drivers",
+        "type": "string"
+      },
+      {
+        "name": "doc_typ",
+        "type": "string"
+      },
+      {
+        "name": "conn_reg_split",
+        "type": "string"
+      },
+      {
+        "name": "lfc_win_supplier",
+        "type": "string"
+      },
+      {
+        "name": "mat_group_id",
+        "type": "string"
+      },
+      {
+        "name": "reg_fflas_serv",
+        "type": "string"
+      },
+      {
+        "name": "ufb_dr_id",
+        "type": "string"
+      },
+      {
+        "name": "matremap",
+        "type": "string"
+      },
+      {
+        "name": "rsp_service_id",
+        "type": "string"
+      },
+      {
+        "name": "rev_id_group",
+        "type": "string"
+      },
+      {
+        "name": "signeddata",
+        "type": "decimal"
+      }
+    ],
+    "rows": [
+      {
+        "values": [
+          "001081800",
+          "",
+          "Actual",
+          "",
+          "DEMREVID052",
+          "FFLAS_NA",
+          "",
+          "M_TEST",
+          "2025.007",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "1.0000000"
+        ]
+      }
+    ]
+  },
+  "empty": {
+    "runId": "E82AEA36D1571FD1B0DE3F30E0EFE307",
+    "cellId": "preview",
+    "revision": 1,
+    "total": 0,
+    "sourceTotal": 0,
+    "offset": 0,
+    "limit": 2,
+    "truncated": false,
+    "tableName": "EMPTY",
+    "tables": [
+      {
+        "name": "FLAGS",
+        "rowCount": 1,
+        "totalCount": 10,
+        "truncated": true,
+        "elapsedUs": 0
+      },
+      {
+        "name": "EMPTY",
+        "rowCount": 0,
+        "totalCount": 0,
+        "truncated": false,
+        "elapsedUs": 0
+      }
+    ],
+    "schema": [
+      {
+        "name": "account",
+        "type": "string"
+      },
+      {
+        "name": "audittrail",
+        "type": "string"
+      },
+      {
+        "name": "category",
+        "type": "string"
+      },
+      {
+        "name": "costcentre",
+        "type": "string"
+      },
+      {
+        "name": "demrevid_kfs",
+        "type": "string"
+      },
+      {
+        "name": "fflas",
+        "type": "string"
+      },
+      {
+        "name": "fflas_subset",
+        "type": "string"
+      },
+      {
+        "name": "matconn",
+        "type": "string"
+      },
+      {
+        "name": "time",
+        "type": "string"
+      },
+      {
+        "name": "product_type",
+        "type": "string"
+      },
+      {
+        "name": "geo_drivers",
+        "type": "string"
+      },
+      {
+        "name": "doc_typ",
+        "type": "string"
+      },
+      {
+        "name": "conn_reg_split",
+        "type": "string"
+      },
+      {
+        "name": "lfc_win_supplier",
+        "type": "string"
+      },
+      {
+        "name": "mat_group_id",
+        "type": "string"
+      },
+      {
+        "name": "reg_fflas_serv",
+        "type": "string"
+      },
+      {
+        "name": "ufb_dr_id",
+        "type": "string"
+      },
+      {
+        "name": "matremap",
+        "type": "string"
+      },
+      {
+        "name": "rsp_service_id",
+        "type": "string"
+      },
+      {
+        "name": "rev_id_group",
+        "type": "string"
+      },
+      {
+        "name": "signeddata",
+        "type": "decimal"
+      }
+    ],
+    "rows": []
+  },
+  "checks": [
+    "background execution",
+    "21 dimension columns",
+    "member leading zeros",
+    "named selection",
+    "empty table schema",
+    "bounded preview totals",
+    "unknown table rejected"
+  ]
+}

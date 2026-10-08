@@ -11,6 +11,7 @@ CLASS zcl_bn_service DEFINITION PUBLIC FINAL CREATE PUBLIC.
              bindings TYPE zcl_bn_types=>tt_bindings,
              schema TYPE tt_schema, retention_until TYPE timestampl,
              rows TYPE zcl_bn_context=>tt_rows,
+             tables TYPE zcl_bn_context=>tt_tables,
            END OF ty_dataset.
     CLASS-METHODS authorize IMPORTING activity TYPE char2 RAISING zcx_bn.
     CLASS-METHODS get_notebook IMPORTING id TYPE string
@@ -19,7 +20,7 @@ CLASS zcl_bn_service DEFINITION PUBLIC FINAL CREATE PUBLIC.
       RETURNING VALUE(run) TYPE zcl_bn_types=>ty_run RAISING zcx_bn.
     CLASS-METHODS dispatch IMPORTING path TYPE string method TYPE string body TYPE string
       id TYPE string DEFAULT '' notebook_id TYPE string DEFAULT ''
-      run_id TYPE string DEFAULT '' cell_id TYPE string DEFAULT ''
+      run_id TYPE string DEFAULT '' cell_id TYPE string DEFAULT '' table_name TYPE string DEFAULT ''
       revision TYPE i DEFAULT 0 offset TYPE i DEFAULT 0 page_size TYPE i DEFAULT 20
       RETURNING VALUE(json) TYPE string RAISING zcx_bn.
     CLASS-METHODS work IMPORTING id TYPE string RAISING zcx_bn.
@@ -417,7 +418,12 @@ CLASS zcl_bn_service IMPLEMENTATION.
           CLEAR dataset.
           dataset-run_id = id. dataset-cell_id = cell-id. dataset-revision = 1.
           dataset-notebook_id = run-notebook_id. dataset-rows = context->outputs.
-          dataset-row_count = lines( dataset-rows ). dataset-created_at = zcl_bn_types=>timestamp( ).
+          dataset-tables = context->tables.
+          dataset-row_count = lines( dataset-rows ).
+          LOOP AT dataset-tables INTO DATA(counted_table).
+            dataset-row_count = dataset-row_count + counted_table-row_count.
+          ENDLOOP.
+          dataset-created_at = zcl_bn_types=>timestamp( ).
           dataset-schema = VALUE #( ( name = 'key' type = 'string' ) ( name = 'amount' type = 'decimal' ) ).
           GET TIME STAMP FIELD dataset-retention_until.
           dataset-retention_until = cl_abap_tstmp=>add( tstmp = dataset-retention_until secs = 2592000 ).
@@ -431,7 +437,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
           APPEND VALUE #( cell_id = cell-id run_id = id revision = 1 ) TO run-bindings.
           APPEND VALUE #( cell_id = cell-id run_id = id revision = 1 row_count = dataset-row_count
             duration_ms = cl_abap_tstmp=>subtract( tstmp1 = stamp tstmp2 = cell_started ) * 1000
-            checksum = zcl_bn_types=>hash( zcl_bn_types=>json( dataset-rows ) ) ) TO run-results.
+            checksum = zcl_bn_types=>hash( zcl_bn_types=>json( dataset ) ) ) TO run-results.
           APPEND LINES OF context->messages TO run-messages.
           run-progress = lines( run-results ) / lines( run-snapshot-cells ).
           " A concurrent cancellation changes the head: retry state publication without losing it.
@@ -562,6 +568,42 @@ CLASS zcl_bn_service IMPLEMENTATION.
         DATA(output_json) = zcl_bn_store=>read( kind = 'D' id = |{ run_id }:{ cell_id }| revision = revision ).
         CLEAR dataset.
         /ui2/cl_json=>deserialize( EXPORTING json = output_json pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = dataset ).
+        IF dataset-tables IS NOT INITIAL.
+          DATA selected_table TYPE zcl_bn_context=>ty_table.
+          IF table_name IS INITIAL.
+            selected_table = dataset-tables[ 1 ].
+          ELSE.
+            READ TABLE dataset-tables INTO selected_table WITH KEY name = table_name.
+            IF sy-subrc <> 0.
+              RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'TABLE_NAME' detail = 'Unknown output table'.
+            ENDIF.
+          ENDIF.
+          TYPES: BEGIN OF ty_table_info,
+                   name TYPE string, row_count TYPE i, total_count TYPE i,
+                   truncated TYPE abap_bool, elapsed_us TYPE i,
+                 END OF ty_table_info,
+                 tt_table_info TYPE STANDARD TABLE OF ty_table_info WITH DEFAULT KEY,
+                 BEGIN OF ty_table_page,
+                   run_id TYPE string, cell_id TYPE string, revision TYPE i,
+                   total TYPE i, source_total TYPE i, offset TYPE i, limit TYPE i,
+                   truncated TYPE abap_bool, table_name TYPE string,
+                   tables TYPE tt_table_info,
+                   schema TYPE zcl_bn_context=>tt_schema,
+                   rows TYPE zcl_bn_context=>tt_table_rows,
+                 END OF ty_table_page.
+          DATA(table_page) = VALUE ty_table_page(
+            run_id = run_id cell_id = cell_id revision = revision offset = offset limit = page_size
+            total = selected_table-row_count source_total = selected_table-total_count
+            truncated = selected_table-truncated table_name = selected_table-name schema = selected_table-schema ).
+          LOOP AT dataset-tables INTO DATA(output_table).
+            APPEND CORRESPONDING #( output_table ) TO table_page-tables.
+          ENDLOOP.
+          LOOP AT selected_table-rows INTO DATA(table_row) FROM offset + 1 TO offset + page_size.
+            APPEND table_row TO table_page-rows.
+          ENDLOOP.
+          json = zcl_bn_types=>json( table_page ).
+          RETURN.
+        ENDIF.
         TYPES: BEGIN OF ty_page,
                  run_id TYPE string, cell_id TYPE string, revision TYPE i,
                  total TYPE i, offset TYPE i, limit TYPE i,
@@ -624,3 +666,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 ENDCLASS.
+
+
+
+

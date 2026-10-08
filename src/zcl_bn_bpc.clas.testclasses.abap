@@ -2,6 +2,7 @@ CLASS ltcl_inputs DEFINITION FINAL FOR TESTING DURATION SHORT RISK LEVEL HARMLES
   PRIVATE SECTION.
     METHODS adapters FOR TESTING RAISING zcx_bn.
     METHODS typed_access FOR TESTING RAISING zcx_bn.
+    METHODS named_tables FOR TESTING RAISING zcx_bn.
 ENDCLASS.
 CLASS ltcl_inputs IMPLEMENTATION.
   METHOD adapters.
@@ -20,17 +21,45 @@ CLASS ltcl_inputs IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals( act = params[ hashkey = 'TIME' ]-hashvalue exp = 'P_03,P_01' ).
     cl_abap_unit_assert=>assert_equals( act = params[ hashkey = 'suppressZero' ]-hashvalue exp = 'false' ).
   ENDMETHOD.
+  METHOD named_tables.
+    DATA(io) = NEW zcl_bn_context( inputs = VALUE #( ) bindings = VALUE #( ) dependencies = VALUE #( ) cell_id = 'test' ).
+    TYPES: BEGIN OF ty_record,
+             account TYPE uj_dim_member, signeddata TYPE decfloat34,
+           END OF ty_record,
+           tt_records TYPE STANDARD TABLE OF ty_record WITH DEFAULT KEY.
+    DATA rows TYPE tt_records.
+    rows = VALUE #( ( account = '001081800' signeddata = '0.1234567890123456789' ) ).
+    io->emit_table( name = 'RATIOS' rows = rows total_count = 15 ).
+    rows[ 1 ]-account = 'CHANGED'.
+    DATA(saved) = io->tables[ 1 ].
+    cl_abap_unit_assert=>assert_equals( act = saved-total_count exp = 15 ).
+    cl_abap_unit_assert=>assert_equals( act = saved-row_count exp = 1 ).
+    cl_abap_unit_assert=>assert_equals( act = saved-truncated exp = abap_true ).
+    cl_abap_unit_assert=>assert_equals( act = saved-schema[ 1 ]-name exp = 'account' ).
+    cl_abap_unit_assert=>assert_equals( act = saved-rows[ 1 ]-values[ 1 ] exp = '001081800' ).
+    DATA(number) = CONV decfloat34( saved-rows[ 1 ]-values[ 2 ] ).
+    cl_abap_unit_assert=>assert_equals( act = number exp = CONV decfloat34( '0.1234567890123456789' ) ).
+    TRY.
+        io->emit_table( name = 'RATIOS' rows = rows ).
+        cl_abap_unit_assert=>fail( 'Duplicate table names must fail' ).
+      CATCH zcx_bn INTO DATA(error).
+        cl_abap_unit_assert=>assert_equals( act = error->code exp = 'TABLE_NAME' ).
+    ENDTRY.
+    CLEAR rows.
+    io->emit_table( name = 'EMPTY' rows = rows ).
+    cl_abap_unit_assert=>assert_equals( act = lines( io->tables[ 2 ]-schema ) exp = 2 ).
+  ENDMETHOD.
   METHOD typed_access.
     DATA inputs TYPE zcl_bn_types=>tt_inputs.
     inputs = VALUE #( ( name = 'total' type = 'number' value = '12.5' )
-      ( name = 'label' type = 'string' value = 'É · São' ) ( name = 'flag' type = 'boolean' value = 'true' )
+      ( name = 'label' type = 'string' value = 'Ã‰ Â· SÃ£o' ) ( name = 'flag' type = 'boolean' value = 'true' )
       ( name = 'CATEGORY' type = 'member' dimension = 'CATEGORY' selected = VALUE #( ( `BUDGET` ) )
         resolved = VALUE #( ( `BUDGET` ) ) )
       ( name = 'TIME' type = 'range' dimension = 'TIME' selected = VALUE #( ( `FiscalNode` ) )
         resolved = VALUE #( ( `P_A` ) ( `P_B` ) ) ) ).
     DATA(io) = NEW zcl_bn_context( inputs = inputs bindings = VALUE #( ) dependencies = VALUE #( ) cell_id = 'test' ).
     cl_abap_unit_assert=>assert_equals( act = io->input( 'total' ) exp = '12.5' ).
-    cl_abap_unit_assert=>assert_equals( act = io->input( 'label' ) exp = 'É · São' ).
+    cl_abap_unit_assert=>assert_equals( act = io->input( 'label' ) exp = 'Ã‰ Â· SÃ£o' ).
     cl_abap_unit_assert=>assert_equals( act = io->input( 'flag' ) exp = 'true' ).
     cl_abap_unit_assert=>assert_equals( act = io->member( 'CATEGORY' ) exp = 'BUDGET' ).
     DATA(selected) = io->selection( 'TIME' ).

@@ -4,6 +4,23 @@ CLASS zcl_bn_context DEFINITION PUBLIC FINAL CREATE PUBLIC.
              key TYPE string, amount TYPE decfloat34,
            END OF ty_row,
            tt_rows TYPE STANDARD TABLE OF ty_row WITH DEFAULT KEY.
+    TYPES: BEGIN OF ty_column,
+             name TYPE string, type TYPE string,
+           END OF ty_column,
+           tt_schema TYPE STANDARD TABLE OF ty_column WITH DEFAULT KEY,
+           BEGIN OF ty_table_row,
+             values TYPE zcl_bn_types=>tt_ids,
+           END OF ty_table_row,
+           tt_table_rows TYPE STANDARD TABLE OF ty_table_row WITH DEFAULT KEY,
+           BEGIN OF ty_table,
+             name TYPE string, schema TYPE tt_schema, rows TYPE tt_table_rows,
+             row_count TYPE i, total_count TYPE i, truncated TYPE abap_bool,
+             elapsed_us TYPE i,
+           END OF ty_table,
+           tt_tables TYPE STANDARD TABLE OF ty_table WITH DEFAULT KEY.
+    DATA tables TYPE tt_tables READ-ONLY.
+    METHODS emit_table IMPORTING name TYPE string rows TYPE ANY TABLE
+      total_count TYPE i DEFAULT -1 elapsed_us TYPE i DEFAULT 0 RAISING zcx_bn.
     DATA environment TYPE uj_appset_id READ-ONLY.
     DATA model TYPE uj_appl_id READ-ONLY.
     DATA outputs TYPE tt_rows READ-ONLY.
@@ -91,7 +108,55 @@ CLASS zcl_bn_context IMPLEMENTATION.
     ENDIF.
     outputs = rows.
   ENDMETHOD.
+  METHOD emit_table.
+    IF name IS INITIAL OR lines( tables ) >= 50 OR line_exists( tables[ name = name ] ).
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'TABLE_NAME' detail = 'Unique table name required; maximum 50 tables'.
+    ENDIF.
+    DATA descriptor TYPE REF TO cl_abap_tabledescr.
+    descriptor ?= cl_abap_typedescr=>describe_by_data( rows ).
+    DATA structure TYPE REF TO cl_abap_structdescr.
+    TRY.
+        structure ?= descriptor->get_table_line_type( ).
+      CATCH cx_sy_move_cast_error.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'TABLE_TYPE' detail = 'Expected a table of flat structures'.
+    ENDTRY.
+    DATA(table) = VALUE ty_table( name = name row_count = nmin( val1 = lines( rows ) val2 = 5000 )
+      total_count = COND #( WHEN total_count < 0 THEN lines( rows ) ELSE total_count ) elapsed_us = elapsed_us ).
+    IF table-total_count < lines( rows ).
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'TABLE_COUNT' detail = 'Total count cannot be smaller than supplied rows'.
+    ENDIF.
+    table-truncated = xsdbool( table-total_count > table-row_count ).
+    DATA(components) = structure->get_components( ).
+    LOOP AT components INTO DATA(component).
+      IF component-type->kind <> cl_abap_typedescr=>kind_elem.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'TABLE_TYPE' detail = 'Nested or reference columns are unsupported'.
+      ENDIF.
+      APPEND VALUE #( name = to_lower( component-name ) type = COND #(
+        WHEN component-type->type_kind = cl_abap_typedescr=>typekind_packed OR
+             component-type->type_kind = cl_abap_typedescr=>typekind_decfloat16 OR
+             component-type->type_kind = cl_abap_typedescr=>typekind_decfloat34 OR
+             component-type->type_kind = cl_abap_typedescr=>typekind_float OR
+             component-type->type_kind = cl_abap_typedescr=>typekind_int
+        THEN 'decimal' ELSE 'string' ) ) TO table-schema.
+    ENDLOOP.
+    FIELD-SYMBOLS <row> TYPE any.
+    FIELD-SYMBOLS <value> TYPE any.
+    DATA index TYPE i.
+    LOOP AT rows ASSIGNING <row>.
+      index = index + 1.
+      IF index > 5000. EXIT. ENDIF.
+      DATA(outrow) = VALUE ty_table_row( ).
+      LOOP AT components INTO component.
+        ASSIGN COMPONENT component-name OF STRUCTURE <row> TO <value>.
+        APPEND |{ <value> }| TO outrow-values.
+      ENDLOOP.
+      APPEND outrow TO table-rows.
+    ENDLOOP.
+    APPEND table TO tables.
+  ENDMETHOD.
   METHOD message.
     APPEND VALUE #( cell_id = mv_cell_id severity = 'Information' text = text ) TO messages.
   ENDMETHOD.
 ENDCLASS.
+
+
