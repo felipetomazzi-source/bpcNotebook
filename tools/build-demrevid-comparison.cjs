@@ -9,12 +9,12 @@ const marker='" BEGIN ORIGINAL COMPARISON SNAPSHOT';
 if(current.includes(marker))throw Error('Comparison already generated; update deliberately, do not append twice');
 let original=baseline.replace(/zcl_bpc_demrevid_calc_003/gi,'lcl_original_demrevid')
   .replace(/class lcl_original_demrevid definition public/i,'class lcl_original_demrevid definition');
-original=original.replace(/class lcl_original_demrevid implementation\./i,
-  'class lcl_original_demrevid definition local friends ltc_original_compare.\nclass lcl_original_demrevid implementation.');
+original=original.replace(/create public/i,'create public friends ltc_original_compare');
 const compare=`
 class ltc_original_compare definition deferred.
 class zcl_bn_dem_alloc definition local friends ltc_original_compare.
 ${marker}
+INCLUDE zi_dim_names.
 " Customer source 2796a7f, class identity changed only for ABAP Unit isolation.
 ${original}
 " END ORIGINAL COMPARISON SNAPSHOT

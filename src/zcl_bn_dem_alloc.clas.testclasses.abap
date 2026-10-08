@@ -598,6 +598,7 @@ ENDCLASS.
 class ltc_original_compare definition deferred.
 class zcl_bn_dem_alloc definition local friends ltc_original_compare.
 " BEGIN ORIGINAL COMPARISON SNAPSHOT
+INCLUDE zi_dim_names.
 " Customer source 2796a7f, class identity changed only for ABAP Unit isolation.
 "! <p class="shorttext synchronized" lang="en">DEMREVID - Allocate Revenues (Actuals)</p>
 "! BPC "Script Logic" custom logic (BAdI) class for the DEMREVID model (Demand/Revenue by ID,
@@ -633,7 +634,7 @@ class zcl_bn_dem_alloc definition local friends ltc_original_compare.
 "! </ul>
 class lcl_original_demrevid definition
   final
-  create public .
+  create public friends ltc_original_compare .
 
 
   public section.
@@ -1006,7 +1007,6 @@ endclass.
 
 
 
-class lcl_original_demrevid definition local friends ltc_original_compare.
 class lcl_original_demrevid implementation.
 
 
