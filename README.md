@@ -34,7 +34,7 @@ hub's content area; the hub keeps its header and **Back to hub** button visible.
 - SAP component base URL: **`/sap/bc/ui5_ui5/sap/zbpc_notebook/`**.
 - Connected DEV URL: **`http://vhcalnplci:8000/sap/bc/ui5_ui5/sap/zbpc_notebook/`**.
 - Required host UI5: **1.120.0+**, tested with SAP runtime **1.120.40**. Required libraries are
-  `sap.m`, `sap.ui.layout` and `sap.ui.codeeditor`, declared in the manifest.
+  `sap.m`, `sap.ui.table`, `sap.ui.layout` and `sap.ui.codeeditor`, declared in the manifest.
 - Backend remains **`/sap/bc/zbpc_notebook`** in this repository/package. Load
   from the same SAP origin and authenticated client as the hub.
 
@@ -94,3 +94,5 @@ environment/model selection.
 Notebook navigation uses standard UI5 model group headers and a SearchField. Search filters notebook names, model/environment IDs and notebook IDs locally without loading notebook contents. Standalone groups identify the environment as well as the model; embedded navigation remains restricted to the hub-selected environment. Filtering does not discard an open notebook or unsaved edits.
 
 Dimension member selection uses a standard UI5 Tree in a resizable two-panel dialog: hierarchy choice, ID/description display, search, selected-member removal and Clear all. The chosen SAP hierarchy supplies parent relationships; unauthorized parent IDs are omitted. Search preserves selected IDs and backend save/run validation still resolves nodes. All authorized metadata pages must load before Apply is enabled; more than 50,000 members fails explicitly. Other metadata pickers remain simple lists.
+
+Result previews use the standard `sap.ui.table.Table` grid, with resizable/reorderable columns, horizontal scrolling and 50-row server pages. Cell values preserve exact SAP decimal text and member IDs. This is a grid preview, not AnalyticalTable: the REST/JSON service does not supply analytical OData binding, so no automatic totals/subtotals are implied.

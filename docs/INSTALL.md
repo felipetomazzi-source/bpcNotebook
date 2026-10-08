@@ -2,7 +2,7 @@
 
 ## Local prototype
 
-Node.js 22 or later is sufficient. `npm start` serves `http://127.0.0.1:4173`. Choose **Open allocation demo**, then **Run all**. Select `allocate` in the output selector: CC100 is 66,000. Page size is two rows to demonstrate paging. Change an input and save to see stale outputs. **Retry snapshot** reruns historical source/inputs under a new ID. **Versions** opens immutable revisions.
+Node.js 22 or later is sufficient. `npm start` serves `http://127.0.0.1:4173`. Choose **Open allocation demo**, then **Run all**. Select `allocate` in the output selector: CC100 is 66,000. Grid preview pages contain up to 50 rows. Change an input and save to see stale outputs. **Retry snapshot** reruns historical source/inputs under a new ID. **Versions** opens immutable revisions.
 
 The local service stores `.local/store.json`, binds loopback and uses one trusted local identity. It simulates exactly two demo operations and refuses edited ABAP. A restart fails unfinished executions without replaying them. The local UI uses SAPUI5 1.120.41 from SAP's CDN; the generated SAP bundle uses installed SAP UI5 resources. Local browser internet access is required. The deployed SAP UI5 browser now passes the allocation-demo workflow.
 
