@@ -104,7 +104,7 @@ export class Engine {
     this.audit(user, 'SAVE', id); this.persist(); return this.get(id, user);
   }
   list(user) { return Object.values(this.db.notebooks).filter(n => n.owner === user && !n.deletedAt).map(n => {
-    const v = n.versions.at(-1); return {id: n.id, title: v.title, revision: v.revision, savedAt: v.savedAt};
+    const v = n.versions.at(-1); return {id: n.id, title: v.title, environment: v.environment, model: v.model, revision: v.revision, savedAt: v.savedAt};
   }); }
   fingerprint(n, cellId) {
     const c = n.cells.find(c => c.id === cellId);

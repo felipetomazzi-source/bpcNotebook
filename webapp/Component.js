@@ -20,7 +20,76 @@ sap.ui.define(
       });
     }
     return UIComponent.extend("bpc.notebook.Component", {
-      metadata: { manifest: "json" },
+      metadata: {
+        manifest: "json",
+        properties: {
+          embedded: {type:"boolean", defaultValue:false},
+          environment: {type:"string", defaultValue:""}
+        },
+        events: {navigateBack:{parameters:{environment:{type:"string"}}}}
+      },
+      setEmbedded: function (embedded) {
+        this.setProperty("embedded",!!embedded,true);
+        if (this.standaloneHeader) { this.standaloneHeader.setVisible(!this.getEmbedded()); }
+        if (this.rootContent) { this.rootContent.toggleStyleClass("sapUiSizeCompact",!this.getEmbedded()); }
+        return this;
+      },
+      setEnvironment: function (environment) {
+        environment = String(environment || "");
+        if (!this.workspace || !this._apiReady) { this.setProperty("environment",environment,true); return this; }
+        if (this.getEnvironment() === environment) { return this; }
+        var self = this;
+        this.leaveNotebook(function () {
+          self.setProperty("environment",environment,true);
+          self.navigationToken = (self.navigationToken || 0) + 1;
+          self._closeDialogs(); self.clearNotebook();
+          self._loadHostEnvironment(environment);
+        });
+        return this;
+      },
+      requestNavigateBack: function () {
+        var self = this;
+        this.leaveNotebook(function () {
+          self.navigationToken = (self.navigationToken || 0) + 1;
+          self._contextGeneration = (self._contextGeneration || 0) + 1;
+          self._closeDialogs(); self.clearNotebook();
+          self.fireNavigateBack({environment:self.getEnvironment()});
+        });
+        return this;
+      },
+      _openDialog: function (dialog) {
+        if (this._destroyed) { dialog.destroy(); return; }
+        var self = this;
+        dialog.attachAfterClose(function () { self._dialogs = (self._dialogs || []).filter(function (item) { return item !== dialog; }); });
+        (this._dialogs || (this._dialogs = [])).push(dialog);
+        dialog.open();
+      },
+      _closeDialogs: function () {
+        (this._dialogs || []).forEach(function (dialog) { dialog.destroy(); });
+        this._dialogs = [];
+      },
+      _loadHostEnvironment: function (environment) {
+        var self = this, generation = this._contextGeneration = (this._contextGeneration || 0) + 1;
+        this.hostEnvironmentValid = false;
+        this.list.destroyItems(); this.workspace.setBusy(true);
+        if (!environment) {
+          this.workspace.setBusy(false); this.meta.setText("Select an environment in the hub.");
+          return Promise.resolve();
+        }
+        return Api.request("/metadata","POST",{kind:"environments"}).then(function (metadata) {
+          if (self._contextGeneration !== generation) { return; }
+          if (!metadata.items.some(function (item) { return item.id === environment; })) {
+            self.meta.setText("The selected environment is unavailable or unauthorized."); return;
+          }
+          self.hostEnvironmentValid = true;
+          self.meta.setText("Environment " + environment + " · select or create a notebook");
+          return self.refresh();
+        }).catch(function (error) {
+          if (self._contextGeneration === generation) { self.meta.setText(error.message); }
+        }).finally(function () {
+          if (self._contextGeneration === generation) { self.workspace.setBusy(false); }
+        });
+      },
       createContent: function () {
         var self = this;
         this.selected = null;
@@ -224,7 +293,8 @@ sap.ui.define(
         var page = new m.Page({
           showHeader: false,
           content: [
-            new m.OverflowToolbar({
+            this.standaloneHeader = new m.OverflowToolbar({
+              visible: !this.getEmbedded(),
               content: [
                 new m.Avatar({ initials: "BN", displaySize: "XS", backgroundColor: "Accent5" }),
                 new m.Title({ text: "BPC Notebook" }),
@@ -249,19 +319,22 @@ sap.ui.define(
         });
         Api.init()
           .then(function () {
-            return self.refresh();
+            self._apiReady = true;
+            return self.getEmbedded() ? self._loadHostEnvironment(self.getEnvironment()) : self.refresh();
           })
           .catch(function (e) {
             self.error(e);
           });
-        return new m.App({ pages: [page] }).addStyleClass("sapUiSizeCompact");
+        return this.rootContent = new m.App({ pages: [page] }).addStyleClass("bpcNotebookRoot" + (this.getEmbedded() ? "" : " sapUiSizeCompact"));
       },
       error: function (e) {
         MessageBox.error(e.message || String(e));
       },
       refresh: function () {
-        var self = this;
+        var self = this, generation = this._contextGeneration;
         return Api.request("/notebooks").then(function (list) {
+          if (self._contextGeneration !== generation || self._destroyed) { return; }
+          if (self.getEmbedded()) { list = self.hostEnvironmentValid ? list.filter(function (n) { return n.environment === self.getEnvironment(); }) : []; }
           self.list.destroyItems();
           list.forEach(function (n) {
             self.list.addItem(
@@ -331,6 +404,7 @@ sap.ui.define(
       create: function (isDemo, confirmed) {
         var self = this;
         if (!confirmed) { this.leaveNotebook(function () { self.create(isDemo,true); }); return; }
+        if (this.getEmbedded() && !this.hostEnvironmentValid) { MessageBox.information("Select an authorized environment in the hub first."); return; }
         var data = isDemo ? { demo: true } : { title: "Untitled calculation", inputs: [], cells: [] };
         function create(data) {
           var token = self.navigationToken = (self.navigationToken || 0) + 1;
@@ -344,7 +418,7 @@ sap.ui.define(
           })
           .catch(function (error) { if (self.navigationToken === token) { self.error(error); } })
           .finally(function () { if (self.navigationToken === token) { self.workspace.setBusy(false); } }); }
-        if (isDemo && !Api.local) {
+        if (this.getEmbedded() || (isDemo && !Api.local)) {
           this.chooseContext(function (ctx) { data.environment = ctx.environment; data.model = ctx.model; create(data); });
         } else { create(data); }
       },
@@ -357,6 +431,9 @@ sap.ui.define(
         Api.request("/notebook?id=" + encodeURIComponent(id))
           .then(function (n) {
             if (self.navigationToken !== token) { return; }
+            if (self.getEmbedded() && (!self.hostEnvironmentValid || n.environment !== self.getEnvironment())) {
+              MessageBox.information("This notebook belongs to a different hub environment."); return;
+            }
             self.notebook = n; self.scriptNotebook = null;
             self.renderNotebook(); self.loadRuns().catch(self.error.bind(self));
           })
@@ -637,7 +714,7 @@ sap.ui.define(
           if (!navigator.clipboard) { MessageBox.information("Select and copy the Script Logic text above."); return; }
           navigator.clipboard.writeText(editor.getValue()).then(function () { MessageToast.show("Script Logic copied"); }).catch(function () { MessageBox.information("Select and copy the Script Logic text above."); });
         }}),new m.Button({text:"Close",press:function () { dialog.close(); }})],afterClose:function () { dialog.destroy(); }});
-        dialog.open();
+        this._openDialog(dialog);
       },
       addCell: function (script) {
         if (!this.notebook) {
@@ -658,7 +735,7 @@ sap.ui.define(
         var dialog = new m.Dialog({title:"Generated ABAP · saved execution source",contentWidth:"70rem",
           content:[new CodeEditor({type:"abap",lineNumbers:true,editable:false,width:"100%",height:"32rem"}).setValue(source)],
           endButton:new m.Button({text:"Close",press:function () { dialog.close(); }}),afterClose:function () { dialog.destroy(); }});
-        dialog.open();
+        this._openDialog(dialog);
       },
       scriptHelp: function (cellId) {
         var self = this, model = this.notebook.model || "MODEL";
@@ -677,7 +754,7 @@ sap.ui.define(
             var box = self.cells.getItems().filter(function (b) { return b.data("cellId") === cellId; })[0];
             var editor = box.data("editor"); editor.setValue(editor.getCurrentValue() + "\n" + area.getCurrentValue()); dialog.close();
           }}),endButton:new m.Button({text:"Close",press:function () { dialog.close(); }}),afterClose:function () { dialog.destroy(); }});
-        dialog.open();
+        this._openDialog(dialog);
       },
       scriptMetadata: function (kind, model, dimension) {
         var n = this.notebook, key = [n.environment,model,kind,dimension || ""].join("/");
@@ -849,7 +926,7 @@ sap.ui.define(
           if (key === "filter" && (!chosen.member || chosen.memberIsNode) || key === "field" && !chosen.field) { ready = false; }
           insert.setEnabled(ready); preview.setValue(ready ? self.bpcSnippet(cell,chosen,key) : "Choose metadata above to build valid ABAP.");
         }
-        dialog.open(); update();
+        this._openDialog(dialog); update();
       },
       bpcSnippet: function (cell, chosen, action) {
         var suffix = 1;
@@ -900,6 +977,14 @@ sap.ui.define(
       },
       chooseContext: function (done) {
         var self = this;
+        if (this.getEmbedded()) {
+          if (!this.hostEnvironmentValid) { MessageBox.information("Select an authorized environment in the hub first."); return; }
+          var environment = this.getEnvironment();
+          this.chooseMetadata({kind:"models",environment:environment}, false, [], function (models) {
+            if (self.getEnvironment() === environment) { done({environment:environment,model:models[0]}); }
+          });
+          return;
+        }
         this.chooseMetadata({kind:"environments"}, false, [], function (ids) {
           var environment = ids[0];
           self.chooseMetadata({kind:"models", environment:environment}, false, [], function (models) {
@@ -958,7 +1043,7 @@ sap.ui.define(
             offset += result.items.length; more.setVisible(result.more); list.setBusy(false);
           }).catch(function (e) { if (token === generation) { list.setBusy(false); self.error(e); } });
         }
-        dialog.open(); load(false);
+        this._openDialog(dialog); load(false);
       },
       renderSelection: function (p) {
         var self = this, n = this.notebook;
@@ -1058,7 +1143,7 @@ sap.ui.define(
             dialog.destroy();
           },
         });
-        dialog.open();
+        this._openDialog(dialog);
       },
       validate: function (id) {
         var self = this;
@@ -1307,7 +1392,7 @@ sap.ui.define(
             dialog.destroy();
           },
         });
-        dialog.open();
+        this._openDialog(dialog);
       },
       preview: function () {
         var self = this,
@@ -1399,11 +1484,14 @@ sap.ui.define(
                 dialog.destroy();
               },
             });
-            dialog.open();
+            self._openDialog(dialog);
           })
           .catch(self.error.bind(self));
       },
       exit: function () {
+        this._destroyed = true; this._contextGeneration = (this._contextGeneration || 0) + 1;
+        this.navigationToken = (this.navigationToken || 0) + 1;
+        this._closeDialogs();
         clearTimeout(this.poll);
       },
     });
