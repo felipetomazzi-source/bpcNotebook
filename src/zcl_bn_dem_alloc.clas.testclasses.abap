@@ -2443,8 +2443,8 @@ CLASS ltc_original_compare IMPLEMENTATION.
     DATA(new_original) = NEW zcl_bpc_demrevid( model_data = proposed ).
     new_original->compare_delta( old_original ).
     DATA(io) = NEW zcl_bn_context( inputs = VALUE #( ) bindings = VALUE #( ) dependencies = VALUE #( ) cell_id = 'delta' ).
-    DATA(old_port) = NEW zcl_bn_dem_model( environment = io model_data = CORRESPONDING #( previous ) ).
-    DATA(new_port) = NEW zcl_bn_dem_model( environment = io model_data = CORRESPONDING #( proposed ) ).
+    DATA(old_port) = NEW zcl_bn_dem_model( environment = io model_data = CORRESPONDING zcl_bn_dem_model=>tabl( previous ) ).
+    DATA(new_port) = NEW zcl_bn_dem_model( environment = io model_data = CORRESPONDING zcl_bn_dem_model=>tabl( proposed ) ).
     new_port->compare_delta( old_port ).
     DATA(expected) = CORRESPONDING zcl_bn_dem_model=>tabl( new_original->model_data ).
     DATA(actual) = new_port->model_data.
