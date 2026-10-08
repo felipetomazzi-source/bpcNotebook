@@ -1,0 +1,232 @@
+{
+  "steps": [
+    {
+      "id": "INITIALISE",
+      "title": "Load inputs",
+      "method": "initialise",
+      "order": 1,
+      "status": "retained-abap-not-ported",
+      "prerequisites": []
+    },
+    {
+      "id": "ENRICH_REVENUES",
+      "title": "Derive revenue dimensions",
+      "method": "assign_new_fields_rev",
+      "order": 2,
+      "status": "retained-abap-not-ported",
+      "prerequisites": [
+        "INITIALISE"
+      ]
+    },
+    {
+      "id": "CONSOLIDATE",
+      "title": "Consolidate revenues",
+      "method": "group",
+      "order": 3,
+      "status": "retained-abap-not-ported",
+      "prerequisites": [
+        "ENRICH_REVENUES"
+      ]
+    },
+    {
+      "id": "LOCATION_ALLOC_METHOD",
+      "title": "Calc location alloc method",
+      "method": "calc_location_alloc_method",
+      "order": 4,
+      "status": "retained-abap-not-ported",
+      "prerequisites": [
+        "CONSOLIDATE"
+      ]
+    },
+    {
+      "id": "LOCATION_ALLOC_RATIOS",
+      "title": "Calc location alloc ratios",
+      "method": "calc_location_alloc_ratios",
+      "order": 5,
+      "status": "retained-abap-not-ported",
+      "prerequisites": [
+        "LOCATION_ALLOC_METHOD"
+      ]
+    },
+    {
+      "id": "ALLOC_RSP_BILLED_DATA",
+      "title": "Calc alloc rsp billed data",
+      "method": "calc_alloc_rsp_billed_data",
+      "order": 6,
+      "status": "retained-abap-not-ported",
+      "prerequisites": [
+        "LOCATION_ALLOC_RATIOS"
+      ]
+    },
+    {
+      "id": "REMAINING_RSP_BILLING",
+      "title": "Calc remaining rsp billing",
+      "method": "calc_remaining_rsp_billing",
+      "order": 7,
+      "status": "retained-abap-not-ported",
+      "prerequisites": [
+        "ALLOC_RSP_BILLED_DATA"
+      ]
+    },
+    {
+      "id": "RSP_NOT_BILLED_LOCATION",
+      "title": "Calc rsp not billed location",
+      "method": "calc_rsp_not_billed_location",
+      "order": 8,
+      "status": "retained-abap-not-ported",
+      "prerequisites": [
+        "REMAINING_RSP_BILLING"
+      ]
+    },
+    {
+      "id": "FFLAS_GROUPING",
+      "title": "Calc fflas grouping",
+      "method": "calc_fflas_grouping",
+      "order": 9,
+      "status": "retained-abap-not-ported",
+      "prerequisites": [
+        "RSP_NOT_BILLED_LOCATION"
+      ]
+    },
+    {
+      "id": "PQ_ID_FFLAS_REVENUE",
+      "title": "Calc pq id fflas revenue",
+      "method": "calc_pq_id_fflas_revenue",
+      "order": 10,
+      "status": "retained-abap-not-ported",
+      "prerequisites": [
+        "FFLAS_GROUPING"
+      ]
+    },
+    {
+      "id": "PQ_FFLAS_RATIO",
+      "title": "Calc pq fflas ratio",
+      "method": "calc_pq_fflas_ratio",
+      "order": 11,
+      "status": "retained-abap-not-ported",
+      "prerequisites": [
+        "PQ_ID_FFLAS_REVENUE"
+      ]
+    },
+    {
+      "id": "SUPPLIER_ALLOC_METHOD",
+      "title": "Calc supplier alloc method",
+      "method": "calc_supplier_alloc_method",
+      "order": 12,
+      "status": "retained-abap-not-ported",
+      "prerequisites": [
+        "PQ_FFLAS_RATIO"
+      ]
+    },
+    {
+      "id": "SUPPLIER_ALLOC_RATIOS",
+      "title": "Calc supplier alloc ratios",
+      "method": "calc_supplier_alloc_ratios",
+      "order": 13,
+      "status": "retained-abap-not-ported",
+      "prerequisites": [
+        "SUPPLIER_ALLOC_METHOD"
+      ]
+    },
+    {
+      "id": "ALLOC_ID_REV_SUPPLIER",
+      "title": "Calc alloc id rev supplier",
+      "method": "calc_alloc_id_rev_supplier",
+      "order": 14,
+      "status": "retained-abap-not-ported",
+      "prerequisites": [
+        "SUPPLIER_ALLOC_RATIOS"
+      ]
+    },
+    {
+      "id": "PRICE_MATERIAL_LEVEL",
+      "title": "Calc price material level",
+      "method": "calc_price_material_level",
+      "order": 15,
+      "status": "retained-abap-not-ported",
+      "prerequisites": [
+        "ALLOC_ID_REV_SUPPLIER"
+      ]
+    },
+    {
+      "id": "HSNS_REV_ALLOC",
+      "title": "Calc hsns rev alloc",
+      "method": "calc_hsns_rev_alloc",
+      "order": 16,
+      "status": "retained-abap-not-ported",
+      "prerequisites": [
+        "PRICE_MATERIAL_LEVEL"
+      ]
+    },
+    {
+      "id": "FFLAS_RATIOS_BY_MATERIAL",
+      "title": "Calc fflas ratios by material",
+      "method": "calc_fflas_ratios_by_material",
+      "order": 17,
+      "status": "retained-abap-not-ported",
+      "prerequisites": [
+        "HSNS_REV_ALLOC"
+      ]
+    },
+    {
+      "id": "TRANSPOSE_REVENUES",
+      "title": "Transpose revenues",
+      "method": "transpose_revenues",
+      "order": 18,
+      "status": "retained-abap-not-ported",
+      "prerequisites": [
+        "FFLAS_RATIOS_BY_MATERIAL"
+      ]
+    },
+    {
+      "id": "TRANSPOSE_PRICES",
+      "title": "Transpose prices",
+      "method": "transpose_prices",
+      "order": 19,
+      "status": "retained-abap-not-ported",
+      "prerequisites": [
+        "TRANSPOSE_REVENUES"
+      ]
+    },
+    {
+      "id": "TRANSPOSE_CONNECTIONS",
+      "title": "Transpose connections",
+      "method": "transpose_connections",
+      "order": 20,
+      "status": "retained-abap-not-ported",
+      "prerequisites": [
+        "TRANSPOSE_PRICES"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "file": "src/zbpc_demrevid/zcl_bpc_demrevid_calc_003.clas.abap",
+      "sha256": "f6f631a7516b03d13f206bba91474d53667d56c894b30aa01dcde6fc97a8b2fa"
+    },
+    {
+      "file": "src/zbpc_demrevid/zcl_bpc_demrevid.clas.abap",
+      "sha256": "975194a42c32c4881f276be1c5e1773729e488ac33c4d9711c867dc95258ed81"
+    },
+    {
+      "file": "src/zcl_bpc_model.clas.abap",
+      "sha256": "288a8c645d650412da13d6cfd3d489a167e115e3d77d4ce2abc2d86d71011160"
+    },
+    {
+      "file": "src/zbpc_dimensions/zcl_bpc_dim_matconn.clas.abap",
+      "sha256": "056298d5f1447f4e8282b1bf0f3af72fac94eacbfe2fef6677354f449f7c31ca"
+    },
+    {
+      "file": "src/zbpc_dimensions/zcl_bpc_dim_product_type.clas.abap",
+      "sha256": "fd34f2ac9a259624d911944d19ec7f8be62bfe00d02f96d41a931e7f9fff8699"
+    },
+    {
+      "file": "src/zbpc_dimensions/zcl_bpc_dim_mat_group_id.clas.abap",
+      "sha256": "75ea0a43003084de947f187377909500a312a43bbbe296c8f72eca5455451d2d"
+    }
+  ],
+  "scriptReference": "5ba07f031060ab90dc8f5ba521880f246874a120",
+  "businessEquivalent": false,
+  "writes": false,
+  "handlerBound": false
+}

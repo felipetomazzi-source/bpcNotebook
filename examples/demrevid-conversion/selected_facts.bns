@@ -1,0 +1,13 @@
+model allocation = DEMREVID
+data facts = allocation where TIME = range("TIME") and CATEGORY = selection("CATEGORY") limit 100000
+show facts as "SELECTED_PERIOD_FACTS"
+let total = 0
+for row in facts
+  total = total + number(row.SIGNEDDATA)
+end
+table summary
+append summary key = "RAW_ROW_COUNT" amount = count(facts)
+append summary key = "RAW_SIGNEDDATA_TOTAL" amount = total
+emit summary
+show summary as "READ_COUNTS"
+message "Raw facts: TIME_NA and outside-scope lookback reads are not included"

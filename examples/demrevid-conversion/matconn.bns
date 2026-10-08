@@ -1,0 +1,4 @@
+dimension dim = DEMREVID-MATCONN
+members rows = dim
+show rows as "MATCONN_STORED_MEMBERS"
+message text(count(rows))
