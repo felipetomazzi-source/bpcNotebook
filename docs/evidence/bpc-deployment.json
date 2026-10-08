@@ -1,9 +1,9 @@
 {
-  "at": "2026-10-08T22:42:14.037Z",
+  "at": "2026-10-08T22:58:58.497Z",
   "repoId": "000000000008",
   "package": "ZBPC_NOTEBOOK",
   "transport": "NPLK900126",
-  "commit": "98728f0749897254946717082604d7be6b326906",
+  "commit": "e0bce7eec45d423b2948397ba6c63c4fdc4c8a0e",
   "method": "Full online abapGit repository serialization (refresh + get_files_local) after network pull, compared byte-for-byte with committed Git blobs",
   "files": [
     {
@@ -224,8 +224,8 @@
     },
     {
       "filename": "src/package.devc.xml",
-      "bytes": 418,
-      "sapSha256": "4d7487f8c685585523f3daae10c20299061c3d058da0731c601664627f9e53ba",
+      "bytes": 447,
+      "sapSha256": "c98b69bdc72de20fe668a80d9b0208bb76187fc322bf0932378af6105e1d4ba4",
       "equal": true
     },
     {

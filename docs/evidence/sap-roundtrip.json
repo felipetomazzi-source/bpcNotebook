@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-08T22:36:52.383Z",
+  "at": "2026-10-08T22:58:37.356Z",
   "method": "abapGit object deserializers and serializers through ADT classrun",
   "objectPackage": "ZBPC_NOTEBOOK",
   "packageMetadataTarget": "ZBPC_NOTEBOOK",
@@ -14,9 +14,9 @@
     },
     {
       "filename": "package.devc.xml",
-      "gitBlob": "0947bcbf142b27a50502d40aadaefc653e82ca8a",
-      "sapSha256": "4d7487f8c685585523f3daae10c20299061c3d058da0731c601664627f9e53ba",
-      "bytes": 418,
+      "gitBlob": "9fb08fa512b5b6fe5e0c246810b87e8603eeb34e",
+      "sapSha256": "c98b69bdc72de20fe668a80d9b0208bb76187fc322bf0932378af6105e1d4ba4",
+      "bytes": 447,
       "equal": true
     },
     {
@@ -425,8 +425,8 @@
     "BNIMPORTED|CLAS|ZCX_BN",
     "BNIMPORTED|CLAS|ZCX_BN_ENGINE",
     "BNLOGI|> Mass activating 6 DDIC objects",
-    "BNLOGI|Log name: ABAPGIT_20261009_113711",
-    "BNLOGI|> Activating 10 objects "
+    "BNLOGI|Log name: ABAPGIT_20261009_115850",
+    "BNLOGI|> Activating 9 objects "
   ],
   "passed": true,
   "missing": []
