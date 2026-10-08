@@ -1,9 +1,9 @@
 {
-  "at": "2026-10-08T19:52:13.507Z",
+  "at": "2026-10-08T22:42:14.037Z",
   "repoId": "000000000008",
   "package": "ZBPC_NOTEBOOK",
   "transport": "NPLK900126",
-  "commit": "1e4e9c26c791ca37983177f8b6d37e0f637be85b",
+  "commit": "98728f0749897254946717082604d7be6b326906",
   "method": "Full online abapGit repository serialization (refresh + get_files_local) after network pull, compared byte-for-byte with committed Git blobs",
   "files": [
     {
@@ -146,8 +146,8 @@
     },
     {
       "filename": "src/zcl_bn_service.clas.abap",
-      "bytes": 54748,
-      "sapSha256": "ce278f706121276b5860266b7442dc641d150916cc561449a43e666dcfacceb9",
+      "bytes": 54805,
+      "sapSha256": "d8a9772daf59dc69a19b38beba7ef4eeb9ac09111475d228aa9bd728c74b51b2",
       "equal": true
     },
     {
@@ -224,8 +224,8 @@
     },
     {
       "filename": "src/package.devc.xml",
-      "bytes": 337,
-      "sapSha256": "e6da46f804899887d291a41770622a6156ccaa35cc8e2d8bd5ac3aaf338c2c74",
+      "bytes": 418,
+      "sapSha256": "4d7487f8c685585523f3daae10c20299061c3d058da0731c601664627f9e53ba",
       "equal": true
     },
     {
@@ -290,8 +290,8 @@
     },
     {
       "filename": "src/zbpc_notebook.wapa.component.js",
-      "bytes": 361522,
-      "sapSha256": "94be5a609978e9b268c8af61f0a1a10561b7f56b1418b30bd9e8685e312e419a",
+      "bytes": 384051,
+      "sapSha256": "0245d2ceab344b84ffb1994872db15a5a2385638052f040cabf030716d6c334e",
       "equal": true
     },
     {
@@ -302,26 +302,26 @@
     },
     {
       "filename": "src/zbpc_notebook.wapa.css_-style.css",
-      "bytes": 4351,
-      "sapSha256": "7c9c1595cb47921fc0eba84f814ab4155055c818f752483d51598e3d24a6770c",
+      "bytes": 4095,
+      "sapSha256": "091d87726741b1aab1f0d6d9747ae99c2059142b30223b6e1fdc8e13aa6bd063",
       "equal": true
     },
     {
       "filename": "src/zbpc_notebook.wapa.index.html",
-      "bytes": 6143,
-      "sapSha256": "e29d3c5287bf85b41be42e4cc6b3a1cc02ea1ea4e904f73fd65eda6e5223c653",
+      "bytes": 6399,
+      "sapSha256": "9ef7c6d75bd39831989aec532fde68b474025cb5938db7ff20c336644c0c6484",
       "equal": true
     },
     {
       "filename": "src/zbpc_notebook.wapa.manifest.json",
-      "bytes": 3839,
-      "sapSha256": "f36f3f51b9ac20b7d378a076a3e53fd223899b470d22193f1a13e5da0c168ee7",
+      "bytes": 4095,
+      "sapSha256": "d8d6351fd9b5c7095675524a7a8d70ab7d9c4b1cb68767ae4d368765d4d52ec4",
       "equal": true
     },
     {
       "filename": "src/zbpc_notebook.wapa.model_-api.js",
-      "bytes": 18175,
-      "sapSha256": "6cbae8392b6ae52a2e6ca26a7e5bc5114aee855ff3867fce5b2a6acbe0ac0bba",
+      "bytes": 18431,
+      "sapSha256": "cf85657e5741e6a9c5ceb666e8161456b63e67a64bb8299bbae8c79252952f49",
       "equal": true
     },
     {
