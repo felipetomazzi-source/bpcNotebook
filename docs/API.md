@@ -27,3 +27,5 @@ Output revision is immutable 1 in this milestone; reruns get different IDs. Sour
 Idempotency keys bind user/client and request checksum. Repeats return the original run; changed requests with the same key return 409. Concurrent first SAP submissions may return a CAS conflict: repeat the identical key after the first resolves. Snapshots/reservations commit before job release. There are no automatic calculation retries.
 
 States: queued → running → succeeded/failed/cancelled. SAP ten-minute submission deadline/cancellation is checked between cells; local deadline is 60 seconds. Native polling reconciles termination and expiry. Mid-cell preemption requires SM37/operator intervention. Syntax diagnostics include source/generated lines, word and message; run diagnostics also identify cell. Production approved-release execution and live BPC writes are unavailable.
+
+Notebook Script cells use the same ABAP source field and immutable source history. The source contains the versioned authored-script comment envelope and generated ABAP. SAP syntax-checks script cells before accepting a save. See [Notebook Script](notebook-script.md).

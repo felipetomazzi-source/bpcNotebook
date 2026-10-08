@@ -158,6 +158,26 @@ CLASS zcl_bn_service IMPLEMENTATION.
     notebook-environment = request-environment. notebook-model = request-model.
     notebook-inputs = zcl_bn_types=>normalize_inputs( request-inputs ).
     check_definition( notebook ).
+    " Script saves must pass the native compiler before any immutable rows are written.
+    LOOP AT notebook-cells INTO DATA(script_cell).
+      FIND REGEX '^\* BPC Notebook Script v1' IN script_cell-source.
+      IF sy-subrc <> 0. CONTINUE. ENDIF.
+      zcl_bn_compiler=>compile( EXPORTING source = script_cell-source
+        IMPORTING pool = DATA(script_pool) diagnostics = DATA(script_diagnostics) ).
+      IF script_diagnostics IS NOT INITIAL.
+        DATA(script_diagnostic) = script_diagnostics[ 1 ].
+        DATA script_body TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
+        DATA script_number TYPE string.
+        DATA(script_origin) = 1.
+        SPLIT script_cell-source AT cl_abap_char_utilities=>newline INTO TABLE script_body.
+        LOOP AT script_body INTO DATA(script_line) FROM 1 TO script_diagnostic-line.
+          FIND REGEX '^\* @bn-line ([0-9]+)$' IN script_line SUBMATCHES script_number.
+          IF sy-subrc = 0. script_origin = CONV i( script_number ). ENDIF.
+        ENDLOOP.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'SCRIPT_ABAP'
+          detail = |Cell { script_cell-id }, script line { script_origin }: { script_diagnostic-message }|.
+      ENDIF.
+    ENDLOOP.
     zcl_bn_bpc=>resolve( CHANGING notebook = notebook ).
     DATA previous TYPE zcl_bn_types=>ty_notebook.
     IF request-expected_revision > 0.

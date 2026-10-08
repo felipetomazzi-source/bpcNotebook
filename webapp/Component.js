@@ -5,9 +5,11 @@ sap.ui.define(
     "sap/m/MessageBox",
     "sap/m/MessageToast",
     "sap/ui/codeeditor/CodeEditor",
+    "sap/ui/codeeditor/js/ace/ace",
     "bpc/notebook/model/Api",
+    "bpc/notebook/model/Script",
   ],
-  function (UIComponent, library, MessageBox, MessageToast, CodeEditor, Api) {
+  function (UIComponent, library, MessageBox, MessageToast, CodeEditor, Ace, Api, Script) {
     "use strict";
     var m = sap.m;
     function displayTime(value) {
@@ -169,6 +171,7 @@ sap.ui.define(
                 self.addCell();
               },
             }),
+            new m.Button({text:"Add script cell",icon:"sap-icon://add",press:function () { self.addCell(true); }}),
             new m.Button({
               text: "Inputs",
               press: function () {
@@ -283,7 +286,7 @@ sap.ui.define(
         function create(data) { return Api.request("/notebooks", "POST", data)
           .then(function (n) {
             self.resetReview();
-            self.notebook = n;
+            self.notebook = n; self.scriptNotebook = null;
             self.renderNotebook();
             self.refresh();
           })
@@ -301,7 +304,7 @@ sap.ui.define(
         Api.request("/notebook?id=" + encodeURIComponent(id))
           .then(function (n) {
             self.resetReview();
-            self.notebook = n;
+            self.notebook = n; self.scriptNotebook = null;
             self.runId = null;
             self.renderNotebook();
             self.loadRuns();
@@ -338,6 +341,7 @@ sap.ui.define(
       renderNotebook: function () {
         var self = this,
           n = this.notebook;
+        if (this.scriptNotebook !== n.id) { this.scriptDrafts = {}; this.scriptNotebook = n.id; }
         this.dirty = false;
         this.title.setText(n.title);
         this.meta.setText(
@@ -367,7 +371,7 @@ sap.ui.define(
             }),
           );
         });
-        this.cells.removeAllItems();
+        this.cells.destroyItems();
         n.cells.forEach(function (c, index) {
           var state = new m.ObjectStatus({
             text: c.output
@@ -377,15 +381,25 @@ sap.ui.define(
               : "Not executed",
             state: c.output ? (c.output.stale ? "Warning" : "Success") : "None",
           }).addStyleClass("cellStatus");
+          var draft = self.scriptDrafts[c.id] || Script.unpack(c.source);
+          self.scriptDrafts[c.id] = draft;
+          var scriptStatus = new m.ObjectStatus({visible:draft.language === "script",text:"Notebook Script · generates ABAP on save"});
+          if (draft.error) { scriptStatus.setText(draft.error.message); scriptStatus.setState("Error"); }
           var editor = new CodeEditor({
-            width:"100%", height:"20rem", type:"abap", lineNumbers:true,
+            width:"100%", height:"20rem", type:draft.language === "script" ? "text" : "abap", lineNumbers:true,
             liveChange:function(e) {
               var value = e.getParameter("value");
-              if (value === c.source) { return; }
-              c.source = value; self.activeCell = c.id; self.mark();
+              if (value.replace(/\r\n|\r/g,"\n") === draft.text.replace(/\r\n|\r/g,"\n")) { return; }
+              draft.text = value;
+              if (draft.language === "script") {
+                try { c.source = Script.compile(value); draft.error = null; scriptStatus.setText("Script ready · generates ABAP on save"); scriptStatus.setState("Success"); }
+                catch (error) { draft.error = error; scriptStatus.setText(error.message); scriptStatus.setState("Error"); }
+              } else { c.source = value; }
+              self.activeCell = c.id; self.mark();
             }
-          }).setValue(c.source);
+          }).setValue(draft.text);
           editor.addEventDelegate({onfocusin:function () { self.activeCell = c.id; }});
+          if (draft.language === "script") { editor.addEventDelegate({onAfterRendering:function () { self.configureScriptEditor(editor,draft); }}); }
           var box = new m.Panel({
             content: [
               new m.OverflowToolbar({
@@ -427,6 +441,7 @@ sap.ui.define(
                 "cellMeta",
               ),
               editor,
+              scriptStatus,
               new m.HBox({
                 alignItems: "Center",
                 wrap: "Wrap",
@@ -448,7 +463,11 @@ sap.ui.define(
                       self.mark();
                     },
                   }),
-                  new m.Button({text:"BPC code",icon:"sap-icon://source-code",press:function () { self.codeAssistant(c.id); }}),
+                  new m.Button({text:draft.language === "script" ? "Script help" : "BPC code",icon:"sap-icon://source-code",
+                    press:function () { if (draft.language === "script") { self.scriptHelp(c.id); } else { self.codeAssistant(c.id); } }}),
+                  new m.Button({text:"Generated ABAP",visible:draft.language === "script",press:function () {
+                    try { self.showGenerated(Script.compile(draft.text)); } catch (error) { self.error(error); }
+                  }}),
                   new m.Button({
                     text: "Validate",
                     press: function () {
@@ -482,11 +501,17 @@ sap.ui.define(
         if (!this.notebook) {
           return Promise.resolve();
         }
+        try {
+          this.notebook.cells.forEach(function (cell) {
+            var draft = self.scriptDrafts[cell.id];
+            if (draft && draft.language === "script") { cell.source = Script.compile(draft.text); }
+          });
+        } catch (error) { this.error(error); return Promise.resolve(); }
         var payload = JSON.parse(JSON.stringify(this.notebook));
         payload.expectedRevision = payload.revision;
         return Api.request("/notebook", "PUT", payload)
           .then(function (n) {
-            self.notebook = n;
+            self.notebook = n; self.scriptNotebook = null;
             self.renderNotebook();
             self.refresh();
             MessageToast.show("Immutable version saved");
@@ -496,20 +521,126 @@ sap.ui.define(
             throw e;
           });
       },
-      addCell: function () {
+      addCell: function (script) {
         if (!this.notebook) {
           return;
         }
         var n = this.notebook;
         n.cells.push({
           id: "cell_" + Date.now(),
-          title: "New ABAP cell",
-          source: "io->message( 'New cell' ).",
+          title: script ? "New Notebook Script cell" : "New ABAP cell",
+          source: script ? Script.compile('message "New script cell"') : "io->message( 'New cell' ).",
           dependencies: [],
           sourceVersion: 0,
         });
         this.renderNotebook();
         this.mark();
+      },
+      showGenerated: function (source) {
+        var dialog = new m.Dialog({title:"Generated ABAP · saved execution source",contentWidth:"70rem",
+          content:[new CodeEditor({type:"abap",lineNumbers:true,editable:false,width:"100%",height:"32rem"}).setValue(source)],
+          endButton:new m.Button({text:"Close",press:function () { dialog.close(); }}),afterClose:function () { dialog.destroy(); }});
+        dialog.open();
+      },
+      scriptHelp: function (cellId) {
+        var self = this, model = this.notebook.model || "MODEL";
+        var sample = "# Ctrl+Space opens suggestions; MODEL- offers dimensions\n" +
+          "dimension materials = " + model + "-DIMENSION\n" +
+          "members memberRows = materials\nshow memberRows as \"MEMBERS\"\n" +
+          "model plan = " + model + "\n" +
+          "data facts = plan where TIME = range(\"TIME\") limit 10000\n" +
+          "let factor = number(input(\"factor\"))\nfor row in facts\n" +
+          "  row.SIGNEDDATA = row.SIGNEDDATA * factor\nend\nshow facts as \"FACTS\"\n" +
+          "# Stored property: let label = materials-EVDESCRIPTION(\"MEMBER_ID\")";
+        var area = new CodeEditor({type:"text",lineNumbers:true,width:"100%",height:"26rem"}).setValue(sample);
+        var dialog = new m.Dialog({title:"Notebook Script · examples",contentWidth:"65rem",content:[
+          new m.MessageStrip({text:"Replace DIMENSION and parameter names with your notebook's definitions. Reads use frozen selections and backend authorization.",type:"Information"}),
+          area],beginButton:new m.Button({text:"Append example",press:function () {
+            var box = self.cells.getItems().filter(function (b) { return b.data("cellId") === cellId; })[0];
+            var editor = box.data("editor"); editor.setValue(editor.getCurrentValue() + "\n" + area.getCurrentValue()); dialog.close();
+          }}),endButton:new m.Button({text:"Close",press:function () { dialog.close(); }}),afterClose:function () { dialog.destroy(); }});
+        dialog.open();
+      },
+      scriptMetadata: function (kind, model, dimension) {
+        var n = this.notebook, key = [n.environment,model,kind,dimension || ""].join("/");
+        this.scriptMetadataCache = this.scriptMetadataCache || {};
+        if (this.scriptMetadataCache[key]) { return this.scriptMetadataCache[key]; }
+        if (!n.environment) { return Promise.resolve([]); }
+        var all = [], cache = this.scriptMetadataCache;
+        function load(offset) {
+          return Api.request("/metadata","POST",{kind:kind,environment:n.environment,model:model,dimension:dimension || "",offset:offset})
+            .then(function (data) {
+              if (data.more && !data.items.length) { throw new Error("Metadata paging made no progress"); }
+              all = all.concat(data.items); return data.more ? load(offset + data.items.length) : all;
+            });
+        }
+        cache[key] = load(0).catch(function (error) { delete cache[key]; throw error; }); return cache[key];
+      },
+      scriptSuggestions: function (text, prefix) {
+        var n = this.notebook;
+        var names = prefix.split("-"), model = names[0], dimension;
+        function choices(items, base, kind) {
+          return items.map(function (item) { return {caption:base + item.id + (item.description ? " · " + item.description : ""),
+            value:base + item.id,meta:kind,score:1000}; });
+        }
+        if (names.length > 1) {
+          // Aliases are resolved from the authored declaration, never from hardcoded dimension lists.
+          var pattern = new RegExp("^\\s*dimension\\s+" + model + "\\s*=\\s*([A-Za-z_][A-Za-z0-9_]*)(?:-([A-Za-z_][A-Za-z0-9_]*))?\\s*(?:#.*)?$","m");
+          var alias = text.match(pattern);
+          var modelAlias = text.match(new RegExp("^\\s*model\\s+" + model + "\\s*=\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*(?:#.*)?$","m"));
+          if (alias) { model = alias[2] ? alias[1] : n.model; dimension = alias[2] || alias[1]; }
+          else if (modelAlias) { model = modelAlias[1]; if (names.length > 2) { dimension = names[1]; } }
+          else if (names.length > 2) { dimension = names[1]; }
+          var contextAlias = text.match(new RegExp("^\\s*model\\s+" + model + "\\s*=\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*(?:#.*)?$","m"));
+          if (contextAlias) { model = contextAlias[1]; }
+          if (dimension) {
+            var base = alias ? names[0] + "-" : names[0] + "-" + dimension + "-";
+            return this.scriptMetadata("properties",model,dimension).then(function (items) { return choices(items,base,"property"); });
+          }
+          return this.scriptMetadata("dimensions",model).then(function (items) { return choices(items,names[0] + "-","dimension"); });
+        }
+        var words = ["dimension","members","model","data","where","limit","let","for","in","if","else","end","show","as",
+          "table","append","key","amount","read","emit","message","input","member","range","selection","number","text","count","concat","true","false"];
+        var result = words.map(function (word) { return {caption:word,value:word,meta:"script",score:50}; });
+        return this.scriptMetadata("models","").then(function (items) { return result.concat(choices(items,"","model")); });
+      },
+      configureScriptEditor: function (control, draft) {
+        // UI5 exposes the Ace instance for editor extensions. Keep that dependency isolated here.
+        // Completion needs cursor/session access beyond CodeEditor's global custom-completer interface.
+        if (!control.getInternalEditorInstance) { return; }
+        var self = this, editor = control.getInternalEditorInstance();
+        var Mode = Ace.require("ace/mode/text").Mode, Tokenizer = Ace.require("ace/tokenizer").Tokenizer;
+        var mode = new Mode();
+        mode.$tokenizer = new Tokenizer({start:[
+          {token:"comment",regex:"#.*$"},
+          {token:"string",regex:'"(?:[^"\\\\]|\\\\.)*"'},
+          {token:"constant.numeric",regex:"\\b[0-9]+(?:\\.[0-9]+)?\\b"},
+          {token:"keyword",regex:"\\b(?:dimension|members|model|data|where|limit|let|for|in|if|else|end|show|as|table|append|key|amount|read|emit|message|and|or|not)\\b"},
+          {token:"support.function",regex:"\\b(?:input|member|range|selection|number|text|count|concat)\\b"},
+          {token:"constant.language",regex:"\\b(?:true|false)\\b"},
+          {token:"support.type",regex:"\\b[A-Z][A-Z0-9_]*(?:-[A-Z][A-Z0-9_]*)*\\b"}
+        ]});
+        editor.session.setMode(mode);
+        editor.setOptions({enableBasicAutocompletion:true,enableLiveAutocompletion:false});
+        editor.completers = [{identifierRegexps:[/[A-Za-z0-9_\-]/],
+          getCompletions:function (active, session, position, prefix, callback) {
+            var match = session.getLine(position.row).slice(0,position.column).match(/[A-Za-z_][A-Za-z0-9_-]*$/);
+            prefix = match ? match[0] : "";
+            self.scriptSuggestions(session.getValue(),prefix).then(function (items) {
+              if (!control.bIsDestroyed && active === editor) { callback(null,items); }
+              else { callback(null,[]); }
+            }).catch(function () { callback(null,[]); });
+          }}];
+        if (!control.data("scriptCompletionInstalled")) {
+          control.data("scriptCompletionInstalled",true);
+          editor.on("change",function (delta) {
+            if (delta.action === "insert" && delta.lines.length === 1 && delta.lines[0] === "-") {
+              setTimeout(function () {
+                if (!control.bIsDestroyed && editor.isFocused()) { editor.execCommand("startAutocomplete"); }
+              },0);
+            }
+          });
+        }
       },
       codeAssistant: function (cellId) {
         var self = this, n = this.notebook;
@@ -519,6 +650,7 @@ sap.ui.define(
         var cell = n.cells.filter(function(c) { return c.id === cellId; })[0];
         if (!cell) { cell = n.cells[0]; cellId = cell.id; }
         this.activeCell = cellId;
+        if (this.scriptDrafts[cellId] && this.scriptDrafts[cellId].language === "script") { this.scriptHelp(cellId); return; }
         var chosen = {model:n.model,dimension:"",property:"",member:"",field:""};
         var modelText = new m.Text({text:n.environment + " / " + n.model}).addStyleClass("sapUiTinyMarginEnd");
         var dimensionText = new m.Text({text:"Choose a dimension"}).addStyleClass("sapUiTinyMarginEnd");
@@ -640,6 +772,7 @@ sap.ui.define(
       },
       insertCode: function (cellId, snippet) {
         var cell = this.notebook.cells.filter(function(c) { return c.id === cellId; })[0];
+        if (this.scriptDrafts[cellId] && this.scriptDrafts[cellId].language === "script") { this.scriptHelp(cellId); return; }
         if (!cell) { MessageBox.warning("The cell is no longer available."); return; }
         cell.source += (cell.source && !/\n$/.test(cell.source) ? "\n" : "") + snippet + "\n";
         this.cells.getItems().forEach(function(box) {
@@ -819,7 +952,8 @@ sap.ui.define(
               result.diagnostics.length
                 ? result.diagnostics
                     .map(function (d) {
-                      return "Line " + d.line + ": " + d.message;
+                      var cell = self.notebook.cells.filter(function(c) { return c.id === id; })[0];
+                      return "Line " + Script.sourceLine(cell.source,d.line) + ": " + d.message;
                     })
                     .join("\n")
                 : result.native
@@ -971,7 +1105,7 @@ sap.ui.define(
                   if (!self.notebook || self.notebook.id !== n.id || self.dirty) {
                     return;
                   }
-                  self.notebook = n;
+                  self.notebook = n; self.scriptNotebook = null;
                   self.renderNotebook();
                 });
               }

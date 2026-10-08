@@ -1,0 +1,72 @@
+{
+  "at": "2026-10-08T11:00:33.715611+00:00",
+  "passed": true,
+  "notebookId": "E82AEA36D1571FD1B0E0A54AE4C24538",
+  "runId": "E82AEA36D1571FD1B0E0A5F66A514538",
+  "checks": [
+    "SAP native compilation of all three scripts",
+    "arithmetic/loop/condition outputs 66000,39600,26400",
+    "authorized dimension/property and model adapters",
+    "frozen TIME selections",
+    "exact Unicode and whitespace author-source reopen",
+    "live model-dimension and dimension-property completion",
+    "native compilation of model aliases, modulo, boolean logic and escaped/long text",
+    "browser save, generated ABAP preview, and invalid-script save blocked before HTTP PUT",
+    "old frozen script source unchanged after browser save",
+    "SAP save rejects invalid generated ABAP before any persisted cell/revision changes",
+    "four-script background execution including aliases, modulo, boolean logic and concatenation",
+    "live DEMREV- completion reads actual model dimensions"
+  ],
+  "output": {
+    "runId": "E82AEA36D1571FD1B0E0A5F66A514538",
+    "cellId": "script0",
+    "revision": 1,
+    "total": 3,
+    "sourceTotal": 3,
+    "offset": 0,
+    "limit": 20,
+    "truncated": false,
+    "tableName": "ALLOCATION",
+    "tables": [
+      {
+        "name": "ALLOCATION",
+        "rowCount": 3,
+        "totalCount": 3,
+        "truncated": false,
+        "elapsedUs": 0
+      }
+    ],
+    "schema": [
+      {
+        "name": "key",
+        "type": "string"
+      },
+      {
+        "name": "amount",
+        "type": "decimal"
+      }
+    ],
+    "rows": [
+      {
+        "values": [
+          "CC100",
+          "66000"
+        ]
+      },
+      {
+        "values": [
+          "CC200",
+          "39600"
+        ]
+      },
+      {
+        "values": [
+          "CC300",
+          "26400"
+        ]
+      }
+    ]
+  },
+  "savedRevision": 5,
+  "finalRunId": "E82AEA36D1571FD1B0E0E058AE1C4570"
+}
