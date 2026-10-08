@@ -59,4 +59,6 @@ node tools/check-bpc-selections.cjs --environment=<ID> --model=<ID> --category=<
 
 This check creates a notebook and runs calculation-only example cells. It uses configured ADT credentials without printing them. The local Node simulation deliberately returns `SAP_REQUIRED` for member inputs and metadata: it cannot verify actual BPC authorization or supply production choices. Primitive notebooks remain available locally.
 
+The full online repository check, including package membership and `.abapgit.xml`, is recorded in `docs/evidence/bpc-deployment.json`. After pulling the intended commit in SAP, run `node tools/verify-sap-repository.cjs --repo-id=<SAP repository key> --package=ZBPC_NOTEBOOK` to compare every serialized repository file with committed Git blobs. This caught and corrected an existing BSP/API service assignment to `$TMP` that individual object exports could not detect. All 41 files now belong to the online repository and match.
+
 SAP serialization evidence remains in `docs/evidence/sap-roundtrip.json`; the comparison covers all native object metadata, ABAP sources/test includes, BSP bodies and UI5 mappings, including UTF-8/BOM/whitespace conventions.

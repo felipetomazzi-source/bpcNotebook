@@ -33,3 +33,5 @@ This verifies actual SAP import/serialization against Git; it does not claim a n
 ## Deployment follow-up
 
 At the user’s request, code was pushed to main and pulled through SAP abapGit using transport NPLK900126. A second SICF object for the SAP UI5 launch URL is now included. The newest machine-readable comparison imports all 41 files against package ZBPC_NOTEBOOK; every file passes. Browser testing on installed SAP UI5 found and fixed its unsupported ObjectStatus Information value state and the empty native error structure. DEVELOPER is enabled in DEV client 001. The real background allocation succeeded and returned CC100 = 66,000. Earlier paragraphs describe the initial local-package verification; this follow-up supersedes its deployment limitations.
+
+The BPC selector deployment additionally passed a full online repository serialization after the network pull: **41/41 files match committed Git blobs**, with no missing package objects. See [deployment evidence](bpc-deployment.json). The test caught and corrected old `$TMP` assignments for WAPA and the notebook API SICF object using SAP's TADIR/CTS APIs and the existing transport.
