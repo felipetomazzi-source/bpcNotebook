@@ -1,0 +1,143 @@
+html,
+body,
+#content {
+  height: 100%;
+  margin: 0;
+}
+.topbar.sapMTB {
+  height: 64px;
+  padding: 0 28px;
+  background: #102b40;
+  border: 0;
+}
+.topbar .sapMTitle,
+.topbar .sapMText {
+  color: #fff;
+}
+.topbar .sapMText {
+  margin-left: 22px;
+  color: #adc7d7;
+  font-size: 11px;
+  letter-spacing: 2px;
+}
+.workspace {
+  min-height: calc(100vh - 104px);
+  background: #f3f5f7;
+  align-items: stretch;
+}
+.sidebar {
+  padding: 28px 18px;
+  background: #fff;
+  border-right: 1px solid #dfe5e9;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+.sidebar .sapMTitle {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #617886;
+}
+.sideTitle {
+  display: block;
+  font-size: 20px;
+  margin: 18px 0;
+  color: #183e52;
+}
+.sideNote {
+  display: block;
+  margin-top: 32px;
+  line-height: 1.6;
+  color: #718390;
+}
+.notebookList {
+  margin-top: 24px;
+}
+.main {
+  padding: 30px 36px;
+  box-sizing: border-box;
+  max-width: 1300px;
+}
+.main > .sapMTitle {
+  color: #17384d;
+  font-size: 27px;
+  margin-bottom: 8px;
+}
+.main > .sapMText {
+  color: #6c8090;
+  margin-bottom: 20px;
+}
+.main > .sapMTB {
+  background: transparent;
+  padding: 0;
+  border-bottom: 1px solid #d4dee5;
+}
+.inputs {
+  gap: 20px;
+  padding: 22px 0;
+}
+.inputs .sapMLabel {
+  color: #587182;
+  font-size: 12px;
+}
+.cell {
+  margin-bottom: 20px;
+  background: #fff;
+  border: 1px solid #dae2e7;
+  border-left: 3px solid #287da5;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.cell > .sapMTB {
+  background: #fafdff;
+  padding: 6px 16px;
+  height: 48px;
+}
+.cellMeta {
+  padding: 10px 18px 3px;
+  color: #718693;
+  font-size: 11px;
+}
+.code {
+  padding: 0 12px;
+  box-sizing: border-box;
+}
+.code textarea {
+  font-family: Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.65;
+  background: #fbfcfd;
+  border: 0;
+  color: #24465b;
+  padding: 14px;
+}
+.cellActions {
+  padding: 10px 16px;
+  gap: 10px;
+  border-top: 1px solid #edf1f4;
+}
+.cellActions .sapMLabel {
+  font-size: 11px;
+  color: #6d8492;
+}
+.results {
+  padding: 22px;
+  border: 1px solid #dce4e9;
+  background: #fff;
+  border-radius: 4px;
+  margin-top: 12px;
+  gap: 12px;
+}
+.results .sapMTitle {
+  color: #254a60;
+}
+@media (max-width: 900px) {
+  .workspace {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100% !important;
+  }
+  .main {
+    padding: 20px;
+  }
+}

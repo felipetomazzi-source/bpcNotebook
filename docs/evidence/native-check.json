@@ -1,0 +1,79 @@
+{
+  "at": "2026-10-08T06:50:35.684Z",
+  "package": "$TMP",
+  "tables": [
+    {
+      "name": "zbn_head",
+      "result": {
+        "messages": [],
+        "success": true,
+        "inactive": []
+      }
+    },
+    {
+      "name": "zbn_doc",
+      "result": {
+        "messages": [],
+        "success": true,
+        "inactive": []
+      }
+    },
+    {
+      "name": "zbn_src",
+      "result": {
+        "messages": [],
+        "success": true,
+        "inactive": []
+      }
+    }
+  ],
+  "activation": {
+    "messages": [],
+    "success": true,
+    "inactive": []
+  },
+  "tests": [
+    {
+      "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_compiler/includes/testclasses#type=CLAS%2FOCL;name=LTCL_COMPILER",
+      "adtcore:type": "CLAS/OL",
+      "adtcore:name": "LTCL_COMPILER",
+      "uriType": "semantic",
+      "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_compiler/includes/testclasses#type=CLAS%2FOCL;name=LTCL_COMPILER",
+      "durationCategory": "short",
+      "riskLevel": "harmless",
+      "alerts": [],
+      "testmethods": [
+        {
+          "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_compiler/includes/testclasses#type=CLAS%2FOLD;name=LTCL_COMPILER%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20SYNTAX_LINE_MAPPING",
+          "adtcore:type": "CLAS/OLI",
+          "adtcore:name": "SYNTAX_LINE_MAPPING",
+          "executionTime": 0,
+          "uriType": "semantic",
+          "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_compiler/includes/testclasses#type=CLAS%2FOLD;name=LTCL_COMPILER%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20SYNTAX_LINE_MAPPING",
+          "unit": "s",
+          "alerts": []
+        },
+        {
+          "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_compiler/includes/testclasses#type=CLAS%2FOLD;name=LTCL_COMPILER%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20TYPED_JSON_INPUTS",
+          "adtcore:type": "CLAS/OLI",
+          "adtcore:name": "TYPED_JSON_INPUTS",
+          "executionTime": 0,
+          "uriType": "semantic",
+          "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_compiler/includes/testclasses#type=CLAS%2FOLD;name=LTCL_COMPILER%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20TYPED_JSON_INPUTS",
+          "unit": "s",
+          "alerts": []
+        },
+        {
+          "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_compiler/includes/testclasses#type=CLAS%2FOLD;name=LTCL_COMPILER%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20WRAPPER_AND_OUTPUT",
+          "adtcore:type": "CLAS/OLI",
+          "adtcore:name": "WRAPPER_AND_OUTPUT",
+          "executionTime": 0.01,
+          "uriType": "semantic",
+          "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_compiler/includes/testclasses#type=CLAS%2FOLD;name=LTCL_COMPILER%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20WRAPPER_AND_OUTPUT",
+          "unit": "s",
+          "alerts": []
+        }
+      ]
+    }
+  ]
+}

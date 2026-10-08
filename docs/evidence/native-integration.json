@@ -1,0 +1,26 @@
+{
+  "at": "2026-10-08T06:49:03.463Z",
+  "result": [
+    {
+      "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_service/includes/testclasses#type=CLAS%2FOCL;name=LTCL_INTEGRATION",
+      "adtcore:type": "CLAS/OL",
+      "adtcore:name": "LTCL_INTEGRATION",
+      "uriType": "semantic",
+      "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_service/includes/testclasses#type=CLAS%2FOCL;name=LTCL_INTEGRATION",
+      "durationCategory": "long",
+      "riskLevel": "dangerous",
+      "alerts": [
+        {
+          "kind": "warning",
+          "severity": "tolerable",
+          "details": [
+            "You can find further informations in document <CHAP> <SAUNIT_TEST_PROPS>"
+          ],
+          "stack": [],
+          "title": "No execution, risk level of test class exceeds upper limit"
+        }
+      ],
+      "testmethods": []
+    }
+  ]
+}

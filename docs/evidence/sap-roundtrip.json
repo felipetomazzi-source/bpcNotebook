@@ -1,0 +1,291 @@
+{
+  "at": "2026-10-08T07:08:26.530Z",
+  "method": "abapGit object deserializers and serializers through ADT classrun",
+  "objectPackage": "$TMP",
+  "packageMetadataTarget": "$BN_ROUNDTRIP",
+  "gitComparison": "Git clean-filter blobs (not the index or HEAD)",
+  "files": [
+    {
+      "filename": ".abapgit.xml",
+      "gitBlob": "9bb224b37e801549a25dd01c58b0954858aec1b7",
+      "sapSha256": "30ed533fd2fe8c42375e4943710cc2d52cd57360d29e7c10b5b9a7650e1ddac6",
+      "bytes": 287,
+      "equal": true
+    },
+    {
+      "filename": "package.devc.xml",
+      "gitBlob": "813a78a6dae1e43d56b23827bb2d6a4a030f9bd1",
+      "sapSha256": "e6da46f804899887d291a41770622a6156ccaa35cc8e2d8bd5ac3aaf338c2c74",
+      "bytes": 337,
+      "equal": true
+    },
+    {
+      "filename": "zbn_doc.tabl.xml",
+      "gitBlob": "35dd1170c834b538f878207587641418636291ad",
+      "sapSha256": "c3694221b7881e394f6c7c6ff42e17585c60aa8f85785d48cb2df3133790ef7d",
+      "bytes": 2637,
+      "equal": true
+    },
+    {
+      "filename": "zbn_head.tabl.xml",
+      "gitBlob": "fb4a57936d9d8d73cffe9b981e74ae790bc82d14",
+      "sapSha256": "f004e367f2a5f43ee532488f3161c96dc0c02286797e7243ef0df782e4b538c5",
+      "bytes": 1890,
+      "equal": true
+    },
+    {
+      "filename": "zbn_job.prog.abap",
+      "gitBlob": "2374977e8b925622bc0edf158111458fae340a24",
+      "sapSha256": "ed5937c6fa48976b8f9adcb70f37b19e41d9ad1b63d2a1f666b86ca60adf1964",
+      "bytes": 258,
+      "equal": true
+    },
+    {
+      "filename": "zbn_job.prog.xml",
+      "gitBlob": "bfb567ccbd2d6868534c8f82e59604e26c1216d4",
+      "sapSha256": "7fd82862a63ceff840a65b6e1a882428af1d9d2faa9368e5f3849bc2013f6863",
+      "bytes": 500,
+      "equal": true
+    },
+    {
+      "filename": "zbn_probe_job.prog.abap",
+      "gitBlob": "a17aeebf2e36ae962c43d13b63ba89f3a1957662",
+      "sapSha256": "4cbe4498c3461281650232b5e0c2e718052e39d936a71607bb3cb747fbfaef8d",
+      "bytes": 174,
+      "equal": true
+    },
+    {
+      "filename": "zbn_probe_job.prog.xml",
+      "gitBlob": "dc210591441ebacd57ffe40cb8bbc55d9e29b51d",
+      "sapSha256": "d04466cd9c2fe811a560a11ee052d4c69423a30566a272be4949aced8accc164",
+      "bytes": 521,
+      "equal": true
+    },
+    {
+      "filename": "zbn_src.tabl.xml",
+      "gitBlob": "8bf4e427309160d6b0ac67726692bbeab0cc4bfd",
+      "sapSha256": "db0db382d10fa4441f691df8f654d643fc13eda3d476152f4417968f478ee957",
+      "bytes": 3086,
+      "equal": true
+    },
+    {
+      "filename": "zbpc_notebook  ed75b3bc30cb2971582627d6a.sicf.xml",
+      "gitBlob": "02ffef0f0e9aee2fd5832b297f5720297fe6e904",
+      "sapSha256": "17b6e7800e4c126589e5c0f382e5edc533020ea4ebe292eb730296d2c66a0988",
+      "bytes": 748,
+      "equal": true
+    },
+    {
+      "filename": "zbpc_notebook.wapa.component.js",
+      "gitBlob": "e2f6f1872a9f22f4ca069be7d52256bf8865d22e",
+      "sapSha256": "3197a88e4e66089295a4da69222df01fcf6599ab80679485bf78a74a6138aca9",
+      "bytes": 214039,
+      "equal": true
+    },
+    {
+      "filename": "zbpc_notebook.wapa.componentpreload.js",
+      "gitBlob": "fdfe880a972cd8010430d8bcde881822ad1c11dd",
+      "sapSha256": "520c4cc90d4c8858152cb4a6ed1cfada0362f717b0dc9b7c97571e1a6a5230a6",
+      "bytes": 767,
+      "equal": true
+    },
+    {
+      "filename": "zbpc_notebook.wapa.css_-style.css",
+      "gitBlob": "ebfbdefd5bc99c1fcf4fea1f010ab404098b719a",
+      "sapSha256": "45dfa2299e1d1e55b7a0ada145e59f8b365044b4d97bc7505df887f5d6ccf7ec",
+      "bytes": 36863,
+      "equal": true
+    },
+    {
+      "filename": "zbpc_notebook.wapa.index.html",
+      "gitBlob": "bcf7318f6fed4b71701ba0d3693eca477b30bad5",
+      "sapSha256": "dd6598e5832f72db4d65adead23f75eddda8f62e0a39707a869491b15e0998a2",
+      "bytes": 6143,
+      "equal": true
+    },
+    {
+      "filename": "zbpc_notebook.wapa.manifest.json",
+      "gitBlob": "50d4c1e2a0b30bedf2b9cfd4a2ebbfd60d51a54b",
+      "sapSha256": "c5f8042d8204286b253ec1ccc9111daa88e742b14cb1fce7b5fc8ecf39dae008",
+      "bytes": 3839,
+      "equal": true
+    },
+    {
+      "filename": "zbpc_notebook.wapa.model_-api.js",
+      "gitBlob": "140d0407f53aafe9b9600700bfcbdf47015f4e6d",
+      "sapSha256": "da92d356e1ace8f78cf9a5c7a2dc435e69a87b6c059a89f944622ea945ba3afa",
+      "bytes": 17407,
+      "equal": true
+    },
+    {
+      "filename": "zbpc_notebook.wapa.ui5repositorypathmapping.xml",
+      "gitBlob": "e1f51b086c746dac8a180094c0a35274e505b2e8",
+      "sapSha256": "f0339da60f21264aee42b50ebec9acc47219eee89a700c44ad664a21f902b7b9",
+      "bytes": 3071,
+      "equal": true
+    },
+    {
+      "filename": "zbpc_notebook.wapa.xml",
+      "gitBlob": "3cfb0a16629930e864ae345b7f1ba83dfb44a6ab",
+      "sapSha256": "ed148f4b8bad7603947488a786e40088dd8909373c88cbbf815f8b46a24b3318",
+      "bytes": 2688,
+      "equal": true
+    },
+    {
+      "filename": "zcl_bn_compiler.clas.abap",
+      "gitBlob": "7db7711342a943adde85309a7772580c4c0dbf8f",
+      "sapSha256": "c501e96c9374ace4fdb10d8da40be93ded55215ed1600dacec194f5bf327b1f5",
+      "bytes": 1302,
+      "equal": true
+    },
+    {
+      "filename": "zcl_bn_compiler.clas.testclasses.abap",
+      "gitBlob": "6ae71f9b5fdc6464cd1d0ff5d3687b8d54984855",
+      "sapSha256": "62f227e0913cee545473fc4d77ab50a4ca485e8c9d8b7e5a342dac5be30ebcef",
+      "bytes": 2214,
+      "equal": true
+    },
+    {
+      "filename": "zcl_bn_compiler.clas.xml",
+      "gitBlob": "37ac577c942c2721a7a9989d58025e19ab6fe8bd",
+      "sapSha256": "8f077825c3de151d129a4c5f974a1325e5d074bfbe6ffa69d9071c1dccdd31cf",
+      "bytes": 529,
+      "equal": true
+    },
+    {
+      "filename": "zcl_bn_context.clas.abap",
+      "gitBlob": "c3edad1433636702b0832fc2ebf03a1dafcd1f62",
+      "sapSha256": "b7051276001b1ff9112d397cf0317ae65d7cfda3b7c42f33444492c9279f60ae",
+      "bytes": 2689,
+      "equal": true
+    },
+    {
+      "filename": "zcl_bn_context.clas.xml",
+      "gitBlob": "f17431a0d8311991e69bd382f3fd6cbe078eeca2",
+      "sapSha256": "ceac0cbaa55a4ed90ac085fc86737692bda4ea1d9e1b9e3c649692dd5164acd4",
+      "bytes": 486,
+      "equal": true
+    },
+    {
+      "filename": "zcl_bn_http.clas.abap",
+      "gitBlob": "f13d8f9de7ba635d110e34f8be243f74bc9e761c",
+      "sapSha256": "d8ca4caa02328b92867ea5101abb6f80c61caf6a67ec0409f4b6a57fbc64fef3",
+      "bytes": 3165,
+      "equal": true
+    },
+    {
+      "filename": "zcl_bn_http.clas.xml",
+      "gitBlob": "51f302a024f350a77f6d4e1bb6d81c06cf9731f7",
+      "sapSha256": "53fadb4327afd20818f2ba394003cd86adafeafb52935106bb52d8486c54efe2",
+      "bytes": 480,
+      "equal": true
+    },
+    {
+      "filename": "zcl_bn_probe.clas.abap",
+      "gitBlob": "0347c5549ac1cebd7ee62db9e0f783cca94a7b83",
+      "sapSha256": "a59f6fe71520a4d59a22cd8b64ed82826343f0c13aec44e80abb3dbf00ae570b",
+      "bytes": 933,
+      "equal": true
+    },
+    {
+      "filename": "zcl_bn_probe.clas.testclasses.abap",
+      "gitBlob": "58313cf0e0f1c48648624269a85b4463180ca657",
+      "sapSha256": "53c0a3e7c1d042b7f620998e9d7158cab101eeca801b0e85efa8d3ad652d57b9",
+      "bytes": 1726,
+      "equal": true
+    },
+    {
+      "filename": "zcl_bn_probe.clas.xml",
+      "gitBlob": "a5b11a7220624335b04a790ae21fa3a7d93527f9",
+      "sapSha256": "447e134d8e4bd384b03b22e14e782a80ac2fe9a3dcd69dbe6ee1d17b5ab10e7b",
+      "bytes": 523,
+      "equal": true
+    },
+    {
+      "filename": "zcl_bn_service.clas.abap",
+      "gitBlob": "b9cf63a4df1b20bd74056b9c9ff994509b5c40b7",
+      "sapSha256": "fc4aa4c8c71eb2f457501d262e7944a13a21b87fcf2cecb812d80961ddfe553b",
+      "bytes": 32097,
+      "equal": true
+    },
+    {
+      "filename": "zcl_bn_service.clas.testclasses.abap",
+      "gitBlob": "0ca97a357ed08eb108ad0fda83cb3980c07549d8",
+      "sapSha256": "80f009126d521e3351329651b20c42d751111467338bc17689f19b150f252380",
+      "bytes": 3808,
+      "equal": true
+    },
+    {
+      "filename": "zcl_bn_service.clas.xml",
+      "gitBlob": "a019b02ba35646fdd63a73c49f7923871cb27b34",
+      "sapSha256": "83fd9f49a5e2c19e9567a0bd19bc2e28bd1ee6098d6b9631f90686d5eca69be6",
+      "bytes": 527,
+      "equal": true
+    },
+    {
+      "filename": "zcl_bn_store.clas.abap",
+      "gitBlob": "1d59748c09b775ee639246de2edb99faea2b652b",
+      "sapSha256": "7090b2ece0e86435397faa31392ff85e878c083aaeccd17cc4a3ecee9e04ea62",
+      "bytes": 3244,
+      "equal": true
+    },
+    {
+      "filename": "zcl_bn_store.clas.xml",
+      "gitBlob": "3b4a18c274fd9a6c4a5f504304abe99b5bf0ae07",
+      "sapSha256": "595baa79ced7578ed5b12224a77c3dd6f65a30017cbb0ed32704284779154e0b",
+      "bytes": 482,
+      "equal": true
+    },
+    {
+      "filename": "zcl_bn_types.clas.abap",
+      "gitBlob": "5cd008a379f01d18fbdd57e0c9b7a7c9b920145c",
+      "sapSha256": "4ed04c36d11ae903c13c698434fc325b7cba9919fd1bd8e45fee89bff43066ce",
+      "bytes": 4807,
+      "equal": true
+    },
+    {
+      "filename": "zcl_bn_types.clas.xml",
+      "gitBlob": "8d275d016df5c2084904c3e8c0231569a19332c3",
+      "sapSha256": "6830a0e85b92bc5aa9469410e4f19747aa2d5559284a916b8508c3e6492d562f",
+      "bytes": 482,
+      "equal": true
+    },
+    {
+      "filename": "zcx_bn.clas.abap",
+      "gitBlob": "668bd1a3fe33aa4d79067b47e79cddad73eeb7b3",
+      "sapSha256": "2468ba76fb0afcbc4c98e992fee871de75bff52bbb01480dd4cebf716d01ffad",
+      "bytes": 477,
+      "equal": true
+    },
+    {
+      "filename": "zcx_bn.clas.xml",
+      "gitBlob": "3217c7c0dc28354678f8d8bb41ac8aa844b74b7c",
+      "sapSha256": "9aa9cc7003844d07d964d1340b8414341294d93a552966edf887d2bc3b8ab2a0",
+      "bytes": 498,
+      "equal": true
+    }
+  ],
+  "messages": [
+    "BNIMPORTED|DEVC|$BN_ROUNDTRIP",
+    "BNIMPORTED|TABL|ZBN_DOC",
+    "BNIMPORTED|TABL|ZBN_HEAD",
+    "BNIMPORTED|PROG|ZBN_JOB",
+    "BNIMPORTED|PROG|ZBN_PROBE_JOB",
+    "BNIMPORTED|TABL|ZBN_SRC",
+    "BNIMPORTED|SICF|ZBPC_NOTEBOOK  ED75B3BC30CB2971582627D6A",
+    "BNIMPORTED|WAPA|ZBPC_NOTEBOOK",
+    "BNIMPORTED|CLAS|ZCL_BN_COMPILER",
+    "BNIMPORTED|CLAS|ZCL_BN_CONTEXT",
+    "BNIMPORTED|CLAS|ZCL_BN_HTTP",
+    "BNIMPORTED|CLAS|ZCL_BN_PROBE",
+    "BNIMPORTED|CLAS|ZCL_BN_SERVICE",
+    "BNIMPORTED|CLAS|ZCL_BN_STORE",
+    "BNIMPORTED|CLAS|ZCL_BN_TYPES",
+    "BNIMPORTED|CLAS|ZCX_BN",
+    "BNLOGI|> Mass activating 6 DDIC objects",
+    "BNLOGI|Log name: ABAPGIT_20261008_200834",
+    "BNLOGI|> Activating 8 objects "
+  ],
+  "passed": true,
+  "missing": []
+}

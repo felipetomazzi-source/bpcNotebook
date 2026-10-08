@@ -1,0 +1,5 @@
+* text=auto
+.abapgit.xml text eol=crlf
+# SAP emits LF in Git; BPCIO's Windows checkout uses CRLF. Never trim padding.
+src/* text eol=crlf
+src/*.wapa.* whitespace=-blank-at-eol

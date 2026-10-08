@@ -1,0 +1,58 @@
+{
+  "at": "2026-10-08T06:49:03.080Z",
+  "result": [
+    {
+      "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_probe/includes/testclasses#type=CLAS%2FOCL;name=LTCL_BACKGROUND",
+      "adtcore:type": "CLAS/OL",
+      "adtcore:name": "LTCL_BACKGROUND",
+      "uriType": "semantic",
+      "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_probe/includes/testclasses#type=CLAS%2FOCL;name=LTCL_BACKGROUND",
+      "durationCategory": "medium",
+      "riskLevel": "dangerous",
+      "alerts": [
+        {
+          "kind": "warning",
+          "severity": "tolerable",
+          "details": [
+            "You can find further informations in document <CHAP> <SAUNIT_TEST_PROPS>"
+          ],
+          "stack": [],
+          "title": "No execution, risk level of test class exceeds upper limit"
+        }
+      ],
+      "testmethods": []
+    },
+    {
+      "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_probe/includes/testclasses#type=CLAS%2FOCL;name=LTCL_PROBE",
+      "adtcore:type": "CLAS/OL",
+      "adtcore:name": "LTCL_PROBE",
+      "uriType": "semantic",
+      "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_probe/includes/testclasses#type=CLAS%2FOCL;name=LTCL_PROBE",
+      "durationCategory": "short",
+      "riskLevel": "harmless",
+      "alerts": [],
+      "testmethods": [
+        {
+          "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_probe/includes/testclasses#type=CLAS%2FOLD;name=LTCL_PROBE%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20DIALOG_SUCCESS",
+          "adtcore:type": "CLAS/OLI",
+          "adtcore:name": "DIALOG_SUCCESS",
+          "executionTime": 0,
+          "uriType": "semantic",
+          "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_probe/includes/testclasses#type=CLAS%2FOLD;name=LTCL_PROBE%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20DIALOG_SUCCESS",
+          "unit": "s",
+          "alerts": []
+        },
+        {
+          "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_probe/includes/testclasses#type=CLAS%2FOLD;name=LTCL_PROBE%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20SYNTAX_FAILURE",
+          "adtcore:type": "CLAS/OLI",
+          "adtcore:name": "SYNTAX_FAILURE",
+          "executionTime": 0,
+          "uriType": "semantic",
+          "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_probe/includes/testclasses#type=CLAS%2FOLD;name=LTCL_PROBE%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20SYNTAX_FAILURE",
+          "unit": "s",
+          "alerts": []
+        }
+      ]
+    }
+  ]
+}

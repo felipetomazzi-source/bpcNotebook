@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<UI5RepMapping version="1.0" xmlns="sap.ui5.tools.repository.mapping">
+  <MappingEntries>
+    <MappingEntry path="Component.js" is_folder="" internal_rep="B" internal_rep_path="Component.js" />
+    <MappingEntry path="Component-preload.js" is_folder="" internal_rep="B" internal_rep_path="Componentpreload.js" />
+    <MappingEntry path="index.html" is_folder="" internal_rep="B" internal_rep_path="index.html" />
+    <MappingEntry path="manifest.json" is_folder="" internal_rep="B" internal_rep_path="manifest.json" />
+    <MappingEntry path="model/Api.js" is_folder="" internal_rep="B" internal_rep_path="model/Api.js" />
+    <MappingEntry path="css/style.css" is_folder="" internal_rep="B" internal_rep_path="css/style.css" />
+  </MappingEntries>
+</UI5RepMapping>
