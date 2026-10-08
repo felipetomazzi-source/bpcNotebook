@@ -29,3 +29,9 @@ Idempotency keys bind user/client and request checksum. Repeats return the origi
 States: queued → running → succeeded/failed/cancelled. SAP ten-minute submission deadline/cancellation is checked between cells; local deadline is 60 seconds. Native polling reconciles termination and expiry. Mid-cell preemption requires SM37/operator intervention. Syntax diagnostics include source/generated lines, word and message; run diagnostics also identify cell. Production approved-release execution and live BPC writes are unavailable.
 
 Notebook Script cells use the same ABAP source field and immutable source history. The source contains the versioned authored-script comment envelope and generated ABAP. SAP syntax-checks script cells before accepting a save. See [Notebook Script](notebook-script.md).
+
+## SAP Script Logic handlers
+
+`GET /logic-handler?id=<name>` reads the current user’s named binding. `POST /logic-handler` binds `handler` to `notebookId` / `expectedRevision`, using `handlerRevision` for optimistic replacement (zero creates). The saved notebook must declare its environment/model. Registration does not run cells.
+
+See [the Script Logic contract](notebook-script-logic.md) for BAdI parameters, caller current-view scope, transaction ownership and output review. `/retry` rejects Script Logic runs: invoke the BAdI again from its caller.

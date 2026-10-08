@@ -54,6 +54,8 @@ CLASS zcl_bn_types DEFINITION PUBLIC FINAL CREATE PUBLIC.
              progress TYPE decfloat34, duration_ms TYPE i,
              cancel_requested TYPE abap_bool, checksum TYPE string,
              deadline TYPE timestampl,
+             handler TYPE string, handler_revision TYPE i,
+             logic_parameters TYPE ujk_t_script_logic_hashtable, current_view TYPE ujk_t_cv,
              snapshot TYPE ty_notebook, bindings TYPE tt_bindings,
              frozen_bindings TYPE tt_bindings,
              messages TYPE tt_messages, results TYPE tt_results,

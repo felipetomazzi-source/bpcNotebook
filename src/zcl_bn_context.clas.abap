@@ -18,6 +18,10 @@ CLASS zcl_bn_context DEFINITION PUBLIC FINAL CREATE PUBLIC.
              elapsed_us TYPE i,
            END OF ty_table,
            tt_tables TYPE STANDARD TABLE OF ty_table WITH DEFAULT KEY.
+    TYPES: BEGIN OF ty_live_output,
+             cell_id TYPE string, rows TYPE tt_rows,
+           END OF ty_live_output,
+           tt_live_outputs TYPE STANDARD TABLE OF ty_live_output WITH DEFAULT KEY.
     DATA tables TYPE tt_tables READ-ONLY.
     METHODS emit_table IMPORTING name TYPE string rows TYPE ANY TABLE
       total_count TYPE i DEFAULT -1 elapsed_us TYPE i DEFAULT 0 RAISING zcx_bn.
@@ -27,7 +31,9 @@ CLASS zcl_bn_context DEFINITION PUBLIC FINAL CREATE PUBLIC.
     DATA messages TYPE zcl_bn_types=>tt_messages READ-ONLY.
     METHODS constructor IMPORTING inputs TYPE zcl_bn_types=>tt_inputs
       bindings TYPE zcl_bn_types=>tt_bindings dependencies TYPE zcl_bn_types=>tt_ids cell_id TYPE string
-      environment TYPE string DEFAULT '' model TYPE string DEFAULT ''.
+      environment TYPE string DEFAULT '' model TYPE string DEFAULT ''
+      live_outputs TYPE tt_live_outputs OPTIONAL scope TYPE ujk_t_cv OPTIONAL
+      logic_parameters TYPE ujk_t_script_logic_hashtable OPTIONAL logic_call TYPE abap_bool DEFAULT abap_false.
     METHODS bpc_dimension IMPORTING name TYPE string model_name TYPE string DEFAULT ''
       RETURNING VALUE(adapter) TYPE REF TO zcl_bn_bpc RAISING zcx_bn.
     METHODS bpc_model IMPORTING name TYPE string DEFAULT ''
@@ -45,24 +51,39 @@ CLASS zcl_bn_context DEFINITION PUBLIC FINAL CREATE PUBLIC.
     DATA mt_inputs TYPE zcl_bn_types=>tt_inputs.
     DATA mt_bindings TYPE zcl_bn_types=>tt_bindings.
     DATA mt_dependencies TYPE zcl_bn_types=>tt_ids.
+    METHODS check_logic_model IMPORTING name TYPE string RAISING zcx_bn.
     DATA mv_cell_id TYPE string.
+    DATA mt_live_outputs TYPE tt_live_outputs.
+    DATA mt_scope TYPE ujk_t_cv.
+    DATA mt_logic_parameters TYPE ujk_t_script_logic_hashtable.
+    DATA mv_logic_call TYPE abap_bool.
 ENDCLASS.
 CLASS zcl_bn_context IMPLEMENTATION.
   METHOD constructor.
     me->environment = environment. me->model = model.
+    mt_live_outputs = live_outputs. mt_scope = scope.
+    mt_logic_parameters = logic_parameters. mv_logic_call = logic_call.
     mt_inputs = inputs. mt_bindings = bindings. mt_dependencies = dependencies. mv_cell_id = cell_id.
   ENDMETHOD.
   METHOD bpc_dimension.
+    check_logic_model( model_name ).
     adapter = NEW zcl_bn_bpc( environment = CONV #( environment )
       model = COND #( WHEN model_name IS INITIAL THEN CONV string( model ) ELSE model_name )
-      dimension = name inputs = mt_inputs ).
+      dimension = name inputs = mt_inputs scope = mt_scope ).
     IF name IS INITIAL.
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_DIMENSION' detail = 'Choose a dimension name'.
     ENDIF.
   ENDMETHOD.
   METHOD bpc_model.
+    check_logic_model( name ).
     adapter = NEW zcl_bn_bpc( environment = CONV #( environment )
-      model = COND #( WHEN name IS INITIAL THEN CONV string( model ) ELSE name ) inputs = mt_inputs ).
+      model = COND #( WHEN name IS INITIAL THEN CONV string( model ) ELSE name ) inputs = mt_inputs scope = mt_scope ).
+  ENDMETHOD.
+  METHOD check_logic_model.
+    IF mv_logic_call = abap_true AND name IS NOT INITIAL AND name <> model.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'LOGIC_MODEL'
+        detail = 'Script Logic notebook adapters must use the calling model'.
+    ENDIF.
   ENDMETHOD.
   METHOD input.
     READ TABLE mt_inputs INTO DATA(parameter) WITH KEY name = name.
@@ -96,15 +117,21 @@ CLASS zcl_bn_context IMPLEMENTATION.
     LOOP AT parameter-resolved INTO DATA(id). APPEND CONV uj_dim_member( id ) TO value. ENDLOOP.
   ENDMETHOD.
   METHOD current_view.
-    value = zcl_bn_bpc=>current_view( mt_inputs ).
+    value = zcl_bn_bpc=>scoped_view( inputs = mt_inputs scope = mt_scope ).
   ENDMETHOD.
   METHOD script_parameters.
-    value = zcl_bn_bpc=>script_parameters( mt_inputs ).
+    value = mt_logic_parameters.
+    LOOP AT zcl_bn_bpc=>script_parameters( mt_inputs ) INTO DATA(parameter).
+      DELETE value WHERE hashkey = parameter-hashkey.
+      INSERT parameter INTO TABLE value.
+    ENDLOOP.
   ENDMETHOD.
   METHOD read.
     IF NOT line_exists( mt_dependencies[ table_line = dependency ] ).
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DEPENDENCY' detail = 'Cell did not declare this dependency'.
     ENDIF.
+    READ TABLE mt_live_outputs INTO DATA(live) WITH KEY cell_id = dependency.
+    IF sy-subrc = 0. rows = live-rows. RETURN. ENDIF.
     READ TABLE mt_bindings INTO DATA(binding) WITH KEY cell_id = dependency.
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DEPENDENCY' detail = 'Dependency output missing'.

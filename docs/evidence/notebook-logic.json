@@ -1,0 +1,120 @@
+{
+  "at": "2026-10-08T11:29:18.643Z",
+  "passed": true,
+  "handler": {
+    "name": "BN_LOGIC_VERIFY",
+    "revision": 7,
+    "notebookId": "E82AEA36D1571FD1B0E16F8A554B05F7",
+    "notebookRevision": 1,
+    "environment": "CH_PLANNING",
+    "model": "DEMREVID",
+    "checksum": "C3FEB345B48D61B81692E5038422C9D2F1008666FA76CE52C07AEC946DD317B6"
+  },
+  "notebookId": "E82AEA36D1571FD1B0E16F8A554B05F7",
+  "latestNotebookRevision": 2,
+  "runId": "E82AEA36D1571FD1B0E1700D38DEC5F7",
+  "checks": [
+    "BNCHECK|native NOTEBOOK filter, pinned revision, two cells, typed parameters, CV, CT_DATA unchanged, caller rollback",
+    "",
+    "BNCHECK|rejectedLOGIC_WRITE",
+    "",
+    "BNCHECK|rejectedLOGIC_WRITE",
+    "",
+    "BNCHECK|rejectedLOGIC_INPUT",
+    "",
+    "BNCHECK|rejectedINPUT_TYPE",
+    "",
+    "BNCHECK|rejectedLOGIC_INPUT",
+    "",
+    "BNCHECK|rejectedLOGIC_CV",
+    "",
+    "BNCHECK|rejectedBPC_AUTH",
+    "",
+    "BNCHECK|rejectedLOGIC_WRITE",
+    "",
+    "BNCHECK|rejectedLOGIC_WRITE",
+    "",
+    "BNRUN|E82AEA36D1571FD1B0E1700D38DEC5F7"
+  ],
+  "nativeUnitTests": 6,
+  "output": {
+    "runId": "E82AEA36D1571FD1B0E1700D38DEC5F7",
+    "cellId": "apply",
+    "revision": 1,
+    "total": 1,
+    "offset": 0,
+    "limit": 20,
+    "schema": [
+      {
+        "name": "key",
+        "type": "string"
+      },
+      {
+        "name": "amount",
+        "type": "decimal"
+      }
+    ],
+    "rows": [
+      {
+        "key": "É · São — handler",
+        "amount": 4
+      }
+    ]
+  },
+  "scriptRun": {
+    "handler": "BN_SCRIPT_DEMO",
+    "runId": "E82AEA36D1571FD1B0E1700D38DF25F7",
+    "notebookRevision": 5,
+    "cells": 4,
+    "output": {
+      "runId": "E82AEA36D1571FD1B0E1700D38DF25F7",
+      "cellId": "script0",
+      "revision": 1,
+      "total": 3,
+      "sourceTotal": 3,
+      "offset": 0,
+      "limit": 20,
+      "truncated": false,
+      "tableName": "ALLOCATION",
+      "tables": [
+        {
+          "name": "ALLOCATION",
+          "rowCount": 3,
+          "totalCount": 3,
+          "truncated": false,
+          "elapsedUs": 0
+        }
+      ],
+      "schema": [
+        {
+          "name": "key",
+          "type": "string"
+        },
+        {
+          "name": "amount",
+          "type": "decimal"
+        }
+      ],
+      "rows": [
+        {
+          "values": [
+            "CC100",
+            "120000"
+          ]
+        },
+        {
+          "values": [
+            "CC200",
+            "72000"
+          ]
+        },
+        {
+          "values": [
+            "CC300",
+            "48000"
+          ]
+        }
+      ]
+    }
+  }
+}

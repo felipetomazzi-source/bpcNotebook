@@ -4,6 +4,8 @@ CLASS ltcl_inputs DEFINITION FINAL FOR TESTING DURATION SHORT RISK LEVEL HARMLES
     METHODS adapters FOR TESTING RAISING zcx_bn.
     METHODS typed_access FOR TESTING RAISING zcx_bn.
     METHODS named_tables FOR TESTING RAISING zcx_bn.
+    METHODS logic_scope FOR TESTING RAISING zcx_bn.
+    METHODS live_dependencies FOR TESTING RAISING zcx_bn.
 ENDCLASS.
 CLASS ltcl_inputs IMPLEMENTATION.
   METHOD filter_intersection.
@@ -74,6 +76,44 @@ CLASS ltcl_inputs IMPLEMENTATION.
     CLEAR rows.
     io->emit_table( name = 'EMPTY' rows = rows ).
     cl_abap_unit_assert=>assert_equals( act = lines( io->tables[ 2 ]-schema ) exp = 2 ).
+  ENDMETHOD.
+  METHOD logic_scope.
+    DATA inputs TYPE zcl_bn_types=>tt_inputs.
+    inputs = VALUE #( ( name = 'TIME' type = 'range' dimension = 'TIME'
+      resolved = VALUE #( ( `P_A` ) ( `P_B` ) ) ) ).
+    DATA scope TYPE ujk_t_cv.
+    scope = VALUE #( ( dimension = 'TIME' dim_upper_case = 'TIME' member = VALUE #( ( 'P_B' ) ) )
+      ( dimension = 'ENTITY' member = VALUE #( ( 'E1' ) ) ) ).
+    DATA(result) = zcl_bn_bpc=>scoped_view( inputs = inputs scope = scope ).
+    cl_abap_unit_assert=>assert_equals( act = lines( result ) exp = 2 ).
+    cl_abap_unit_assert=>assert_equals( act = lines( result[ dimension = 'TIME' ]-member ) exp = 1 ).
+    cl_abap_unit_assert=>assert_equals( act = result[ dimension = 'TIME' ]-member[ 1 ] exp = 'P_B' ).
+    cl_abap_unit_assert=>assert_equals( act = result[ dimension = 'ENTITY' ]-member[ 1 ] exp = 'E1' ).
+    scope[ dimension = 'TIME' ]-member = VALUE #( ( 'OTHER' ) ).
+    TRY.
+        zcl_bn_bpc=>scoped_view( inputs = inputs scope = scope ).
+        cl_abap_unit_assert=>fail( 'A disjoint caller scope must fail' ).
+      CATCH zcx_bn INTO DATA(error).
+        cl_abap_unit_assert=>assert_equals( act = error->code exp = 'LOGIC_CV' ).
+    ENDTRY.
+  ENDMETHOD.
+  METHOD live_dependencies.
+    DATA live TYPE zcl_bn_context=>tt_live_outputs.
+    live = VALUE #( ( cell_id = 'seed' rows = VALUE #( ( key = 'É · São' amount = 2 ) ) ) ).
+    DATA(io) = NEW zcl_bn_context( inputs = VALUE #( ) bindings = VALUE #( )
+      dependencies = VALUE #( ( `seed` ) ) cell_id = 'next' live_outputs = live ).
+    live[ 1 ]-rows[ 1 ]-amount = 999.
+    DATA(rows) = io->read( 'seed' ).
+    cl_abap_unit_assert=>assert_equals( act = rows[ 1 ]-amount exp = CONV decfloat34( 2 ) ).
+    rows[ 1 ]-amount = 10.
+    rows = io->read( 'seed' ).
+    cl_abap_unit_assert=>assert_equals( act = rows[ 1 ]-amount exp = CONV decfloat34( 2 ) ).
+    TRY.
+        io->read( 'undeclared' ).
+        cl_abap_unit_assert=>fail( 'Live execution must still require declared dependencies' ).
+      CATCH zcx_bn INTO DATA(error).
+        cl_abap_unit_assert=>assert_equals( act = error->code exp = 'DEPENDENCY' ).
+    ENDTRY.
   ENDMETHOD.
   METHOD typed_access.
     DATA inputs TYPE zcl_bn_types=>tt_inputs.

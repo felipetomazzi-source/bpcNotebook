@@ -7,7 +7,7 @@ CLASS zcl_bn_service DEFINITION PUBLIC FINAL CREATE PUBLIC.
     TYPES: BEGIN OF ty_dataset,
              run_id TYPE string, cell_id TYPE string, revision TYPE i,
              notebook_id TYPE string, fingerprint TYPE string,
-             created_at TYPE string, row_count TYPE i,
+             created_at TYPE string, row_count TYPE i, logic_call TYPE abap_bool,
              bindings TYPE zcl_bn_types=>tt_bindings,
              schema TYPE tt_schema, retention_until TYPE timestampl,
              rows TYPE zcl_bn_context=>tt_rows,
@@ -23,10 +23,15 @@ CLASS zcl_bn_service DEFINITION PUBLIC FINAL CREATE PUBLIC.
       run_id TYPE string DEFAULT '' cell_id TYPE string DEFAULT '' table_name TYPE string DEFAULT ''
       revision TYPE i DEFAULT 0 offset TYPE i DEFAULT 0 page_size TYPE i DEFAULT 20
       RETURNING VALUE(json) TYPE string RAISING zcx_bn.
+    CLASS-METHODS run_logic IMPORTING notebook TYPE zcl_bn_types=>ty_notebook
+      parameters TYPE ujk_t_script_logic_hashtable scope TYPE ujk_t_cv
+      handler TYPE string handler_revision TYPE i
+      RETURNING VALUE(run) TYPE zcl_bn_types=>ty_run RAISING zcx_bn.
     CLASS-METHODS work IMPORTING id TYPE string RAISING zcx_bn.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_request,
              id TYPE string, notebook_id TYPE string, expected_revision TYPE i,
+             handler TYPE string, handler_revision TYPE i,
              scope TYPE string, cell_id TYPE string, idempotency_key TYPE string,
              title TYPE string, cells TYPE zcl_bn_types=>tt_cells,
              inputs TYPE zcl_bn_types=>tt_inputs, demo TYPE abap_bool,
@@ -219,6 +224,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
     zcl_bn_store=>write( kind = 'N' id = notebook-id payload = zcl_bn_types=>json( notebook ) expected = request-expected_revision ).
   ENDMETHOD.
   METHOD is_current.
+    IF dataset-logic_call = abap_true. RETURN. ENDIF.
     IF dataset-run_id IS INITIAL OR dataset-fingerprint <> fingerprint( notebook = notebook cell_id = dataset-cell_id ). RETURN. ENDIF.
     READ TABLE notebook-cells INTO DATA(cell) WITH KEY id = dataset-cell_id.
     LOOP AT cell-dependencies INTO DATA(dependency).
@@ -378,6 +384,76 @@ CLASS zcl_bn_service IMPLEMENTATION.
       ENDIF.
     ENDIF.
   ENDMETHOD.
+  METHOD run_logic.
+    " Synchronous execution in the Script Logic caller LUW: no jobs or transaction boundaries.
+    authorize( '16' ).
+    check_definition( notebook ).
+    zcl_bn_bpc=>validate_frozen( notebook ).
+    zcl_bn_bpc=>validate_scope( environment = notebook-environment model = notebook-model scope = scope ).
+    run = VALUE #( id = zcl_bn_types=>uuid( ) owner = sy-uname notebook_id = notebook-id
+      state = 'running' scope = 'logic' native = abap_true created_at = zcl_bn_types=>timestamp( )
+      started_at = zcl_bn_types=>timestamp( ) snapshot = notebook current_view = scope
+      logic_parameters = parameters handler = handler handler_revision = handler_revision ).
+    run-checksum = zcl_bn_types=>hash( zcl_bn_types=>json( run-snapshot ) && zcl_bn_types=>json( scope ) &&
+      zcl_bn_types=>json( parameters ) && handler && |{ handler_revision }| ).
+    DATA started TYPE timestampl.
+    DATA stamp TYPE timestampl.
+    GET TIME STAMP FIELD started.
+    DATA live TYPE zcl_bn_context=>tt_live_outputs.
+    DATA datasets TYPE STANDARD TABLE OF ty_dataset WITH DEFAULT KEY.
+    LOOP AT notebook-cells INTO DATA(cell).
+      GET TIME STAMP FIELD stamp.
+      IF cl_abap_tstmp=>subtract( tstmp1 = stamp tstmp2 = started ) > 600.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'TIMEOUT' detail = 'Script Logic notebook deadline exceeded between cells'.
+      ENDIF.
+      SELECT SINGLE source, checksum FROM zbn_src INTO (@DATA(source), @DATA(checksum))
+        WHERE notebook_id = @notebook-id AND cell_id = @cell-id AND version = @cell-source_version.
+      IF sy-subrc <> 0 OR checksum <> cell-checksum OR zcl_bn_types=>hash( source ) <> checksum.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'SOURCE_INTEGRITY' detail = 'Saved handler source is missing or changed'.
+      ENDIF.
+      DATA pool TYPE progname.
+      DATA diagnostics TYPE zcl_bn_types=>tt_diagnostics.
+      zcl_bn_compiler=>compile( EXPORTING source = source IMPORTING pool = pool diagnostics = diagnostics ).
+      IF pool IS INITIAL.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'SYNTAX'
+          detail = |Handler { handler }, cell { cell-id }: saved source compilation failed|.
+      ENDIF.
+      DATA(context) = NEW zcl_bn_context( inputs = notebook-inputs bindings = run-bindings
+        dependencies = cell-dependencies cell_id = cell-id environment = notebook-environment model = notebook-model
+        live_outputs = live scope = scope logic_parameters = parameters logic_call = abap_true ).
+      DATA cell_started TYPE timestampl.
+      GET TIME STAMP FIELD cell_started.
+      PERFORM execute IN PROGRAM (pool) USING context.
+      GET TIME STAMP FIELD stamp.
+      DATA(dataset) = VALUE ty_dataset( logic_call = abap_true run_id = run-id cell_id = cell-id revision = 1 notebook_id = notebook-id
+        rows = context->outputs tables = context->tables row_count = lines( context->outputs )
+        created_at = zcl_bn_types=>timestamp( ) fingerprint = fingerprint( notebook = notebook cell_id = cell-id )
+        schema = VALUE #( ( name = 'key' type = 'string' ) ( name = 'amount' type = 'decimal' ) ) ).
+      LOOP AT dataset-tables INTO DATA(table). dataset-row_count = dataset-row_count + table-row_count. ENDLOOP.
+      GET TIME STAMP FIELD dataset-retention_until.
+      dataset-retention_until = cl_abap_tstmp=>add( tstmp = dataset-retention_until secs = 2592000 ).
+      LOOP AT cell-dependencies INTO DATA(dependency).
+        READ TABLE run-bindings INTO DATA(binding) WITH KEY cell_id = dependency.
+        IF sy-subrc = 0. APPEND binding TO dataset-bindings. ENDIF.
+      ENDLOOP.
+      APPEND dataset TO datasets.
+      APPEND VALUE #( cell_id = cell-id rows = context->outputs ) TO live.
+      APPEND VALUE #( cell_id = cell-id run_id = run-id revision = 1 ) TO run-bindings.
+      APPEND VALUE #( cell_id = cell-id run_id = run-id revision = 1 row_count = dataset-row_count
+        duration_ms = cl_abap_tstmp=>subtract( tstmp1 = stamp tstmp2 = cell_started ) * 1000
+        checksum = zcl_bn_types=>hash( zcl_bn_types=>json( dataset ) ) ) TO run-results.
+      APPEND LINES OF context->messages TO run-messages.
+    ENDLOOP.
+    " Stage records only after every cell succeeds. Script Logic owns commit/rollback.
+    LOOP AT datasets INTO dataset.
+      zcl_bn_store=>write( kind = 'D' id = |{ run-id }:{ dataset-cell_id }|
+        payload = zcl_bn_types=>json( dataset ) expected = 0 ).
+    ENDLOOP.
+    GET TIME STAMP FIELD stamp.
+    run-state = 'succeeded'. run-progress = 1. run-finished_at = zcl_bn_types=>timestamp( ).
+    run-duration_ms = cl_abap_tstmp=>subtract( tstmp1 = stamp tstmp2 = started ) * 1000.
+    zcl_bn_store=>write( kind = 'R' id = run-id payload = zcl_bn_types=>json( run ) expected = 0 ).
+  ENDMETHOD.
   METHOD work.
     authorize( '16' ).
     DATA run TYPE zcl_bn_types=>ty_run.
@@ -497,6 +573,11 @@ CLASS zcl_bn_service IMPLEMENTATION.
     DATA notebook TYPE zcl_bn_types=>ty_notebook.
     DATA run TYPE zcl_bn_types=>ty_run.
     CASE |{ method } { path }|.
+      WHEN 'POST /logic-handler'.
+        json = zcl_bn_types=>json( zcl_bn_logic=>register( name = request-handler notebook_id = request-notebook_id
+          notebook_revision = request-expected_revision expected = request-handler_revision ) ).
+      WHEN 'GET /logic-handler'.
+        json = zcl_bn_types=>json( zcl_bn_logic=>binding( id ) ).
       WHEN 'POST /metadata'.
         json = zcl_bn_types=>json( zcl_bn_bpc=>metadata( kind = request-kind environment = request-environment
           model = request-model dimension = request-dimension hierarchy = request-hierarchy
@@ -551,6 +632,10 @@ CLASS zcl_bn_service IMPLEMENTATION.
       WHEN 'POST /runs'. json = zcl_bn_types=>json( submit( request ) ).
       WHEN 'POST /retry'.
         run = get_run( request-id ).
+        IF run-scope = 'logic'.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'LOGIC_RETRY'
+            detail = 'Invoke the handler again from Script Logic to preserve its current view and transaction'.
+        ENDIF.
         IF run-state = 'queued' OR run-state = 'running'.
           RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'RETRY_ACTIVE' detail = 'Wait for the original run to finish' status = 409.
         ENDIF.

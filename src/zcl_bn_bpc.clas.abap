@@ -17,6 +17,10 @@ CLASS zcl_bn_bpc DEFINITION PUBLIC CREATE PUBLIC.
     CLASS-METHODS validate_frozen IMPORTING notebook TYPE zcl_bn_types=>ty_notebook RAISING zcx_bn.
     CLASS-METHODS current_view IMPORTING inputs TYPE zcl_bn_types=>tt_inputs
       RETURNING VALUE(result) TYPE ujk_t_cv RAISING zcx_bn.
+    CLASS-METHODS validate_scope IMPORTING environment TYPE string model TYPE string scope TYPE ujk_t_cv
+      RAISING zcx_bn.
+    CLASS-METHODS scoped_view IMPORTING inputs TYPE zcl_bn_types=>tt_inputs scope TYPE ujk_t_cv
+      RETURNING VALUE(result) TYPE ujk_t_cv RAISING zcx_bn.
     CLASS-METHODS script_parameters IMPORTING inputs TYPE zcl_bn_types=>tt_inputs
       RETURNING VALUE(result) TYPE ujk_t_script_logic_hashtable RAISING zcx_bn.
     TYPES: BEGIN OF ty_filter,
@@ -29,7 +33,7 @@ CLASS zcl_bn_bpc DEFINITION PUBLIC CREATE PUBLIC.
            END OF ty_field,
            tt_fields TYPE STANDARD TABLE OF ty_field WITH DEFAULT KEY.
     METHODS constructor IMPORTING environment TYPE string model TYPE string dimension TYPE string DEFAULT ''
-      inputs TYPE zcl_bn_types=>tt_inputs OPTIONAL RAISING zcx_bn.
+      inputs TYPE zcl_bn_types=>tt_inputs OPTIONAL scope TYPE ujk_t_cv OPTIONAL RAISING zcx_bn.
     METHODS member_data IMPORTING ids TYPE zcl_bn_types=>tt_ids OPTIONAL
       RETURNING VALUE(result) TYPE REF TO data RAISING zcx_bn.
     METHODS properties RETURNING VALUE(result) TYPE tt_fields RAISING zcx_bn.
@@ -51,6 +55,7 @@ CLASS zcl_bn_bpc DEFINITION PUBLIC CREATE PUBLIC.
       RETURNING VALUE(result) TYPE string RAISING zcx_bn.
   PRIVATE SECTION.
     DATA mt_inputs TYPE zcl_bn_types=>tt_inputs.
+    DATA mt_scope TYPE ujk_t_cv.
     CLASS-METHODS validate_filters IMPORTING environment TYPE string model TYPE string filters TYPE tt_filters RAISING zcx_bn.
     CLASS-METHODS describe_table IMPORTING table TYPE REF TO data source TYPE string
       RETURNING VALUE(result) TYPE tt_fields RAISING zcx_bn.
@@ -75,7 +80,7 @@ CLASS zcl_bn_bpc IMPLEMENTATION.
     IF dimension IS NOT INITIAL AND NOT line_exists( available[ id = dimension ] ).
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_DIMENSION' detail = 'Dimension is not in this model'.
     ENDIF.
-    mv_environment = environment. mv_model = model. mv_dimension = dimension. mt_inputs = inputs.
+    mv_environment = environment. mv_model = model. mv_dimension = dimension. mt_inputs = inputs. mt_scope = scope.
   ENDMETHOD.
   METHOD member_data.
     DATA(available) = context( environment = mv_environment model = mv_model ).
@@ -246,7 +251,7 @@ CLASS zcl_bn_bpc IMPLEMENTATION.
     ENDIF.
     DATA(available) = dimensions( ).
     DATA frozen TYPE tt_filters.
-    DATA(cv) = current_view( mt_inputs ).
+    DATA(cv) = scoped_view( inputs = mt_inputs scope = mt_scope ).
     LOOP AT cv INTO DATA(view).
       IF NOT line_exists( available[ id = view-dimension ] ). CONTINUE. ENDIF.
       DATA fixed TYPE ty_filter.
@@ -532,6 +537,36 @@ CLASS zcl_bn_bpc IMPLEMENTATION.
       ENDIF.
       LOOP AT input-resolved INTO DATA(id). APPEND CONV uj_dim_member( id ) TO <cv>-member. ENDLOOP.
       SORT <cv>-member. DELETE ADJACENT DUPLICATES FROM <cv>-member.
+    ENDLOOP.
+  ENDMETHOD.
+  METHOD validate_scope.
+    DATA(available) = context( environment = environment model = model ).
+    DATA filters TYPE tt_filters.
+    LOOP AT scope INTO DATA(view).
+      IF NOT line_exists( available[ id = view-dimension ] ) OR
+         line_exists( filters[ dimension = view-dimension ] ).
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'LOGIC_CV' detail = 'Unknown or duplicate current-view dimension'.
+      ENDIF.
+      DATA(filter) = VALUE ty_filter( dimension = view-dimension ).
+      LOOP AT view-member INTO DATA(id). APPEND CONV string( id ) TO filter-members. ENDLOOP.
+      APPEND filter TO filters.
+    ENDLOOP.
+    validate_filters( environment = environment model = model filters = filters ).
+  ENDMETHOD.
+  METHOD scoped_view.
+    result = current_view( inputs ).
+    LOOP AT scope INTO DATA(view).
+      READ TABLE result ASSIGNING FIELD-SYMBOL(<cv>) WITH KEY dimension = view-dimension.
+      IF sy-subrc <> 0.
+        view-dim_upper_case = to_upper( view-dimension ).
+        INSERT view INTO TABLE result. CONTINUE.
+      ENDIF.
+      LOOP AT <cv>-member INTO DATA(id).
+        IF NOT line_exists( view-member[ table_line = id ] ). DELETE <cv>-member WHERE table_line = id. ENDIF.
+      ENDLOOP.
+      IF <cv>-member IS INITIAL.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'LOGIC_CV' detail = 'Notebook selection conflicts with the caller current view'.
+      ENDIF.
     ENDLOOP.
   ENDMETHOD.
   METHOD script_parameters.
