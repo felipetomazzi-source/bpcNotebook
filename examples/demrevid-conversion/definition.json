@@ -1,0 +1,117 @@
+{
+  "title": "DEMREVID 003 - generic conversion draft (reads only)",
+  "environment": "CH_PLANNING",
+  "model": "DEMREVID",
+  "inputs": [
+    {
+      "name": "CATEGORY",
+      "type": "member",
+      "value": "",
+      "dimension": "CATEGORY",
+      "hierarchy": "",
+      "required": true,
+      "selected": [
+        "Actual"
+      ],
+      "resolved": [
+        "Actual"
+      ]
+    },
+    {
+      "name": "TIME",
+      "type": "range",
+      "value": "",
+      "dimension": "TIME",
+      "hierarchy": "PARENTH2",
+      "required": true,
+      "selected": [
+        "2025.REG"
+      ],
+      "resolved": [
+        "2025.007",
+        "2025.008",
+        "2025.009",
+        "2025.010",
+        "2025.011",
+        "2025.012",
+        "2026.001",
+        "2026.002",
+        "2026.003",
+        "2026.004",
+        "2026.005",
+        "2026.006"
+      ]
+    },
+    {
+      "name": "FFLASMATGROUPS",
+      "type": "boolean",
+      "value": true
+    },
+    {
+      "name": "FFLASMATGROUPSID",
+      "type": "string",
+      "value": "MATGROUPID038"
+    },
+    {
+      "name": "DEBUG",
+      "type": "string",
+      "value": "OFF"
+    },
+    {
+      "name": "HSNS_REALLOC_LOCATIONS",
+      "type": "string",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "id": "context",
+      "title": "Frozen allocation selections and flags",
+      "dependencies": [],
+      "source": "* BPC Notebook Script v1\n* @bn-source bGV0IHBlcmlvZHMgPSByYW5nZSgiVElNRSIpCmxldCBjYXRlZ29yeUlkID0gbWVtYmVyKCJDQVRFR09SWSIpCnRhYmxlIHN1bW1hcnkKYXBwZW5kIHN1bW1h\n* @bn-source cnkga2V5ID0gIlBFUklPRF9DT1VOVCIgYW1vdW50ID0gY291bnQocGVyaW9kcykKZW1pdCBzdW1tYXJ5CnNob3cgc3VtbWFyeSBhcyAiQ09OVEVYVF9DT1VO\n* @bn-source VFMiCm1lc3NhZ2UgY29uY2F0KCJDQVRFR09SWSAiLCBjYXRlZ29yeUlkKQptZXNzYWdlIGNvbmNhdCgiTmV0d29yayBTZXJ2aWNlcyBzdXBwcmVzc2lvbiAi\n* @bn-source LCBpbnB1dCgiRkZMQVNNQVRHUk9VUFMiKSkKbWVzc2FnZSAiUmVhZC1zdGFnZSBjb252ZXJzaW9uIG9ubHk7IG5vIGFsbG9jYXRpb24gb3Igd3JpdGViYWNr\n* @bn-source Ig==\n* @bn-generated\n* @bn-line 1\nDATA(bn_s2) = VALUE zcl_bn_types=>tt_ids( FOR bn_s1 IN io->range( `TIME` ) ( CONV string( bn_s1 ) ) ).\n* @bn-line 2\nDATA(bn_s3) = io->member( `CATEGORY` ).\n* @bn-line 3\nDATA bn_s4 TYPE zcl_bn_context=>tt_rows.\n* @bn-line 4\nAPPEND VALUE #( key = `PERIOD_COUNT` amount = CONV decfloat34( lines( bn_s2 ) ) ) TO bn_s4.\n* @bn-line 5\nio->emit( bn_s4 ).\n* @bn-line 6\nio->emit_table( name = `CONTEXT_COUNTS` rows = bn_s4 ).\n* @bn-line 7\nio->message( CONV string( CONV string( CONV string( `CATEGORY ` ) && CONV string( bn_s3 ) ) ) ).\n* @bn-line 8\nio->message( CONV string( CONV string( CONV string( `Network Services suppression ` ) && CONV string( io->input( `FFLASMATGROUPS` ) ) ) ) ).\n* @bn-line 9\nio->message( CONV string( `Read-stage conversion only; no allocation or writeback` ) )."
+    },
+    {
+      "id": "matconn",
+      "title": "MATCONN stored dimension members",
+      "dependencies": [
+        "context"
+      ],
+      "source": "* BPC Notebook Script v1\n* @bn-source ZGltZW5zaW9uIGRpbSA9IERFTVJFVklELU1BVENPTk4KbWVtYmVycyByb3dzID0gZGltCnNob3cgcm93cyBhcyAiTUFUQ09OTl9TVE9SRURfTUVNQkVSUyIK\n* @bn-source bWVzc2FnZSB0ZXh0KGNvdW50KHJvd3MpKQ==\n* @bn-generated\n* @bn-line 1\nDATA(bn_s1) = io->bpc_dimension( name = `MATCONN` model_name = `DEMREVID` ).\n* @bn-line 2\nDATA(bn_s2) = bn_s1->member_data(  ).\nFIELD-SYMBOLS <bn_s3> TYPE STANDARD TABLE.\nASSIGN bn_s2->* TO <bn_s3>.\n* @bn-line 3\nio->emit_table( name = `MATCONN_STORED_MEMBERS` rows = <bn_s3> ).\n* @bn-line 4\nio->message( CONV string( CONV string( CONV decfloat34( lines( <bn_s3> ) ) ) ) )."
+    },
+    {
+      "id": "product_type",
+      "title": "PRODUCT_TYPE stored dimension members",
+      "dependencies": [
+        "context"
+      ],
+      "source": "* BPC Notebook Script v1\n* @bn-source ZGltZW5zaW9uIGRpbSA9IERFTVJFVklELVBST0RVQ1RfVFlQRQptZW1iZXJzIHJvd3MgPSBkaW0Kc2hvdyByb3dzIGFzICJQUk9EVUNUX1RZUEVfU1RPUkVE\n* @bn-source X01FTUJFUlMiCm1lc3NhZ2UgdGV4dChjb3VudChyb3dzKSk=\n* @bn-generated\n* @bn-line 1\nDATA(bn_s1) = io->bpc_dimension( name = `PRODUCT_TYPE` model_name = `DEMREVID` ).\n* @bn-line 2\nDATA(bn_s2) = bn_s1->member_data(  ).\nFIELD-SYMBOLS <bn_s3> TYPE STANDARD TABLE.\nASSIGN bn_s2->* TO <bn_s3>.\n* @bn-line 3\nio->emit_table( name = `PRODUCT_TYPE_STORED_MEMBERS` rows = <bn_s3> ).\n* @bn-line 4\nio->message( CONV string( CONV string( CONV decfloat34( lines( <bn_s3> ) ) ) ) )."
+    },
+    {
+      "id": "mat_group_id",
+      "title": "MAT_GROUP_ID stored dimension members",
+      "dependencies": [
+        "context"
+      ],
+      "source": "* BPC Notebook Script v1\n* @bn-source ZGltZW5zaW9uIGRpbSA9IERFTVJFVklELU1BVF9HUk9VUF9JRAptZW1iZXJzIHJvd3MgPSBkaW0Kc2hvdyByb3dzIGFzICJNQVRfR1JPVVBfSURfU1RPUkVE\n* @bn-source X01FTUJFUlMiCm1lc3NhZ2UgdGV4dChjb3VudChyb3dzKSk=\n* @bn-generated\n* @bn-line 1\nDATA(bn_s1) = io->bpc_dimension( name = `MAT_GROUP_ID` model_name = `DEMREVID` ).\n* @bn-line 2\nDATA(bn_s2) = bn_s1->member_data(  ).\nFIELD-SYMBOLS <bn_s3> TYPE STANDARD TABLE.\nASSIGN bn_s2->* TO <bn_s3>.\n* @bn-line 3\nio->emit_table( name = `MAT_GROUP_ID_STORED_MEMBERS` rows = <bn_s3> ).\n* @bn-line 4\nio->message( CONV string( CONV string( CONV decfloat34( lines( <bn_s3> ) ) ) ) )."
+    },
+    {
+      "id": "selected_facts",
+      "title": "Generic DEMREVID read for frozen periods",
+      "dependencies": [
+        "context"
+      ],
+      "source": "* BPC Notebook Script v1\n* @bn-source bW9kZWwgYWxsb2NhdGlvbiA9IERFTVJFVklECmRhdGEgZmFjdHMgPSBhbGxvY2F0aW9uIHdoZXJlIFRJTUUgPSByYW5nZSgiVElNRSIpIGFuZCBDQVRFR09S\n* @bn-source WSA9IHNlbGVjdGlvbigiQ0FURUdPUlkiKSBsaW1pdCAxMDAwMDAKc2hvdyBmYWN0cyBhcyAiU0VMRUNURURfUEVSSU9EX0ZBQ1RTIgpsZXQgdG90YWwgPSAw\n* @bn-source CmZvciByb3cgaW4gZmFjdHMKICB0b3RhbCA9IHRvdGFsICsgbnVtYmVyKHJvdy5TSUdORUREQVRBKQplbmQKdGFibGUgc3VtbWFyeQphcHBlbmQgc3VtbWFy\n* @bn-source eSBrZXkgPSAiUkFXX1JPV19DT1VOVCIgYW1vdW50ID0gY291bnQoZmFjdHMpCmFwcGVuZCBzdW1tYXJ5IGtleSA9ICJSQVdfU0lHTkVEREFUQV9UT1RBTCIg\n* @bn-source YW1vdW50ID0gdG90YWwKZW1pdCBzdW1tYXJ5CnNob3cgc3VtbWFyeSBhcyAiUkVBRF9DT1VOVFMiCm1lc3NhZ2UgIlJhdyBmYWN0czogVElNRV9OQSBhbmQg\n* @bn-source b3V0c2lkZS1zY29wZSBsb29rYmFjayByZWFkcyBhcmUgbm90IGluY2x1ZGVkIg==\n* @bn-generated\n* @bn-line 1\nDATA(bn_s1) = io->bpc_model( `DEMREVID` ).\n* @bn-line 2\nDATA bn_s2 TYPE zcl_bn_bpc=>tt_filters.\nAPPEND VALUE #( dimension = `TIME` members = VALUE zcl_bn_types=>tt_ids( FOR bn_s3 IN io->range( `TIME` ) ( CONV string( bn_s3 ) ) ) ) TO bn_s2.\nAPPEND VALUE #( dimension = `CATEGORY` members = io->selection( `CATEGORY` ) ) TO bn_s2.\nDATA(bn_s4) = bn_s1->read_data( filters = bn_s2 max_rows = 100000 ).\nFIELD-SYMBOLS <bn_s5> TYPE STANDARD TABLE.\nASSIGN bn_s4->* TO <bn_s5>.\n* @bn-line 3\nio->emit_table( name = `SELECTED_PERIOD_FACTS` rows = <bn_s5> ).\n* @bn-line 4\nDATA(bn_s6) = CONV decfloat34( `0` ).\n* @bn-line 5\nFIELD-SYMBOLS <bn_s7> TYPE any.\nLOOP AT <bn_s5> ASSIGNING <bn_s7>.\n* @bn-line 6\nFIELD-SYMBOLS <bn_s8> TYPE any.\nUNASSIGN <bn_s8>.\nASSIGN COMPONENT `SIGNEDDATA` OF STRUCTURE <bn_s7> TO <bn_s8>.\nIF sy-subrc <> 0.\n  RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_SCRIPT_FIELD' detail = `Missing field: SIGNEDDATA`.\nENDIF.\nbn_s6 = ( bn_s6 + CONV decfloat34( <bn_s8> ) ).\n* @bn-line 7\nENDLOOP.\n* @bn-line 8\nDATA bn_s9 TYPE zcl_bn_context=>tt_rows.\n* @bn-line 9\nAPPEND VALUE #( key = `RAW_ROW_COUNT` amount = CONV decfloat34( lines( <bn_s5> ) ) ) TO bn_s9.\n* @bn-line 10\nAPPEND VALUE #( key = `RAW_SIGNEDDATA_TOTAL` amount = bn_s6 ) TO bn_s9.\n* @bn-line 11\nio->emit( bn_s9 ).\n* @bn-line 12\nio->emit_table( name = `READ_COUNTS` rows = bn_s9 ).\n* @bn-line 13\nio->message( CONV string( CONV string( `Raw facts: TIME_NA and outside-scope lookback reads are not ` && `included` ) ) )."
+    },
+    {
+      "id": "conversion_status",
+      "title": "Remaining calculation steps and conversion boundary",
+      "dependencies": [
+        "selected_facts",
+        "matconn",
+        "product_type",
+        "mat_group_id"
+      ],
+      "source": "TYPES: BEGIN OF ty_step,\n         step_id TYPE string, method_name TYPE string, status TYPE string,\n       END OF ty_step.\nDATA steps TYPE STANDARD TABLE OF ty_step WITH DEFAULT KEY.\nAPPEND VALUE #( step_id = 'INITIALISE' method_name = 'initialise' status = 'RETAINED_ABAP_NOT_PORTED' ) TO steps.\nAPPEND VALUE #( step_id = 'ENRICH_REVENUES' method_name = 'assign_new_fields_rev' status = 'RETAINED_ABAP_NOT_PORTED' ) TO steps.\nAPPEND VALUE #( step_id = 'CONSOLIDATE' method_name = 'group' status = 'RETAINED_ABAP_NOT_PORTED' ) TO steps.\nAPPEND VALUE #( step_id = 'LOCATION_ALLOC_METHOD' method_name = 'calc_location_alloc_method' status = 'RETAINED_ABAP_NOT_PORTED' ) TO steps.\nAPPEND VALUE #( step_id = 'LOCATION_ALLOC_RATIOS' method_name = 'calc_location_alloc_ratios' status = 'RETAINED_ABAP_NOT_PORTED' ) TO steps.\nAPPEND VALUE #( step_id = 'ALLOC_RSP_BILLED_DATA' method_name = 'calc_alloc_rsp_billed_data' status = 'RETAINED_ABAP_NOT_PORTED' ) TO steps.\nAPPEND VALUE #( step_id = 'REMAINING_RSP_BILLING' method_name = 'calc_remaining_rsp_billing' status = 'RETAINED_ABAP_NOT_PORTED' ) TO steps.\nAPPEND VALUE #( step_id = 'RSP_NOT_BILLED_LOCATION' method_name = 'calc_rsp_not_billed_location' status = 'RETAINED_ABAP_NOT_PORTED' ) TO steps.\nAPPEND VALUE #( step_id = 'FFLAS_GROUPING' method_name = 'calc_fflas_grouping' status = 'RETAINED_ABAP_NOT_PORTED' ) TO steps.\nAPPEND VALUE #( step_id = 'PQ_ID_FFLAS_REVENUE' method_name = 'calc_pq_id_fflas_revenue' status = 'RETAINED_ABAP_NOT_PORTED' ) TO steps.\nAPPEND VALUE #( step_id = 'PQ_FFLAS_RATIO' method_name = 'calc_pq_fflas_ratio' status = 'RETAINED_ABAP_NOT_PORTED' ) TO steps.\nAPPEND VALUE #( step_id = 'SUPPLIER_ALLOC_METHOD' method_name = 'calc_supplier_alloc_method' status = 'RETAINED_ABAP_NOT_PORTED' ) TO steps.\nAPPEND VALUE #( step_id = 'SUPPLIER_ALLOC_RATIOS' method_name = 'calc_supplier_alloc_ratios' status = 'RETAINED_ABAP_NOT_PORTED' ) TO steps.\nAPPEND VALUE #( step_id = 'ALLOC_ID_REV_SUPPLIER' method_name = 'calc_alloc_id_rev_supplier' status = 'RETAINED_ABAP_NOT_PORTED' ) TO steps.\nAPPEND VALUE #( step_id = 'PRICE_MATERIAL_LEVEL' method_name = 'calc_price_material_level' status = 'RETAINED_ABAP_NOT_PORTED' ) TO steps.\nAPPEND VALUE #( step_id = 'HSNS_REV_ALLOC' method_name = 'calc_hsns_rev_alloc' status = 'RETAINED_ABAP_NOT_PORTED' ) TO steps.\nAPPEND VALUE #( step_id = 'FFLAS_RATIOS_BY_MATERIAL' method_name = 'calc_fflas_ratios_by_material' status = 'RETAINED_ABAP_NOT_PORTED' ) TO steps.\nAPPEND VALUE #( step_id = 'TRANSPOSE_REVENUES' method_name = 'transpose_revenues' status = 'RETAINED_ABAP_NOT_PORTED' ) TO steps.\nAPPEND VALUE #( step_id = 'TRANSPOSE_PRICES' method_name = 'transpose_prices' status = 'RETAINED_ABAP_NOT_PORTED' ) TO steps.\nAPPEND VALUE #( step_id = 'TRANSPOSE_CONNECTIONS' method_name = 'transpose_connections' status = 'RETAINED_ABAP_NOT_PORTED' ) TO steps.\nio->emit_table( name = 'CONVERSION_STATUS' rows = steps ).\nDATA(counts) = io->read( 'selected_facts' ).\nio->emit( counts ).\nio->message( 'No allocation output: grouped transformations and lookback contract still require conversion' )."
+    }
+  ]
+}

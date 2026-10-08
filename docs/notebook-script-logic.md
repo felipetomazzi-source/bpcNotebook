@@ -25,19 +25,21 @@ INPUT_SUPPRESSZERO = ON
 - An explicit selection or saved default must stay within any matching caller current-view scope. Unknown inputs, invalid types, unauthorized IDs, hierarchy errors, and widening selections fail the BAdI call.
 - Caller current-view filters also constrain model reads for dimensions that are not notebook inputs. Shared execution snapshots retain the original current view, normalized Script Logic parameters, selected IDs, resolved IDs, notebook revision and handler binding revision.
 
+Reference reads require a pinned declaration and explicit `READ_REFERENCES = DECLARED`; reference-only periods never become output periods and cannot be overridden by INPUT_ parameters. See [scope and retry rules](demrevid-allocation.md).
+
 The caller current view must contain authorized base IDs, with at most 10,000 IDs per dimension. A declared range input retains the existing limit of 100 selected IDs. If a caller supplies more IDs for such an input, the invocation fails clearly; it does not truncate them. Notebook adapters inside this first BAdI version use the calling model.
 
 Cells use the existing contracts: `io->input()`, `io->member()`, `io->selection()`, `io->range()`, `io->current_view()`, and `io->script_parameters()`. The latter retains incoming Script Logic parameters and adds the notebook's typed calculation parameters. Declared dependencies receive in-memory copies of preceding cell outputs, with the same dependency access checks used by background runs.
 
 ## Execution and outputs
 
-This first implementation runs synchronously and records notebook outputs. It requires an explicit `WRITE = OFF`; missing WRITE or WRITE ON is rejected. It leaves incoming BPC `CT_DATA` unchanged and does not return a preview table for BPC write processing. `QUERY = OFF` avoids an unnecessary initial BPC query; cells read through the validated model adapter as needed.
+Preview execution runs synchronously and records notebook outputs. It requires explicit `WRITE = OFF`, leaves incoming BPC `CT_DATA` unchanged and never returns a preview table for BPC write processing. A separately bound allocation mode requires `EXECUTION = ALLOCATION` and `WRITE = ON`; it validates an explicitly published full delta result before returning CT_DATA. See [the allocation contract](demrevid-allocation.md). `QUERY = OFF` avoids an unnecessary initial BPC query; cells read through the validated model adapter as needed.
 
 The handler introduces no COMMIT, ROLLBACK or background-job submission. After every cell succeeds, its output records and completed execution snapshot are staged in the caller's LUW. They become visible in **Execution review** when the caller commits, and disappear if the caller rolls back. Authored ABAP retains the existing trusted-author restrictions; this is not an ABAP sandbox.
 
 Run messages include the execution ID. Exceptions become `CX_UJ_CUSTOM_LOGIC` failures. A failed invocation does not publish partial notebook outputs. BAdI outputs remain external-context results and cannot satisfy ordinary editor-run dependencies; inspect their frozen run directly. To rerun, invoke Script Logic again so it supplies its current view and owns the transaction.
 
-The existing DEV enablement, production block and SAP authorizations remain in force. Handler bindings and notebook revisions must belong to the executing SAP user. Cross-user published handlers and BPC writeback are future extensions.
+The existing DEV enablement, production block and SAP authorizations remain in force. Handler bindings and notebook revisions must belong to the executing SAP user. Cross-user published handlers remain a future extension. Allocation result return is explicitly controlled; business posting remains the BPC caller’s responsibility.
 
 ## Objects and APIs
 

@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-08T19:47:06.189Z",
+  "passed": true,
+  "notebookId": "E82AEA36D1571FD1B0EA1DA6C7A88DBE",
+  "binding": {
+    "name": "BN_ALLOCATION_VERIFY",
+    "revision": 2,
+    "notebookId": "E82AEA36D1571FD1B0EA1DA6C7A88DBE",
+    "notebookRevision": 1,
+    "environment": "CH_PLANNING",
+    "model": "DEMREVID",
+    "checksum": "3F33BE54F032FF34A328AE75D415A196E43BC4E52F17ECE53A18D035E01A40FF",
+    "executionMode": "allocation"
+  },
+  "checks": [
+    "BNCHECK|nonempty typed CT_DATA result, frozen references, caller rollback, no business writeback invoked",
+    "BNCHECK|preview ignores allocation result and preserves CT_DATA",
+    "BNCHECK|failure preserves caller data:TEST_FAILURE",
+    "BNCHECK|failure preserves caller data:REFERENCE_POLICY",
+    "BNCHECK|failure preserves caller data:REFERENCE_POLICY",
+    "BNCHECK|failure preserves caller data:RESULT_SCOPE"
+  ],
+  "businessFactsWritten": false
+}

@@ -1,9 +1,9 @@
 {
-  "at": "2026-10-08T08:06:11.145Z",
+  "at": "2026-10-08T19:52:13.507Z",
   "repoId": "000000000008",
   "package": "ZBPC_NOTEBOOK",
   "transport": "NPLK900126",
-  "commit": "8e12294137fa9a95a75e1f6c0ac16ec1db67fd46",
+  "commit": "1e4e9c26c791ca37983177f8b6d37e0f637be85b",
   "method": "Full online abapGit repository serialization (refresh + get_files_local) after network pull, compared byte-for-byte with committed Git blobs",
   "files": [
     {
@@ -14,14 +14,14 @@
     },
     {
       "filename": "src/zcl_bn_bpc.clas.abap",
-      "bytes": 15106,
-      "sapSha256": "0b90a139ec31719528b25544dcdcdf042d619e9d75c4e9408da8156e1b161f7f",
+      "bytes": 40347,
+      "sapSha256": "87c758409483dcd1605bc0c5a1bb2967f1e89ee6982f852469e14513fbf3b102",
       "equal": true
     },
     {
       "filename": "src/zcl_bn_bpc.clas.testclasses.abap",
-      "bytes": 2800,
-      "sapSha256": "8cd89a276e608368fa8f6d1df8443f8c77046624cb1351cde90011ffcba79adf",
+      "bytes": 11552,
+      "sapSha256": "1740a380630e543b5d8f7f98ebc2b35040af5bee89d787441a9b7f7ea03792cb",
       "equal": true
     },
     {
@@ -50,8 +50,8 @@
     },
     {
       "filename": "src/zcl_bn_context.clas.abap",
-      "bytes": 4862,
-      "sapSha256": "1899c9e15edc601bc4a94c2ced3eaa03f018fde3f8f079f05fbc8ba9e8de7218",
+      "bytes": 19286,
+      "sapSha256": "5ffec35bdbb4ba484336606a0bb9a072ac31fb771a2331bb0c21db1caeb176dc",
       "equal": true
     },
     {
@@ -61,15 +61,69 @@
       "equal": true
     },
     {
+      "filename": "src/zcl_bn_dem_alloc.clas.abap",
+      "bytes": 125065,
+      "sapSha256": "56a08121685812103e030fddf5cde176fe6ff5f6857fb1071ebec04ee3436e0f",
+      "equal": true
+    },
+    {
+      "filename": "src/zcl_bn_dem_alloc.clas.testclasses.abap",
+      "bytes": 31025,
+      "sapSha256": "a563bfdf7f28fae26a744e299622785ab3cfc4f1e35e2d19c90c3eba54af1771",
+      "equal": true
+    },
+    {
+      "filename": "src/zcl_bn_dem_alloc.clas.xml",
+      "bytes": 539,
+      "sapSha256": "deae525639584819ec28e260228922e51fbd76887262d917b4f8758a2836d889",
+      "equal": true
+    },
+    {
+      "filename": "src/zcl_bn_dem_model.clas.abap",
+      "bytes": 16467,
+      "sapSha256": "f9fb6a2c12920eb49550758c015dae587d55a1521126573927a5f9f8a2e5b7cb",
+      "equal": true
+    },
+    {
+      "filename": "src/zcl_bn_dem_model.clas.xml",
+      "bytes": 489,
+      "sapSha256": "7b5e3abdb59c4b01eca9b25ac93ed0ac63005e0d2e3e3247a4007d87b3a7bfec",
+      "equal": true
+    },
+    {
+      "filename": "src/zcl_bn_dimension.clas.abap",
+      "bytes": 4024,
+      "sapSha256": "e8d71738e58b183036a82f4a0e9aece360bd6b254449096fbc2543aea7420479",
+      "equal": true
+    },
+    {
+      "filename": "src/zcl_bn_dimension.clas.xml",
+      "bytes": 502,
+      "sapSha256": "e125d99552f6daf6af1a8b7dbd5d5faede15248ffb0533762f7bcc0428f0218a",
+      "equal": true
+    },
+    {
       "filename": "src/zcl_bn_http.clas.abap",
-      "bytes": 3165,
-      "sapSha256": "d8ca4caa02328b92867ea5101abb6f80c61caf6a67ec0409f4b6a57fbc64fef3",
+      "bytes": 3233,
+      "sapSha256": "bc1454e686198cc51b151ecc20984723699db65dea194b084d265a9cea40c50e",
       "equal": true
     },
     {
       "filename": "src/zcl_bn_http.clas.xml",
       "bytes": 480,
       "sapSha256": "53fadb4327afd20818f2ba394003cd86adafeafb52935106bb52d8486c54efe2",
+      "equal": true
+    },
+    {
+      "filename": "src/zcl_bn_logic.clas.abap",
+      "bytes": 14305,
+      "sapSha256": "e6e9ab332c0ffa13a5acc4c9cdb2d7eb301d9e81b597d165ef4e2f16f3a1f2e9",
+      "equal": true
+    },
+    {
+      "filename": "src/zcl_bn_logic.clas.xml",
+      "bytes": 482,
+      "sapSha256": "39bf653fd342c9dfc5f1b3ac17e80b802e66c92b0e6e5ade9ac5fd58f31be7bb",
       "equal": true
     },
     {
@@ -92,8 +146,8 @@
     },
     {
       "filename": "src/zcl_bn_service.clas.abap",
-      "bytes": 35741,
-      "sapSha256": "29654cdb082082266f7b58c4011e0462944f8304a04189945e801a70bc255f9b",
+      "bytes": 54748,
+      "sapSha256": "ce278f706121276b5860266b7442dc641d150916cc561449a43e666dcfacceb9",
       "equal": true
     },
     {
@@ -110,8 +164,8 @@
     },
     {
       "filename": "src/zcl_bn_store.clas.abap",
-      "bytes": 3244,
-      "sapSha256": "7090b2ece0e86435397faa31392ff85e878c083aaeccd17cc4a3ecee9e04ea62",
+      "bytes": 4713,
+      "sapSha256": "8bd71ed8cffb479249517d00ae0fc5dd17569b4dee8d3c35dadbabafa14128d0",
       "equal": true
     },
     {
@@ -121,9 +175,21 @@
       "equal": true
     },
     {
+      "filename": "src/zcl_bn_transform.clas.abap",
+      "bytes": 55230,
+      "sapSha256": "0d60f36529dadb3e264b118c41d0558c8cb90a32a320aa2bbef5750cb5bfe5ea",
+      "equal": true
+    },
+    {
+      "filename": "src/zcl_bn_transform.clas.xml",
+      "bytes": 502,
+      "sapSha256": "5e4af5ae4c88c49886be2ea70c72abd48b8199245355e1654a7b1dafc73ce9e9",
+      "equal": true
+    },
+    {
       "filename": "src/zcl_bn_types.clas.abap",
-      "bytes": 5004,
-      "sapSha256": "37893f4c9eb875e244d5fc42ebdaa2c886a91551a8e4a7c5f79f64d679f96e63",
+      "bytes": 6175,
+      "sapSha256": "106f7a60d90caff4207f6b3c7926368a85aada0dd32fcde3f6f12c203c1dfdf0",
       "equal": true
     },
     {
@@ -145,9 +211,27 @@
       "equal": true
     },
     {
+      "filename": "src/zcx_bn_engine.clas.abap",
+      "bytes": 478,
+      "sapSha256": "43abb3564317189ae900b897b72a8dc58a0f47728277a0ceb84d2be55c3c8722",
+      "equal": true
+    },
+    {
+      "filename": "src/zcx_bn_engine.clas.xml",
+      "bytes": 519,
+      "sapSha256": "2ba9b580e3acea163359ab54aa7522155951d1599d480b6770d1a6b41789a31c",
+      "equal": true
+    },
+    {
       "filename": "src/package.devc.xml",
       "bytes": 337,
       "sapSha256": "e6da46f804899887d291a41770622a6156ccaa35cc8e2d8bd5ac3aaf338c2c74",
+      "equal": true
+    },
+    {
+      "filename": "src/zbn_notebook_badi.enho.xml",
+      "bytes": 3382,
+      "sapSha256": "832f001d97ffe2694cd616ffc4caed2bb3667c76a02217de0e4aadb553483887",
       "equal": true
     },
     {
@@ -206,8 +290,8 @@
     },
     {
       "filename": "src/zbpc_notebook.wapa.component.js",
-      "bytes": 248599,
-      "sapSha256": "11b275d55b0d9126d62f35145d07ac56368072822d9f8d8f73fe3fdbf5ae7a35",
+      "bytes": 361522,
+      "sapSha256": "94be5a609978e9b268c8af61f0a1a10561b7f56b1418b30bd9e8685e312e419a",
       "equal": true
     },
     {
@@ -218,20 +302,20 @@
     },
     {
       "filename": "src/zbpc_notebook.wapa.css_-style.css",
-      "bytes": 46847,
-      "sapSha256": "369c41c1f38f1c92d8b2a45fd04b1a274bcc9475480c1a0846d52eb83d0911ed",
+      "bytes": 4351,
+      "sapSha256": "7c9c1595cb47921fc0eba84f814ab4155055c818f752483d51598e3d24a6770c",
       "equal": true
     },
     {
       "filename": "src/zbpc_notebook.wapa.index.html",
       "bytes": 6143,
-      "sapSha256": "dd6598e5832f72db4d65adead23f75eddda8f62e0a39707a869491b15e0998a2",
+      "sapSha256": "e29d3c5287bf85b41be42e4cc6b3a1cc02ea1ea4e904f73fd65eda6e5223c653",
       "equal": true
     },
     {
       "filename": "src/zbpc_notebook.wapa.manifest.json",
       "bytes": 3839,
-      "sapSha256": "c5f8042d8204286b253ec1ccc9111daa88e742b14cb1fce7b5fc8ecf39dae008",
+      "sapSha256": "f36f3f51b9ac20b7d378a076a3e53fd223899b470d22193f1a13e5da0c168ee7",
       "equal": true
     },
     {
@@ -241,15 +325,21 @@
       "equal": true
     },
     {
+      "filename": "src/zbpc_notebook.wapa.model_-script.js",
+      "bytes": 79103,
+      "sapSha256": "5c0cf70ec84016df6a19fa1180bdce04e337348bd68cfddc15887f3904a00f9f",
+      "equal": true
+    },
+    {
       "filename": "src/zbpc_notebook.wapa.ui5repositorypathmapping.xml",
-      "bytes": 3071,
-      "sapSha256": "f0339da60f21264aee42b50ebec9acc47219eee89a700c44ad664a21f902b7b9",
+      "bytes": 3327,
+      "sapSha256": "6153be14f1db97411a127c21614f4b0fdaa605625ab884b91635164f1f105d3a",
       "equal": true
     },
     {
       "filename": "src/zbpc_notebook.wapa.xml",
-      "bytes": 2688,
-      "sapSha256": "ed148f4b8bad7603947488a786e40088dd8909373c88cbbf815f8b46a24b3318",
+      "bytes": 2987,
+      "sapSha256": "c2144520f2f1d04d2c06149409a574f31ff232dd48a74d3aaf939bced71962ce",
       "equal": true
     }
   ],

@@ -114,9 +114,9 @@ ENDCLASS.`;
   const run=await api('/run?id='+runId,null,'GET');assert.equal(run.state,'succeeded');assert.equal(run.snapshot.revision,n.revision);
   const outputRows=await api('/output?runId='+runId+'&cellId=apply&revision=1&limit=20',null,'GET');assert.equal(Number(outputRows.rows[0].amount),4);
   const unit=await c.unitTestRun('/sap/bc/adt/oo/classes/zcl_bn_bpc');
-  assert.equal(unit.flatMap(t=>t.testmethods).length,6,'Expected all six native adapter/context tests');
+  assert.equal(unit.flatMap(t=>t.testmethods).length,8,'Expected all eight native adapter/context tests');
   assert(unit.every(t=>t.alerts.length===0&&t.testmethods.every(m=>m.alerts.length===0)),JSON.stringify(unit));
-  const evidence={at:new Date().toISOString(),passed:true,handler,notebookId:n.id,latestNotebookRevision:newer.revision,runId,checks:output.trim().split(/\r?\n/),nativeUnitTests:6,output:outputRows};
+  const evidence={at:new Date().toISOString(),passed:true,handler,notebookId:n.id,latestNotebookRevision:newer.revision,runId,checks:output.trim().split(/\r?\n/),nativeUnitTests:8,output:outputRows};
   const scriptHandler=process.argv.find(a=>a.startsWith('--script-handler='))?.slice(17);
   if(scriptHandler){
    assert(/^[A-Z][A-Z0-9_]{0,29}$/.test(scriptHandler));

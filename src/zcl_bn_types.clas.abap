@@ -1,10 +1,19 @@
 CLASS zcl_bn_types DEFINITION PUBLIC FINAL CREATE PUBLIC.
   PUBLIC SECTION.
     TYPES tt_ids TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
+    TYPES: BEGIN OF ty_fiscal_link,
+             dimension TYPE string, member TYPE string, prior TYPE string, next TYPE string,
+           END OF ty_fiscal_link,
+           tt_fiscal_links TYPE STANDARD TABLE OF ty_fiscal_link WITH DEFAULT KEY.
+    TYPES: BEGIN OF ty_checkpoint,
+      name TYPE string, state TYPE string, started_at TYPE string, finished_at TYPE string,
+      duration_us TYPE i, inputs TYPE tt_ids, outputs TYPE tt_ids,
+    END OF ty_checkpoint, tt_checkpoints TYPE STANDARD TABLE OF ty_checkpoint WITH DEFAULT KEY.
     TYPES: BEGIN OF ty_input,
              name TYPE string, type TYPE string, value TYPE string,
              dimension TYPE string, hierarchy TYPE string, required TYPE abap_bool,
              selected TYPE tt_ids, resolved TYPE tt_ids,
+             purpose TYPE string, lookback_from TYPE string, lookback_steps TYPE i, fiscal_links TYPE tt_fiscal_links,
            END OF ty_input,
            tt_inputs TYPE STANDARD TABLE OF ty_input WITH DEFAULT KEY.
     TYPES: BEGIN OF ty_ref,
@@ -58,8 +67,8 @@ CLASS zcl_bn_types DEFINITION PUBLIC FINAL CREATE PUBLIC.
              logic_parameters TYPE ujk_t_script_logic_hashtable, current_view TYPE ujk_t_cv,
              snapshot TYPE ty_notebook, bindings TYPE tt_bindings,
              frozen_bindings TYPE tt_bindings,
-             messages TYPE tt_messages, results TYPE tt_results,
-             diagnostics TYPE tt_diagnostics,
+             messages TYPE tt_messages, results TYPE tt_results, checkpoints TYPE tt_checkpoints,
+             diagnostics TYPE tt_diagnostics, checkpoint_cell TYPE string,
              error TYPE ty_error,
            END OF ty_run,
            tt_runs TYPE STANDARD TABLE OF ty_run WITH DEFAULT KEY.
@@ -73,6 +82,9 @@ CLASS zcl_bn_types IMPLEMENTATION.
   METHOD json.
     result = /ui2/cl_json=>serialize( data = data
       pretty_name = /ui2/cl_json=>pretty_mode-camel_case ).
+    " Preserve checksums for snapshots saved before reference/checkpoint fields existed.
+    REPLACE ALL OCCURRENCES OF ',"purpose":"","lookbackFrom":"","lookbackSteps":0,"fiscalLinks":[]' IN result WITH ''.
+    REPLACE ALL OCCURRENCES OF ',"checkpoints":[]' IN result WITH ''.
   ENDMETHOD.
   METHOD hash.
     TRY.

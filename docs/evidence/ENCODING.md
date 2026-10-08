@@ -39,3 +39,5 @@ The BPC selector deployment additionally passed a full online repository seriali
 ## Notebook Script Logic deployment
 
 The latest comparison covers all 45 files, including the NOTEBOOK BAdI enhancement and its SAP-generated SOTR text identifiers. The enhancement XML was canonicalized from the real SAP serializer and then imported/serialized again without differences. UTF-8 BOM conventions, CRLF checkout line endings, BSP 255-character padding, punctuation and intentional blank lines remain preserved. The local suite passes 23 tests; six harmless native adapter/context tests and real BAdI invocation tests also pass. See notebook-logic.json for pinned revision, caller LUW and parameter/current-view checks.
+
+Current allocation implementation: the SAP comparison now covers all 56 files, including the generic allocation classes and native business tests. See sap-roundtrip.json and [the allocation verification contract](../demrevid-allocation.md).

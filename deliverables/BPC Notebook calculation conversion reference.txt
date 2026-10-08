@@ -1,0 +1,421 @@
+BPC Notebook calculation conversion reference
+
+Handoff for the agent converting existing ABAP calculations
+
+Verified against repository commit 5ba07f031060ab90dc8f5ba521880f246874a120 on 9 October 2026. Language version Notebook Script v1.
+
+Conversion objective
+
+Convert the supplied calculation into a saved BPC Notebook using Notebook Script where the implemented grammar can preserve its behavior. Configure its real BPC environment, model, inputs and cell dependencies. Keep unsupported operations in clearly identified ABAP cells or report the required extension. Do not invent language features or change the business calculation to fit the language.
+
+This document is self-contained guidance, not the source business calculation. Obtain the original ABAP class and its helper implementations, input meanings, expected results and required virtual properties before completing a business conversion.
+
+Instructions to the conversion agent
+
+Inventory reads, transformations, allocations, rounding, aggregation, hierarchy rules, external calls and writes. Distinguish stored properties from computed or virtual properties.
+
+Map each original parameter to a notebook input, including its type, dimension, hierarchy, default and required status. Keep exact SAP identifiers and fiscal hierarchy semantics.
+
+Produce the authored script for every script cell, any retained ABAP cell source, stable cell IDs, execution order and declared dependencies. Explain unsupported operations and assumptions.
+
+Save and validate in SAP. Compare results against the original calculation for representative nonempty data and edge cases before declaring business equivalence.
+
+Use the named NOTEBOOK handler only after the saved notebook is tested. Bind a specific revision and provide the corresponding LGF block.
+
+Current execution boundary
+
+The installed implementation provides read-only BPC model access and recorded calculation previews. It does not write model facts or return calculated CT_DATA for Script Logic write processing. Existing calculations that perform writeback require a separate implementation decision; a preview alone does not replace their business effect.
+
+The SAP DEV implementation is for trusted authors. Its production block and authorizations remain active. A successful example run is not evidence that the full legacy allocation has been converted.
+
+Notebook setup and frozen inputs
+
+Open the SAP application, choose New notebook, then BPC model. Select the authorized environment and model. Add number, string or boolean parameters in Inputs, and use Add dimension parameter for member or range inputs. Use Add script cell for Notebook Script and Add cell for ABAP.
+
+Example input definition
+
+Replace angle-bracket placeholders with actual metadata IDs. The input names CATEGORY and TIME are notebook parameter names; their dimension fields must name the actual dimensions of the model. Select defaults using the searchable value help.
+
+{
+
+  "environment": "<environment ID>",
+
+  "model": "<model ID>",
+
+  "inputs": [
+
+    {"name":"CATEGORY", "type":"member",
+
+     "dimension":"<category dimension ID>",
+
+     "required":true, "selected":["<member ID>"]},
+
+    {"name":"TIME", "type":"range",
+
+     "dimension":"<time dimension ID>",
+
+     "hierarchy":"<hierarchy ID>", "required":true,
+
+     "selected":["<node or period ID>"]},
+
+    {"name":"total", "type":"number", "value":120000},
+
+    {"name":"factor", "type":"number", "value":1.1},
+
+    {"name":"suppressZero", "type":"boolean", "value":true}
+
+  ]
+
+}
+
+
+
+Selection semantics
+
+member accepts exactly one selected member. range accepts up to 100 selected nodes or individual members. Choose a real hierarchy when the dimension has hierarchies. The backend expands nodes to authorized base IDs and owns the resolved field. Never derive periods from a year prefix, assume twelve months, or send a fabricated resolved array.
+
+selection("TIME") returns the selected IDs, which may include nodes. range("TIME") returns frozen resolved base IDs. member("CATEGORY") returns the single selected ID. input(...) is only for scalar inputs and returns canonical text; convert numbers explicitly.
+
+Saving and execution
+
+Save version compiles script to ABAP and saves the exact authored script in its source envelope. Validate uses SAP compilation. Run all executes with one immutable snapshot containing the saved sources, model and all typed inputs. All cells in that run receive the same values. A changed selection marks earlier results stale.
+
+Submission revalidates authorization and resolves selections again. If the resolved set changed since save, save again before running. Historical retries keep the original source and selections. For initial conversion testing, prefer Run all so dependencies are produced within the same run.
+
+Script statements and resource access
+
+Write one statement per line. Keywords are lowercase and identifiers are case-sensitive ASCII names matching [A-Za-z_][A-Za-z0-9_]*. Use exact metadata IDs for resources. No ABAP periods or semicolons are needed. A hash sign starts a comment outside quoted text.
+
+Dimensions and stored properties
+
+dimension materials = DEMREVID-MATCONN
+
+# A dimension alone uses the configured notebook model
+
+dimension category = CATEGORY
+
+members connections = materials
+
+members chosen = materials ["MEMBER_A", "MEMBER_B"]
+
+let label = materials-EVDESCRIPTION("MEMBER_A")
+
+message label
+
+show connections as "MEMBERS"
+
+
+
+DEMREVID, MATCONN and member IDs above are examples. members returns a dynamic table containing ID, EVDESCRIPTION, stored properties and actual hierarchy parent columns. Requested missing or unauthorized IDs fail. Property access returns text. The fully qualified form MODEL-DIMENSION-PROPERTY("ID") also works.
+
+Models and validated reads
+
+model plan = DEMREVID
+
+dimension time = plan-TIME
+
+data facts = plan where TIME = range("TIME") and CATEGORY = selection("CATEGORY") limit 10000
+
+# Direct model use also creates an adapter
+
+data otherFacts = DEMREVID limit 10000
+
+show facts as "FACTS"
+
+
+
+Each where clause uses a dimension name and an ID-list expression: ["ID", "ID2"], selection(...), range(...), or a declared list variable. Combine dimension filters with and. Single strings are not valid filter lists. Use the actual category and time dimension names if they differ from the example.
+
+Reads automatically apply matching frozen notebook dimension selections even when where is omitted. Added filters intersect these restrictions; they cannot widen them. IDs in a filter are alternatives. Repeated filters on the same dimension intersect. Empty lists, disjoint constraints, unknown dimensions and invalid IDs fail.
+
+Explicit model filters require authorized base IDs; hierarchy nodes and calculated members fail. Use range(...) for nodes resolved by notebook input selection. In ordinary editor runs, another model in the same environment can be read, with shared-name selections revalidated. In a Script Logic handler, adapters must use the calling model.
+
+Autocomplete
+
+Typing DEMREVID- suggests dimensions; DEMREVID-MATCONN- or materials- suggests stored properties. Model aliases also qualify dimensions. Ctrl+Space opens completion. Suggestions use authorized SAP metadata in the chosen environment. Reload the app after metadata changes to refresh the session cache.
+
+Expressions loops and output contracts
+
+Values and built in functions
+
+let factor = number(input("factor"))
+
+let categoryId = member("CATEGORY")
+
+let periods = range("TIME")
+
+let suppress = input("suppressZero") == "true"
+
+let title = concat("Category ", categoryId)
+
+let periodCount = count(periods)
+
+message concat(title, concat(" periods ", text(periodCount)))
+
+
+
+Numbers use decfloat34 conversion and support decimal and exponent notation. Text uses double quotes with JSON-style escapes such as \" for a quote; decoded newlines and null characters are rejected. Unicode accents and punctuation are preserved. true and false are boolean literals. Use concat(a, b) for two scalar text conversions and concatenation; use text(value) for scalar conversion.
+
+The complete built-in set is input, member, selection, range, number, text, count and concat. count accepts a table or ID list. There is no boolean conversion function; compare a boolean input with "true". Variables declared with let keep their original type and can be reassigned using name = expression.
+
+Operators and conditions
+
+Supported arithmetic: + - * / % and unary minus. Comparisons: == != < <= > >=. Boolean operators: and or not. Parentheses group expressions. Precedence from lowest to highest is or, and, comparisons, +/-, */%, then unary minus/not. Conditions must be boolean expressions; numbers and text are not truthy values.
+
+for row in facts
+
+  if row.SIGNEDDATA != 0 and factor > 0
+
+    row.SIGNEDDATA = row.SIGNEDDATA * factor
+
+  else
+
+    row.SIGNEDDATA = 0
+
+  end
+
+end
+
+
+
+for iterates table rows by reference. row.FIELD reads or changes an existing component; field lookup maps to uppercase ABAP names and checks existence at runtime. It does not add columns or change the table schema. Arithmetic uses numeric fields; explicitly convert text fields with number(...). The loop row name expires at end. Nested loops and if/else use end; there is no elseif, break or continue statement.
+
+Two different output contracts
+
+show tableName as "NAME" creates a named flat-table preview. It works for member tables, model tables and scalar tables. Each output name in a cell must be unique. Up to 50 tables are allowed per cell, with at most 5000 persisted preview rows per table; the original total count is retained. Preview pages contain at most 100 rows.
+
+emit rows publishes the scalar dependency output: a table of key (string) and amount (decfloat34), maximum 10000 rows. table rows declares this shape and append rows key = "ID" amount = expression adds rows. Do not emit a model or member table as a scalar dependency. read rows = "cell_id" reads only the earlier cell’s emitted scalar table, and that ID must appear in the consuming cell’s Dependencies field.
+
+Worked allocation across two cells
+
+This example demonstrates syntax and dependency contracts, not the original business allocation. Configure total as number 120000 and factor as number 1.1. Cell IDs below are stable identifiers, distinct from their display titles.
+
+Cell seed with no dependencies
+
+# Prepare three scalar allocations
+
+let total = number(input("total"))
+
+table rows
+
+append rows key = "CC100" amount = total * 0.5
+
+append rows key = "CC200" amount = total * 0.3
+
+append rows key = "CC300" amount = total * 0.2
+
+emit rows
+
+show rows as "BASE_ALLOCATION"
+
+message "Prepared three cost centres"
+
+
+
+Cell allocate with dependency seed
+
+read rows = "seed"
+
+let factor = number(input("factor"))
+
+for row in rows
+
+  row.amount = row.amount * factor
+
+end
+
+emit rows
+
+show rows as "ALLOCATION"
+
+message concat("Applied factor ", text(factor))
+
+
+
+Save both cells, set allocate’s Dependencies to seed, validate and Run all. Expected seed amounts are 60000, 36000 and 24000. Expected allocate amounts are 66000, 39600 and 26400, totaling 132000. Execution review shows the emitted scalar output and each named preview.
+
+Optional suppression semantics
+
+The implemented language can conditionally append scalar rows. It has no delete-row statement. If the original flag means remove zero rows, build a new scalar table and append only qualifying rows; do not substitute setting zero values, which changes the output contract.
+
+read source = "seed"
+
+table filtered
+
+let suppress = input("suppressZero") == "true"
+
+for row in source
+
+  if not suppress or row.amount != 0
+
+    append filtered key = text(row.key) amount = number(row.amount)
+
+  end
+
+end
+
+emit filtered
+
+
+
+This variant requires the declared boolean suppressZero input and dependency seed. Dynamic row fields must be explicitly converted for append because append expects a text key and numeric amount. Preserve the original calculation’s rounding and zero-test rules; this example uses exact zero comparison.
+
+Converting BPC model calculations
+
+Example model transformation in one cell
+
+model plan = DEMREVID
+
+data facts = plan where TIME = range("TIME") and CATEGORY = selection("CATEGORY") limit 100000
+
+let factor = number(input("factor"))
+
+let total = 0
+
+for row in facts
+
+  row.SIGNEDDATA = row.SIGNEDDATA * factor
+
+  total = total + number(row.SIGNEDDATA)
+
+end
+
+show facts as "SCALED_FACTS"
+
+table summary
+
+append summary key = "TOTAL" amount = total
+
+emit summary
+
+message concat("Read rows ", text(count(facts)))
+
+
+
+Use the actual model and filter dimensions. Model reads return a dynamic flat table with one 32-character member column per dimension and SIGNEDDATA of SAP type UJ_SDATA. Assignment to SIGNEDDATA follows its ABAP target type; compare rounding and precision with the original calculation.
+
+The default model-read limit is 100000, configurable from 1 to 1000000. Exceeding it raises BPC_READ_LIMIT rather than returning a partial input. A named preview may truncate at 5000 rows; calculations operate on the full returned table. Never use preview row counts as proof that every business row was processed.
+
+Operations that need an explicit conversion decision
+
+No implemented syntax exists for joins, group by, sorting, keyed lookup, aggregation by dimension, arbitrary dynamic-table construction, table copying, deleting rows, user functions, exception handling, general method calls or writeback. A scalar accumulator loop is supported, but that does not supply grouped aggregation automatically.
+
+All tables in one cell share that cell’s local execution scope. Named previews are persisted review artifacts, not a general full-table handoff API. read exposes only scalar key/amount outputs. Keep transformations of the same full model table in one cell, or retain appropriate ABAP logic; do not promise access to a prior cell’s named dynamic table.
+
+Hierarchy names and stored parent columns are available through the ABAP adapter. Script has no children(), descendants(), hierarchy() or properties() built-ins. Resolve selection nodes through configured range inputs. Algorithms needing additional traversal require an ABAP cell or a language extension.
+
+Virtual properties remain an extension hook. The base adapter rejects virtual requests, and no provider registry or automatic Chorus enrichment is installed. Replacing a legacy computed property with a same-named stored field is not behaviorally equivalent without evidence.
+
+Business equivalence checks
+
+Compare member coverage, hierarchy choice, period expansion, duplicate treatment, security scope, sign conventions, units, numeric precision, zero suppression, allocation totals and empty-input behavior. Run representative nonempty data. Current native examples proved authorized metadata/schema access, but the tested transactional period returned no facts; that cannot validate a full business allocation.
+
+ABAP escape path and Script Logic invocation
+
+Use a separate ABAP cell for unsupported logic
+
+Notebook Script has no raw ABAP escape. Ordinary ABAP cells use the same io context and frozen parameters. They can coexist with script cells, subject to the same scalar dependency contract. Do not add COMMIT or ROLLBACK inside a calculation intended for the synchronous BAdI path.
+
+DATA(category) = io->member( 'CATEGORY' ).
+
+DATA(periods) = io->range( 'TIME' ).
+
+DATA(selected) = io->selection( 'TIME' ).
+
+DATA(cv) = io->current_view( ). " UJK_T_CV
+
+DATA(parameters) = io->script_parameters( ).
+
+DATA(dimension) = io->bpc_dimension( 'MATCONN' ).
+
+DATA(properties) = dimension->properties( ).
+
+DATA(hierarchies) = dimension->hierarchies( ).
+
+DATA(reference) = dimension->member_data( ).
+
+FIELD-SYMBOLS <members> TYPE STANDARD TABLE.
+
+ASSIGN reference->* TO <members>.
+
+io->emit_table( name = 'MEMBERS' rows = <members> ).
+
+
+
+io->environment and io->model hold the frozen context. io->input(name) returns scalar text; member(name), selection(name) and range(name) provide typed access. current_view() adapts resolved selections to UJK_T_CV. script_parameters() supplies UJK_T_SCRIPT_LOGIC_HASHTABLE values using scalar text or comma-separated resolved IDs.
+
+Call a saved notebook from BPC Script Logic
+
+Save the notebook, choose Script Logic, enter a handler name and Bind saved version. The binding pins that notebook revision; later saves require explicit rebinding. The handler and notebook must belong to the executing SAP user under the current DEV policy.
+
+*START_BADI NOTEBOOK
+
+QUERY = OFF
+
+WRITE = OFF
+
+HANDLER = ALLOC_REVENUES
+
+INPUT_FACTOR = $FACTOR$
+
+INPUT_SUPPRESSZERO = ON
+
+*END_BADI
+
+
+
+ALLOC_REVENUES is an example binding, not automatically installed. Supply INPUT_ overrides only for declared parameters. Member/range overrides use comma-separated IDs. HIERARCHY_<name> can accompany an explicit selection. Boolean overrides accept TRUE/FALSE, ON/OFF, 1/0 or X/empty.
+
+Without an explicit member override, matching caller current-view members supply the selection; otherwise the saved selection/default applies. Overrides and defaults must remain within matching caller scope. Model reads also preserve caller filters for dimensions without notebook inputs. Nodes resolve to authorized base IDs.
+
+The BAdI runs synchronously and requires the exact canonical WRITE = OFF. It leaves incoming CT_DATA unchanged. Successful run/output records are staged in the caller’s LUW and appear after caller commit; caller rollback discards them. No background job or internal commit is introduced. Rerun through the caller, not notebook Retry. Deleted notebooks cannot be invoked.
+
+Validation delivery and source references
+
+Required delivery from the conversion agent
+
+Input/context definition with real environment, model, dimension and hierarchy IDs; no invented metadata or calendar periods.
+
+Cell inventory with IDs, titles, authored script or retained ABAP, dependencies and preserved business behavior.
+
+A list of unsupported features and the chosen treatment, including virtual properties and any original writeback.
+
+SAP save/validation results and original-versus-notebook comparisons on representative nonempty data, totals and edge cases.
+
+If applicable, handler binding revision and generated LGF block, with caller scope and transaction behavior verified.
+
+Source and encoding checks
+
+Save through the script editor or compile using the actual Script.compile implementation before calling the API. The API source field stores generated ABAP with a versioned UTF-8/base64 envelope containing the exact authored text. Sending raw Notebook Script as ABAP source is invalid. Editing generated ABAP externally makes it reopen as an ABAP cell when regeneration no longer matches.
+
+Invalid grammar blocks saving. SAP compiles script cells before persisting source; Validate maps generated diagnostics to script lines. Runtime field checks and metadata/authorization checks can still fail. Generated source has the existing 60000-character limit. The local Node simulation does not execute BPC Notebook Script or supply SAP metadata.
+
+When changing repository code, preserve explicit UTF-8 encoding, existing per-file BOM convention, serializer line endings, trailing spaces and blank lines. Do not reformat padded BSP files. Keep BSP metadata and UI5 mappings aligned. Pull into SAP, serialize again and compare every file with Git; a clean local diff alone is insufficient. The referenced commit passed 45 of 45 serialized-file comparisons.
+
+Repository references at the verified commit
+
+Repository: https://github.com/felipetomazzi-source/bpcNotebook
+
+Branch: codex/demrevid-notebook-integration
+
+Commit: 5ba07f031060ab90dc8f5ba521880f246874a120
+
+For a fixed reference, open a path with: https://github.com/felipetomazzi-source/bpcNotebook/blob/5ba07f031060ab90dc8f5ba521880f246874a120/<path>
+
+docs/notebook-script.md — language guide and save/compile behavior.
+
+webapp/model/Script.js — authoritative parser, types and ABAP generator; tests/script.test.mjs — syntax and preservation examples.
+
+docs/bpc-inputs.md — selections, resolution and snapshots; docs/generic-bpc-adapters.md — validated reads and preview limits.
+
+src/zcl_bn_context.clas.abap and src/zcl_bn_bpc.clas.abap — native cell methods, metadata adapters and current-view conversion.
+
+docs/notebook-script-logic.md and src/zcl_bn_logic.clas.abap — handler bindings, parameters and BAdI execution.
+
+docs/API.md — HTTP save/run contracts; docs/notebook-management.md — deletion and unsaved navigation.
+
+tools/check-notebook-script.cjs, tools/check-generic-bpc.cjs and tools/check-notebook-logic.cjs — native verification helpers.
+
+docs/evidence/notebook-script.json, generic-bpc.json, notebook-logic.json and sap-roundtrip.json — recorded SAP evidence.
+
+Some individual historical evidence reports predate the current commit. Use the current parser and native method definitions as the contract when reconciling old examples or file counts.

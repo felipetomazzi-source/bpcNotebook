@@ -1,0 +1,4 @@
+dimension dim = DEMREVID-PRODUCT_TYPE
+members rows = dim
+show rows as "PRODUCT_TYPE_STORED_MEMBERS"
+message text(count(rows))
