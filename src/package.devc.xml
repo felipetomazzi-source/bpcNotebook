@@ -4,6 +4,9 @@
   <asx:values>
    <DEVC>
     <CTEXT>BPC Notebook: versioned ABAP calculation workspace</CTEXT>
+    <COMP_POSID>EPM-BPC</COMP_POSID>
+    <COMPONENT>/CPMB/KP11000002</COMPONENT>
+    <SRV_CHECK>X</SRV_CHECK>
    </DEVC>
   </asx:values>
  </asx:abap>
