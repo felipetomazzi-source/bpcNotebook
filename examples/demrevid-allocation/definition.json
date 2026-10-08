@@ -1,0 +1,137 @@
+{
+  "title": "DEMREVID003 - original baseline conversion",
+  "environment": "CH_PLANNING",
+  "model": "DEMREVID",
+  "inputs": [
+    {
+      "name": "CATEGORY",
+      "type": "member",
+      "value": "",
+      "dimension": "CATEGORY",
+      "hierarchy": "",
+      "required": true,
+      "selected": [
+        "Actual"
+      ]
+    },
+    {
+      "name": "TIME",
+      "type": "range",
+      "value": "",
+      "dimension": "TIME",
+      "hierarchy": "PARENTH1",
+      "required": true,
+      "selected": [
+        "2025.007"
+      ]
+    },
+    {
+      "name": "REFERENCE_TIME",
+      "type": "range",
+      "value": "",
+      "dimension": "TIME",
+      "hierarchy": "PARENTH1",
+      "required": true,
+      "selected": [
+        "TIME_NA"
+      ],
+      "purpose": "reference",
+      "lookbackFrom": "TIME",
+      "lookbackSteps": 1,
+      "fiscalLinks": [
+        {
+          "dimension": "TIME",
+          "member": "2025.006",
+          "prior": "2025.005",
+          "next": "2025.007"
+        },
+        {
+          "dimension": "TIME",
+          "member": "2025.007",
+          "prior": "2025.006",
+          "next": "2025.008"
+        }
+      ]
+    },
+    {
+      "name": "READ_LIMIT",
+      "type": "number",
+      "value": "1000000",
+      "dimension": "",
+      "hierarchy": "",
+      "required": false,
+      "selected": []
+    },
+    {
+      "name": "PREVIEW_ROWS",
+      "type": "number",
+      "value": "100",
+      "dimension": "",
+      "hierarchy": "",
+      "required": false,
+      "selected": []
+    },
+    {
+      "name": "RUN_SECONDS",
+      "type": "number",
+      "value": "7200",
+      "dimension": "",
+      "hierarchy": "",
+      "required": false,
+      "selected": []
+    },
+    {
+      "name": "FFLASMATGROUPS",
+      "type": "boolean",
+      "value": "true",
+      "dimension": "",
+      "hierarchy": "",
+      "required": false,
+      "selected": []
+    },
+    {
+      "name": "FFLASMATGROUPSID",
+      "type": "string",
+      "value": "MATGROUPID038",
+      "dimension": "",
+      "hierarchy": "",
+      "required": false,
+      "selected": []
+    },
+    {
+      "name": "DEBUG",
+      "type": "string",
+      "value": "OFF",
+      "dimension": "",
+      "hierarchy": "",
+      "required": false,
+      "selected": []
+    },
+    {
+      "name": "HSNS_REALLOC_LOCATIONS",
+      "type": "string",
+      "value": "",
+      "dimension": "",
+      "hierarchy": "",
+      "required": false,
+      "selected": []
+    },
+    {
+      "name": "STOP_AFTER",
+      "type": "string",
+      "value": "",
+      "dimension": "",
+      "hierarchy": "",
+      "required": false,
+      "selected": []
+    }
+  ],
+  "cells": [
+    {
+      "id": "allocation",
+      "title": "DEMREVID003 allocation in native working memory",
+      "source": "zcl_bn_dem_alloc=>execute( io = io stop_after = io->input( 'STOP_AFTER' ) ).",
+      "dependencies": []
+    }
+  ]
+}
