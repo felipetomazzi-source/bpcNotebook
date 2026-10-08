@@ -1,0 +1,316 @@
+{
+  "at": "2026-10-08T19:51:15.607Z",
+  "classes": [
+    {
+      "name": "ZCL_BN_BPC",
+      "tests": [
+        {
+          "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_bpc/includes/testclasses#type=CLAS%2FOCL;name=LTCL_INPUTS",
+          "adtcore:type": "CLAS/OL",
+          "adtcore:name": "LTCL_INPUTS",
+          "uriType": "semantic",
+          "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_bpc/includes/testclasses#type=CLAS%2FOCL;name=LTCL_INPUTS",
+          "durationCategory": "short",
+          "riskLevel": "harmless",
+          "alerts": [],
+          "testmethods": [
+            {
+              "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_bpc/includes/testclasses#type=CLAS%2FOLD;name=LTCL_INPUTS%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20ADAPTERS",
+              "adtcore:type": "CLAS/OLI",
+              "adtcore:name": "ADAPTERS",
+              "executionTime": 0,
+              "uriType": "semantic",
+              "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_bpc/includes/testclasses#type=CLAS%2FOLD;name=LTCL_INPUTS%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20ADAPTERS",
+              "unit": "s",
+              "alerts": []
+            },
+            {
+              "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_bpc/includes/testclasses#type=CLAS%2FOLD;name=LTCL_INPUTS%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20ALLOCATION_COPY",
+              "adtcore:type": "CLAS/OLI",
+              "adtcore:name": "ALLOCATION_COPY",
+              "executionTime": 0,
+              "uriType": "semantic",
+              "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_bpc/includes/testclasses#type=CLAS%2FOLD;name=LTCL_INPUTS%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20ALLOCATION_COPY",
+              "unit": "s",
+              "alerts": []
+            },
+            {
+              "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_bpc/includes/testclasses#type=CLAS%2FOLD;name=LTCL_INPUTS%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20FILTER_INTERSECTION",
+              "adtcore:type": "CLAS/OLI",
+              "adtcore:name": "FILTER_INTERSECTION",
+              "executionTime": 0,
+              "uriType": "semantic",
+              "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_bpc/includes/testclasses#type=CLAS%2FOLD;name=LTCL_INPUTS%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20FILTER_INTERSECTION",
+              "unit": "s",
+              "alerts": []
+            },
+            {
+              "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_bpc/includes/testclasses#type=CLAS%2FOLD;name=LTCL_INPUTS%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20LIVE_DEPENDENCIES",
+              "adtcore:type": "CLAS/OLI",
+              "adtcore:name": "LIVE_DEPENDENCIES",
+              "executionTime": 0,
+              "uriType": "semantic",
+              "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_bpc/includes/testclasses#type=CLAS%2FOLD;name=LTCL_INPUTS%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20LIVE_DEPENDENCIES",
+              "unit": "s",
+              "alerts": []
+            },
+            {
+              "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_bpc/includes/testclasses#type=CLAS%2FOLD;name=LTCL_INPUTS%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20LOGIC_SCOPE",
+              "adtcore:type": "CLAS/OLI",
+              "adtcore:name": "LOGIC_SCOPE",
+              "executionTime": 0,
+              "uriType": "semantic",
+              "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_bpc/includes/testclasses#type=CLAS%2FOLD;name=LTCL_INPUTS%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20LOGIC_SCOPE",
+              "unit": "s",
+              "alerts": []
+            },
+            {
+              "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_bpc/includes/testclasses#type=CLAS%2FOLD;name=LTCL_INPUTS%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20NAMED_TABLES",
+              "adtcore:type": "CLAS/OLI",
+              "adtcore:name": "NAMED_TABLES",
+              "executionTime": 0,
+              "uriType": "semantic",
+              "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_bpc/includes/testclasses#type=CLAS%2FOLD;name=LTCL_INPUTS%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20NAMED_TABLES",
+              "unit": "s",
+              "alerts": []
+            },
+            {
+              "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_bpc/includes/testclasses#type=CLAS%2FOLD;name=LTCL_INPUTS%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20REFERENCE_CONTRACT",
+              "adtcore:type": "CLAS/OLI",
+              "adtcore:name": "REFERENCE_CONTRACT",
+              "executionTime": 0,
+              "uriType": "semantic",
+              "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_bpc/includes/testclasses#type=CLAS%2FOLD;name=LTCL_INPUTS%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20REFERENCE_CONTRACT",
+              "unit": "s",
+              "alerts": []
+            },
+            {
+              "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_bpc/includes/testclasses#type=CLAS%2FOLD;name=LTCL_INPUTS%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20TYPED_ACCESS",
+              "adtcore:type": "CLAS/OLI",
+              "adtcore:name": "TYPED_ACCESS",
+              "executionTime": 0,
+              "uriType": "semantic",
+              "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_bpc/includes/testclasses#type=CLAS%2FOLD;name=LTCL_INPUTS%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20TYPED_ACCESS",
+              "unit": "s",
+              "alerts": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ZCL_BN_DEM_ALLOC",
+      "tests": [
+        {
+          "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOCL;name=LTC_DELTA_CONTRACT",
+          "adtcore:type": "CLAS/OL",
+          "adtcore:name": "LTC_DELTA_CONTRACT",
+          "uriType": "semantic",
+          "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOCL;name=LTC_DELTA_CONTRACT",
+          "durationCategory": "short",
+          "riskLevel": "harmless",
+          "alerts": [],
+          "testmethods": [
+            {
+              "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_DELTA_CONTRACT%20%20%20%20%20%20%20%20%20%20%20%20REPLACEMENT_CHANGES",
+              "adtcore:type": "CLAS/OLI",
+              "adtcore:name": "REPLACEMENT_CHANGES",
+              "executionTime": 0,
+              "uriType": "semantic",
+              "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_DELTA_CONTRACT%20%20%20%20%20%20%20%20%20%20%20%20REPLACEMENT_CHANGES",
+              "unit": "s",
+              "alerts": []
+            }
+          ]
+        },
+        {
+          "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOCL;name=LTC_FFLAS_RATIO_TEST",
+          "adtcore:type": "CLAS/OL",
+          "adtcore:name": "LTC_FFLAS_RATIO_TEST",
+          "uriType": "semantic",
+          "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOCL;name=LTC_FFLAS_RATIO_TEST",
+          "durationCategory": "short",
+          "riskLevel": "harmless",
+          "alerts": [],
+          "testmethods": [
+            {
+              "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_FFLAS_RATIO_TEST%20%20%20%20%20%20%20%20%20%20MATERIAL_GROUP_SKIP_LIST",
+              "adtcore:type": "CLAS/OLI",
+              "adtcore:name": "MATERIAL_GROUP_SKIP_LIST",
+              "executionTime": 0,
+              "uriType": "semantic",
+              "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_FFLAS_RATIO_TEST%20%20%20%20%20%20%20%20%20%20MATERIAL_GROUP_SKIP_LIST",
+              "unit": "s",
+              "alerts": []
+            },
+            {
+              "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_FFLAS_RATIO_TEST%20%20%20%20%20%20%20%20%20%20NO_MATCHING_FFLAS_BREAKDOWN",
+              "adtcore:type": "CLAS/OLI",
+              "adtcore:name": "NO_MATCHING_FFLAS_BREAKDOWN",
+              "executionTime": 0,
+              "uriType": "semantic",
+              "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_FFLAS_RATIO_TEST%20%20%20%20%20%20%20%20%20%20NO_MATCHING_FFLAS_BREAKDOWN",
+              "unit": "s",
+              "alerts": []
+            },
+            {
+              "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_FFLAS_RATIO_TEST%20%20%20%20%20%20%20%20%20%20RATIO_AND_REMAINDER_SUM_TO_1",
+              "adtcore:type": "CLAS/OLI",
+              "adtcore:name": "RATIO_AND_REMAINDER_SUM_TO_1",
+              "executionTime": 0,
+              "uriType": "semantic",
+              "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_FFLAS_RATIO_TEST%20%20%20%20%20%20%20%20%20%20RATIO_AND_REMAINDER_SUM_TO_1",
+              "unit": "s",
+              "alerts": []
+            },
+            {
+              "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_FFLAS_RATIO_TEST%20%20%20%20%20%20%20%20%20%20ROUNDING_EXISTING_ROW",
+              "adtcore:type": "CLAS/OLI",
+              "adtcore:name": "ROUNDING_EXISTING_ROW",
+              "executionTime": 0,
+              "uriType": "semantic",
+              "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_FFLAS_RATIO_TEST%20%20%20%20%20%20%20%20%20%20ROUNDING_EXISTING_ROW",
+              "unit": "s",
+              "alerts": []
+            },
+            {
+              "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_FFLAS_RATIO_TEST%20%20%20%20%20%20%20%20%20%20SINGLE_FFLAS_COVERS_ALL_REV",
+              "adtcore:type": "CLAS/OLI",
+              "adtcore:name": "SINGLE_FFLAS_COVERS_ALL_REV",
+              "executionTime": 0,
+              "uriType": "semantic",
+              "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_FFLAS_RATIO_TEST%20%20%20%20%20%20%20%20%20%20SINGLE_FFLAS_COVERS_ALL_REV",
+              "unit": "s",
+              "alerts": []
+            },
+            {
+              "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_FFLAS_RATIO_TEST%20%20%20%20%20%20%20%20%20%20SKIPPED_MATERIAL_IS_FLAGGED",
+              "adtcore:type": "CLAS/OLI",
+              "adtcore:name": "SKIPPED_MATERIAL_IS_FLAGGED",
+              "executionTime": 0,
+              "uriType": "semantic",
+              "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_FFLAS_RATIO_TEST%20%20%20%20%20%20%20%20%20%20SKIPPED_MATERIAL_IS_FLAGGED",
+              "unit": "s",
+              "alerts": []
+            },
+            {
+              "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_FFLAS_RATIO_TEST%20%20%20%20%20%20%20%20%20%20SUPPRESSION_DISABLED",
+              "adtcore:type": "CLAS/OLI",
+              "adtcore:name": "SUPPRESSION_DISABLED",
+              "executionTime": 0,
+              "uriType": "semantic",
+              "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_FFLAS_RATIO_TEST%20%20%20%20%20%20%20%20%20%20SUPPRESSION_DISABLED",
+              "unit": "s",
+              "alerts": []
+            },
+            {
+              "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_FFLAS_RATIO_TEST%20%20%20%20%20%20%20%20%20%20ZERO_REVENUE_ROW_IS_IGNORED",
+              "adtcore:type": "CLAS/OLI",
+              "adtcore:name": "ZERO_REVENUE_ROW_IS_IGNORED",
+              "executionTime": 0,
+              "uriType": "semantic",
+              "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_FFLAS_RATIO_TEST%20%20%20%20%20%20%20%20%20%20ZERO_REVENUE_ROW_IS_IGNORED",
+              "unit": "s",
+              "alerts": []
+            }
+          ]
+        },
+        {
+          "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOCL;name=LTC_PQ_FFLAS_RATIO_TEST",
+          "adtcore:type": "CLAS/OL",
+          "adtcore:name": "LTC_PQ_FFLAS_RATIO_TEST",
+          "uriType": "semantic",
+          "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOCL;name=LTC_PQ_FFLAS_RATIO_TEST",
+          "durationCategory": "short",
+          "riskLevel": "harmless",
+          "alerts": [],
+          "testmethods": [
+            {
+              "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_PQ_FFLAS_RATIO_TEST%20%20%20%20%20%20%20ALL_ID_RATIO_IS_0",
+              "adtcore:type": "CLAS/OLI",
+              "adtcore:name": "ALL_ID_RATIO_IS_0",
+              "executionTime": 0,
+              "uriType": "semantic",
+              "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_PQ_FFLAS_RATIO_TEST%20%20%20%20%20%20%20ALL_ID_RATIO_IS_0",
+              "unit": "s",
+              "alerts": []
+            },
+            {
+              "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_PQ_FFLAS_RATIO_TEST%20%20%20%20%20%20%20ALL_PQ_RATIO_IS_1",
+              "adtcore:type": "CLAS/OLI",
+              "adtcore:name": "ALL_PQ_RATIO_IS_1",
+              "executionTime": 0,
+              "uriType": "semantic",
+              "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_PQ_FFLAS_RATIO_TEST%20%20%20%20%20%20%20ALL_PQ_RATIO_IS_1",
+              "unit": "s",
+              "alerts": []
+            },
+            {
+              "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_PQ_FFLAS_RATIO_TEST%20%20%20%20%20%20%20MIXED_PQ_AND_ID_RATIO",
+              "adtcore:type": "CLAS/OLI",
+              "adtcore:name": "MIXED_PQ_AND_ID_RATIO",
+              "executionTime": 0,
+              "uriType": "semantic",
+              "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_PQ_FFLAS_RATIO_TEST%20%20%20%20%20%20%20MIXED_PQ_AND_ID_RATIO",
+              "unit": "s",
+              "alerts": []
+            }
+          ]
+        },
+        {
+          "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOCL;name=LTC_PQ_ID_FFLAS_REVENUE_TEST",
+          "adtcore:type": "CLAS/OL",
+          "adtcore:name": "LTC_PQ_ID_FFLAS_REVENUE_TEST",
+          "uriType": "semantic",
+          "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOCL;name=LTC_PQ_ID_FFLAS_REVENUE_TEST",
+          "durationCategory": "short",
+          "riskLevel": "harmless",
+          "alerts": [],
+          "testmethods": [
+            {
+              "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_PQ_ID_FFLAS_REVENUE_TEST%20%20FULL_ALLOC_NO_NON_FFLAS",
+              "adtcore:type": "CLAS/OLI",
+              "adtcore:name": "FULL_ALLOC_NO_NON_FFLAS",
+              "executionTime": 0,
+              "uriType": "semantic",
+              "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_PQ_ID_FFLAS_REVENUE_TEST%20%20FULL_ALLOC_NO_NON_FFLAS",
+              "unit": "s",
+              "alerts": []
+            },
+            {
+              "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_PQ_ID_FFLAS_REVENUE_TEST%20%20LFC_TAGGED_AS_ID_ONLY",
+              "adtcore:type": "CLAS/OLI",
+              "adtcore:name": "LFC_TAGGED_AS_ID_ONLY",
+              "executionTime": 0,
+              "uriType": "semantic",
+              "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_PQ_ID_FFLAS_REVENUE_TEST%20%20LFC_TAGGED_AS_ID_ONLY",
+              "unit": "s",
+              "alerts": []
+            },
+            {
+              "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_PQ_ID_FFLAS_REVENUE_TEST%20%20PARTIAL_ALLOC_NON_FFLAS",
+              "adtcore:type": "CLAS/OLI",
+              "adtcore:name": "PARTIAL_ALLOC_NON_FFLAS",
+              "executionTime": 0,
+              "uriType": "semantic",
+              "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_PQ_ID_FFLAS_REVENUE_TEST%20%20PARTIAL_ALLOC_NON_FFLAS",
+              "unit": "s",
+              "alerts": []
+            },
+            {
+              "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_PQ_ID_FFLAS_REVENUE_TEST%20%20RONZ_UFB_TAGGED_AS_PQ",
+              "adtcore:type": "CLAS/OLI",
+              "adtcore:name": "RONZ_UFB_TAGGED_AS_PQ",
+              "executionTime": 0,
+              "uriType": "semantic",
+              "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dem_alloc/includes/testclasses#type=CLAS%2FOLD;name=LTC_PQ_ID_FFLAS_REVENUE_TEST%20%20RONZ_UFB_TAGGED_AS_PQ",
+              "unit": "s",
+              "alerts": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "passed": true
+}

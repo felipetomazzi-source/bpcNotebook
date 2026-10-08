@@ -582,11 +582,18 @@ sap.ui.define(
         var input = new m.Input({value:"",placeholder:"For example ALLOC_REVENUES",maxLength:30});
         var revision = new m.Text({text:"Saved notebook revision " + notebook.revision + " · " + notebook.environment + " / " + notebook.model});
         var editor = new CodeEditor({type:"text",lineNumbers:true,editable:false,width:"100%",height:"20rem"});
+        var mode = new m.Select({selectedKey:"preview",items:[
+          new sap.ui.core.Item({key:"preview",text:"Preview — WRITE OFF"}),
+          new sap.ui.core.Item({key:"allocation",text:"Allocation — return validated delta"})]});
         var bindingRevision = 0, checkedName = "", bound = false;
         var status = new m.MessageStrip({text:"Bind a named handler to this saved revision. Later notebook edits require an explicit rebind.",type:"Information",showIcon:true});
         function sample() {
-          var lines = ["*START_BADI NOTEBOOK","QUERY = OFF","WRITE = OFF","HANDLER = " + input.getValue().toUpperCase()];
+          var allocation = mode.getSelectedKey() === "allocation";
+          var lines = ["*START_BADI NOTEBOOK","QUERY = OFF","WRITE = " + (allocation ? "ON" : "OFF"),
+            "EXECUTION = " + (allocation ? "ALLOCATION" : "PREVIEW"),"HANDLER = " + input.getValue().toUpperCase()];
+          if (notebook.inputs.some(function (p) { return p.purpose === "reference"; })) { lines.push("READ_REFERENCES = DECLARED"); }
           notebook.inputs.forEach(function (p) {
+            if (p.purpose === "reference") { return; }
             lines.push("// Optional override for " + p.name + " (" + p.type + ")");
             lines.push("// INPUT_" + p.name.toUpperCase() + " = $" + p.name.toUpperCase() + "$");
             if ((p.type === "member" || p.type === "range") && p.hierarchy) {
@@ -599,12 +606,13 @@ sap.ui.define(
           if (checkedName !== input.getValue().toUpperCase()) { return; }
           bind.setEnabled(false);
           Api.request("/logic-handler","POST",{handler:checkedName,handlerRevision:bindingRevision,
-            notebookId:notebook.id,expectedRevision:notebook.revision}).then(function (handler) {
+            notebookId:notebook.id,expectedRevision:notebook.revision,executionMode:mode.getSelectedKey()}).then(function (handler) {
             bindingRevision = handler.revision; bound = true; sample();
             status.setType("Success"); status.setText("Handler " + handler.name + " is bound to notebook revision " + handler.notebookRevision + ". Copy this Script Logic block.");
             MessageToast.show("Script Logic handler saved");
           }).catch(function (error) { self.error(error); }).finally(function () { bind.setEnabled(true); });
         }});
+        mode.attachChange(function () { bound = false; sample(); });
         input.attachChange(function () {
           var name = input.getValue().toUpperCase(); input.setValue(name); checkedName = ""; bound = false; bind.setEnabled(false); sample();
           if (!/^[A-Z][A-Z0-9_]{0,29}$/.test(name)) { status.setType("Error"); status.setText("Enter a handler identifier of 1 to 30 characters."); return; }
@@ -620,8 +628,10 @@ sap.ui.define(
           });
         });
         var dialog = new m.Dialog({title:"Script Logic handler",contentWidth:"50rem",content:[new m.VBox({items:[
-          revision,new m.Label({text:"Handler",labelFor:input}),input,status,
-          new m.Text({text:"Selections come from the BPC current view. INPUT_ parameters override notebook defaults and must stay inside that scope. Outputs appear in Execution review after the caller commits."}),editor
+          revision,new m.Label({text:"Handler",labelFor:input}),input,new m.Label({text:"Execution contract"}),mode,status,
+          new m.Text({text:"Output selections stay inside the BPC current view. " +
+            "READ_REFERENCES = DECLARED explicitly permits only the reviewed reference dimensions to use their frozen read scope; it never widens output periods. " +
+            "Allocation requires a bound allocation handler and a final delta dataset."}),editor
         ]}).addStyleClass("sapUiSmallMargin")],buttons:[bind,new m.Button({text:"Copy block",press:function () {
           if (!bound) { MessageToast.show("Bind the handler first"); return; }
           if (!navigator.clipboard) { MessageBox.information("Select and copy the Script Logic text above."); return; }
@@ -963,7 +973,7 @@ sap.ui.define(
                 self.renderNotebook(); self.mark();
               });
           }});
-        this.inputs.addItem(new m.VBox({items:[new m.Label({text:p.name + (p.required ? " *" : "") + " · " + p.dimension}),
+        this.inputs.addItem(new m.VBox({items:[new m.Label({text:p.name + (p.required ? " *" : "") + " · " + p.dimension + (p.purpose === "reference" ? " · Reference reads" : " · Calculation selection")}),
           display, new m.Text({text:p.resolved.length ? p.resolved.length + " resolved member(s) · " + (p.hierarchy || "single member")
             : "Save to resolve and validate selection"}),
           new m.Button({text:"Clear",type:"Transparent",press:function () {
@@ -986,7 +996,9 @@ sap.ui.define(
           contentWidth: "550px",
           content: [
             new m.Text({
-              text: "JSON array: name, type (number/string/boolean/member/range). Scalars use value. BPC inputs use dimension, hierarchy, required and selected (IDs). Resolved IDs are backend-owned. Choose BPC model first.",
+              text: "JSON array: name, type (number/string/boolean/member/range). Scalars use value. BPC inputs use dimension, hierarchy, required and selected (IDs). " +
+                "Reference inputs use purpose: reference; optional lookbackFrom names an output selection and lookbackSteps is 1–24. References never become output periods. " +
+                "Resolved IDs and fiscal links are backend-owned. Choose BPC model first.",
             }),
             new m.Label({text:"New dimension parameter"}),
             new m.Input({placeholder:"Parameter name (defaults to dimension ID)",change:function (e) {
@@ -1174,9 +1186,15 @@ sap.ui.define(
                 new m.MessageStrip({ text: r.error.code + ": " + r.error.message, type: "Error" }),
               );
             }
+            (r.checkpoints || []).forEach(function (step) {
+              self.runMessages.addItem(new m.ObjectStatus({text:step.name + " · " + step.state + " · " + (step.durationUs / 1000) + " ms",
+                state:step.state === "succeeded" ? "Success" : "Error"}));
+            });
+            var outputs = r.results.slice();
+            if (r.checkpointCell) { outputs.push({cellId:r.checkpointCell,rowCount:"partial checkpoint previews",durationMs:r.durationMs}); }
             var selected = self.outputSelect.getSelectedKey();
             self.outputSelect.removeAllItems();
-            r.results.forEach(function (o) {
+            outputs.forEach(function (o) {
               self.outputSelect.addItem(
                 new sap.ui.core.Item({
                   key: o.cellId,
@@ -1185,16 +1203,16 @@ sap.ui.define(
               );
             });
             self.outputSelect.setSelectedKey(
-              r.results.some(function (o) {
+              outputs.some(function (o) {
                 return o.cellId === selected;
               })
                 ? selected
-                : r.results.length
-                  ? r.results[0].cellId
+                : outputs.length
+                  ? outputs[0].cellId
                   : "",
             );
             if (self.outputSelect.getSelectedKey() !== selected) { self.tableName = ""; }
-            if (r.results.length) {
+            if (outputs.length) {
               self.preview();
             } else {
               self.table.removeAllItems();
@@ -1230,6 +1248,9 @@ sap.ui.define(
         }
       },
       retry: function () {
+        if (this.currentRun && this.currentRun.snapshot.inputs.some(function (p) { return p.purpose === "reference"; })) {
+          MessageBox.information("Reference calculations require a new run with a new data snapshot. Use Run all; historical retry is unavailable."); return;
+        }
         if (this.currentRun && this.currentRun.scope === "logic") {
           MessageBox.information("Invoke the handler again from Script Logic to preserve its current view and transaction."); return;
         }
@@ -1336,7 +1357,7 @@ sap.ui.define(
                 " of " +
                 page.total +
                 " · output revision " +
-                page.revision + (page.truncated ? " · preview of " + page.sourceTotal + " source rows" : ""),
+                page.revision + (page.partial ? " · incomplete calculation checkpoints" : "") + (page.truncated ? " · preview of " + page.sourceTotal + " source rows" : ""),
             );
           })
           .catch(function(e) { if (self.previewToken === token && self.runId === requestRun) { self.error(e); } });

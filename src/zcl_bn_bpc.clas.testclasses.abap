@@ -6,6 +6,8 @@ CLASS ltcl_inputs DEFINITION FINAL FOR TESTING DURATION SHORT RISK LEVEL HARMLES
     METHODS named_tables FOR TESTING RAISING zcx_bn.
     METHODS logic_scope FOR TESTING RAISING zcx_bn.
     METHODS live_dependencies FOR TESTING RAISING zcx_bn.
+    METHODS reference_contract FOR TESTING RAISING zcx_bn.
+    METHODS allocation_copy FOR TESTING RAISING zcx_bn.
 ENDCLASS.
 CLASS ltcl_inputs IMPLEMENTATION.
   METHOD filter_intersection.
@@ -137,5 +139,54 @@ CLASS ltcl_inputs IMPLEMENTATION.
       CATCH zcx_bn INTO DATA(error).
         cl_abap_unit_assert=>assert_equals( act = error->code exp = 'INPUT_TYPE' ).
     ENDTRY.
+  ENDMETHOD.
+
+  METHOD reference_contract.
+    DATA(inputs) = VALUE zcl_bn_types=>tt_inputs(
+      ( name = 'TIME' type = 'range' dimension = 'TIME' resolved = VALUE #( ( `FISC_OUT` ) ) )
+      ( name = 'REF' type = 'range' dimension = 'TIME' purpose = 'reference'
+        resolved = VALUE #( ( `MAPPING` ) ( `FISC_PRIOR` ) )
+        fiscal_links = VALUE #( ( dimension = 'TIME' member = 'FISC_OUT' prior = 'FISC_PRIOR' ) ) ) ).
+    DATA(io) = NEW zcl_bn_context( inputs = inputs bindings = VALUE #( ) dependencies = VALUE #( ) cell_id = 'test'
+      logic_call = abap_true ).
+    DATA(cv) = io->current_view( ).
+    cl_abap_unit_assert=>assert_equals( act = lines( cv[ dim_upper_case = 'TIME' ]-member ) exp = 1 ).
+    cl_abap_unit_assert=>assert_equals( act = cv[ dim_upper_case = 'TIME' ]-member[ 1 ] exp = 'FISC_OUT' ).
+    cl_abap_unit_assert=>assert_equals( act = io->offset_period( member = 'FISC_OUT' offset_by = -1 ) exp = 'FISC_PRIOR' ).
+    TRY.
+        io->reference_model( ).
+        cl_abap_unit_assert=>fail( 'Caller reference exception must be explicit' ).
+      CATCH zcx_bn INTO DATA(error).
+        cl_abap_unit_assert=>assert_equals( act = error->code exp = 'REFERENCE_POLICY' ).
+    ENDTRY.
+    TRY.
+        io->offset_period( member = 'FISC_OUT' offset_by = -2 ).
+        cl_abap_unit_assert=>fail( 'Offsets beyond frozen metadata must fail' ).
+      CATCH zcx_bn INTO error.
+        cl_abap_unit_assert=>assert_equals( act = error->code exp = 'FISCAL_OFFSET' ).
+    ENDTRY.
+  ENDMETHOD.
+  METHOD allocation_copy.
+    TYPES: BEGIN OF ty_record, account TYPE uj_dim_member, signeddata TYPE uj_signeddata, END OF ty_record,
+      tt_records TYPE STANDARD TABLE OF ty_record WITH DEFAULT KEY.
+    DATA rows TYPE tt_records.
+    rows = VALUE #( ( account = 'ORIGINAL' signeddata = '-123.4567890' ) ).
+    DATA(io) = NEW zcl_bn_context( inputs = VALUE #( ) bindings = VALUE #( ) dependencies = VALUE #( ) cell_id = 'test' ).
+    io->allocation_result( name = 'FINAL' rows = rows kind = 'delta' ).
+    rows[ 1 ]-signeddata = 0.
+    FIELD-SYMBOLS <saved> TYPE tt_records. ASSIGN io->result_rows->* TO <saved>.
+    cl_abap_unit_assert=>assert_equals( act = <saved>[ 1 ]-signeddata exp = CONV uj_signeddata( '-123.4567890' ) ).
+    cl_abap_unit_assert=>assert_initial( io->tables ).
+    TRY.
+        io->allocation_result( name = 'OTHER' rows = rows kind = 'delta' ).
+        cl_abap_unit_assert=>fail( 'Exactly one result may be published' ).
+      CATCH zcx_bn INTO DATA(error).
+        cl_abap_unit_assert=>assert_equals( act = error->code exp = 'RESULT_CONTRACT' ).
+    ENDTRY.
+    CLEAR rows.
+    DATA(empty) = NEW zcl_bn_context( inputs = VALUE #( ) bindings = VALUE #( ) dependencies = VALUE #( ) cell_id = 'test' ).
+    empty->allocation_result( name = 'EMPTY' rows = rows kind = 'delta' ).
+    DATA(schema) = zcl_bn_bpc=>describe_table( table = empty->result_rows source = 'test' ).
+    cl_abap_unit_assert=>assert_equals( act = lines( schema ) exp = 2 ).
   ENDMETHOD.
 ENDCLASS.

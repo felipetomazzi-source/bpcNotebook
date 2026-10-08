@@ -1,3 +1,5 @@
+Current implementation: [DEMREVID003 allocation contract](demrevid-allocation.md). The read-only draft and limitations below describe the earlier conversion milestone; the executable one-service port supersedes its missing API list. End-to-end business acceptance remains pending.
+
 # DEMREVID003 conversion draft
 
 The saved notebook **DEMREVID 003 - generic conversion draft (reads only)** is a partial conversion, not the replacement allocation. Its six cells saved, compiled and ran on NPL client 001 on 9 October 2026. Notebook ID: `E82AEA36D1571FD1B0E2BD7EF9940724`, revision 1. Run ID: `E82AEA36D1571FD1B0E2BDA46FBA4727`.

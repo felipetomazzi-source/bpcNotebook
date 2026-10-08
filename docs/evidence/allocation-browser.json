@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-08T19:50:36.502Z",
+  "passed": true,
+  "checks": [
+    "Standard UI5 Select exposes preview and allocation modes",
+    "Horizon Dark calculation/reference labels distinct",
+    "Twenty checkpoint success states and timings rendered",
+    "Named preview shows full count 3550 and bounded count 100",
+    "Allocation sample contains EXECUTION = ALLOCATION, WRITE = ON, READ_REFERENCES = DECLARED"
+  ],
+  "bindingCreated": false
+}

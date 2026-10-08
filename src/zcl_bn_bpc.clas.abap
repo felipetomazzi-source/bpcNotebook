@@ -32,6 +32,12 @@ CLASS zcl_bn_bpc DEFINITION PUBLIC CREATE PUBLIC.
              source TYPE string,
            END OF ty_field,
            tt_fields TYPE STANDARD TABLE OF ty_field WITH DEFAULT KEY.
+    METHODS children IMPORTING member TYPE string hierarchy TYPE string
+      RETURNING VALUE(result) TYPE zcl_bn_types=>tt_ids RAISING zcx_bn.
+    METHODS fiscal_links IMPORTING ids TYPE zcl_bn_types=>tt_ids
+      RETURNING VALUE(result) TYPE zcl_bn_types=>tt_fiscal_links RAISING zcx_bn.
+    CLASS-METHODS validate_result IMPORTING environment TYPE string model TYPE string rows TYPE ANY TABLE
+      output_view TYPE ujk_t_cv RAISING zcx_bn.
     METHODS constructor IMPORTING environment TYPE string model TYPE string dimension TYPE string DEFAULT ''
       inputs TYPE zcl_bn_types=>tt_inputs OPTIONAL scope TYPE ujk_t_cv OPTIONAL RAISING zcx_bn.
     METHODS member_data IMPORTING ids TYPE zcl_bn_types=>tt_ids OPTIONAL
@@ -46,6 +52,8 @@ CLASS zcl_bn_bpc DEFINITION PUBLIC CREATE PUBLIC.
       RETURNING VALUE(result) TYPE REF TO data RAISING zcx_bn.
     CLASS-METHODS merge_filters IMPORTING frozen TYPE tt_filters requested TYPE tt_filters
       RETURNING VALUE(result) TYPE tt_filters RAISING zcx_bn.
+    CLASS-METHODS describe_table IMPORTING table TYPE REF TO data source TYPE string
+      RETURNING VALUE(result) TYPE tt_fields RAISING zcx_bn.
   PROTECTED SECTION.
     DATA mv_environment TYPE string.
     DATA mv_model TYPE string.
@@ -57,8 +65,6 @@ CLASS zcl_bn_bpc DEFINITION PUBLIC CREATE PUBLIC.
     DATA mt_inputs TYPE zcl_bn_types=>tt_inputs.
     DATA mt_scope TYPE ujk_t_cv.
     CLASS-METHODS validate_filters IMPORTING environment TYPE string model TYPE string filters TYPE tt_filters RAISING zcx_bn.
-    CLASS-METHODS describe_table IMPORTING table TYPE REF TO data source TYPE string
-      RETURNING VALUE(result) TYPE tt_fields RAISING zcx_bn.
     CLASS-METHODS model_table IMPORTING dimensions TYPE tt_items
       RETURNING VALUE(result) TYPE REF TO data RAISING zcx_bn.
 
@@ -81,6 +87,85 @@ CLASS zcl_bn_bpc IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_DIMENSION' detail = 'Dimension is not in this model'.
     ENDIF.
     mv_environment = environment. mv_model = model. mv_dimension = dimension. mt_inputs = inputs. mt_scope = scope.
+  ENDMETHOD.
+  METHOD children.
+    DATA(list) = list_members( environment = mv_environment model = mv_model dimension = mv_dimension hierarchy = hierarchy ).
+    IF NOT line_exists( list-items[ id = member ] ).
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_AUTH' detail = 'Hierarchy member unavailable' status = 403.
+    ENDIF.
+    result = bases( environment = mv_environment dimension = mv_dimension hierarchy = hierarchy
+      member = member is_node = list-items[ id = member ]-is_node ).
+    validate_filters( environment = mv_environment model = mv_model
+      filters = VALUE #( ( dimension = mv_dimension members = result ) ) ).
+  ENDMETHOD.
+  METHOD fiscal_links.
+    DATA(ref) = member_data( ids ).
+    FIELD-SYMBOLS <rows> TYPE STANDARD TABLE.
+    FIELD-SYMBOLS <id> TYPE any.
+    FIELD-SYMBOLS <prior> TYPE any.
+    FIELD-SYMBOLS <next> TYPE any.
+    ASSIGN ref->* TO <rows>.
+    LOOP AT <rows> ASSIGNING FIELD-SYMBOL(<row>).
+      UNASSIGN: <id>, <prior>, <next>.
+      ASSIGN COMPONENT 'ID' OF STRUCTURE <row> TO <id>.
+      ASSIGN COMPONENT 'PRIOR_PERIOD' OF STRUCTURE <row> TO <prior>.
+      ASSIGN COMPONENT 'NEXT_PERIOD' OF STRUCTURE <row> TO <next>.
+      IF <id> IS NOT ASSIGNED OR <prior> IS NOT ASSIGNED OR <next> IS NOT ASSIGNED.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FISCAL_METADATA' detail = 'Explicit PRIOR_PERIOD and NEXT_PERIOD metadata required'.
+      ENDIF.
+      APPEND VALUE #( dimension = mv_dimension member = <id> prior = <prior> next = <next> ) TO result.
+    ENDLOOP.
+  ENDMETHOD.
+  METHOD validate_result.
+    DATA(adapter) = NEW zcl_bn_bpc( environment = environment model = model ).
+    DATA(dims) = adapter->dimensions( ).
+    DATA(schema) = describe_table( table = REF #( rows ) source = 'result' ).
+    IF lines( schema ) <> lines( dims ) + 1 OR NOT line_exists( schema[ name = 'SIGNEDDATA' ] ).
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'RESULT_SCHEMA' detail = 'Result must contain exactly the model dimensions and SIGNEDDATA'.
+    ENDIF.
+    DATA(table_type) = CAST cl_abap_tabledescr( cl_abap_tabledescr=>describe_by_data( rows ) ).
+    DATA(line_type) = CAST cl_abap_structdescr( table_type->get_table_line_type( ) ).
+    DATA(components) = line_type->get_components( ).
+    DATA(amount_type) = components[ name = 'SIGNEDDATA' ]-type.
+    DATA native_amount TYPE uj_signeddata.
+    DATA(native_type) = cl_abap_elemdescr=>describe_by_data( native_amount ).
+    IF amount_type->type_kind <> native_type->type_kind OR amount_type->length <> native_type->length OR
+       amount_type->decimals <> native_type->decimals.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'RESULT_SCHEMA' detail = 'SIGNEDDATA must preserve the native UJ_SIGNEDDATA numeric type'.
+    ENDIF.
+    DATA(context_dims) = context( environment = environment model = model ).
+    DATA(ctx) = cl_uj_context=>get_cur_context( ).
+    FIELD-SYMBOLS <member> TYPE any.
+    LOOP AT dims INTO DATA(dim).
+      IF NOT line_exists( schema[ name = dim-id ] ).
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'RESULT_SCHEMA' detail = 'A model dimension is missing'.
+      ENDIF.
+      DATA(ids) = VALUE zcl_bn_types=>tt_ids( ).
+      LOOP AT rows ASSIGNING FIELD-SYMBOL(<row>).
+        UNASSIGN <member>. ASSIGN COMPONENT dim-id OF STRUCTURE <row> TO <member>.
+        IF <member> IS NOT ASSIGNED OR <member> IS INITIAL.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'RESULT_MEMBER' detail = 'Result member missing'.
+        ENDIF.
+        READ TABLE output_view INTO DATA(view) WITH KEY dimension = dim-id.
+        IF sy-subrc = 0 AND NOT line_exists( view-member[ table_line = <member> ] ).
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'RESULT_SCOPE' detail = 'Output exceeds calculation or caller scope' status = 403.
+        ENDIF.
+        APPEND CONV string( <member> ) TO ids.
+      ENDLOOP.
+      SORT ids. DELETE ADJACENT DUPLICATES FROM ids.
+      IF ids IS INITIAL. CONTINUE. ENDIF.
+      validate_filters( environment = environment model = model filters = VALUE #( ( dimension = dim-id members = ids ) ) ).
+      context( environment = environment model = model ). ctx = cl_uj_context=>get_cur_context( ).
+      DATA writable TYPE uje_t_mem. CLEAR writable.
+      LOOP AT ids INTO DATA(id). APPEND CONV #( id ) TO writable. ENDLOOP.
+      ctx->check_member_access( EXPORTING i_dim_name = CONV #( dim-id ) i_rw = 'W' it_mem_list = writable
+        IMPORTING et_mem_list = DATA(allowed) ).
+      LOOP AT writable INTO DATA(wanted).
+        IF NOT line_exists( allowed[ table_line = wanted ] ).
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'RESULT_AUTH' detail = 'Result write authorization denied' status = 403.
+        ENDIF.
+      ENDLOOP.
+    ENDLOOP.
   ENDMETHOD.
   METHOD member_data.
     DATA(available) = context( environment = mv_environment model = mv_model ).
@@ -508,6 +593,44 @@ CLASS zcl_bn_bpc IMPLEMENTATION.
         ENDIF.
       ENDLOOP.
     ENDLOOP.
+    " Freeze reference IDs and fiscal offsets independently of output periods.
+    LOOP AT notebook-inputs ASSIGNING <input>.
+      IF <input>-purpose IS NOT INITIAL AND <input>-purpose <> 'reference'.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'INPUT_PURPOSE' detail = 'Purpose must be blank or reference'.
+      ENDIF.
+      IF <input>-purpose = 'reference' AND <input>-type <> 'member' AND <input>-type <> 'range'.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'INPUT_PURPOSE' detail = 'Reference selections must be member or range inputs'.
+      ENDIF.
+      CLEAR <input>-fiscal_links.
+      IF <input>-lookback_from IS INITIAL. CONTINUE. ENDIF.
+      IF <input>-purpose <> 'reference' OR <input>-type <> 'range' OR
+         <input>-lookback_steps < 1 OR <input>-lookback_steps > 24.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'REFERENCE_SCOPE' detail = 'Lookbacks require a reference range and 1 to 24 offsets'.
+      ENDIF.
+      READ TABLE notebook-inputs INTO DATA(output) WITH KEY name = <input>-lookback_from.
+      IF sy-subrc <> 0 OR output-purpose = 'reference' OR output-dimension <> <input>-dimension.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'REFERENCE_SCOPE' detail = 'Lookback source must be an output selection of the same dimension'.
+      ENDIF.
+      DATA(adapter) = NEW zcl_bn_bpc( environment = notebook-environment model = notebook-model dimension = <input>-dimension ).
+      DATA(pending) = output-resolved.
+      DO <input>-lookback_steps TIMES.
+        IF pending IS INITIAL. EXIT. ENDIF.
+        DATA(links) = adapter->fiscal_links( pending ).
+        APPEND LINES OF links TO <input>-fiscal_links. CLEAR pending.
+        LOOP AT links INTO DATA(link).
+          IF link-prior IS INITIAL.
+            RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FISCAL_METADATA' detail = 'Lookback member has no explicit prior-period link'.
+          ENDIF.
+          APPEND link-prior TO pending. APPEND link-prior TO <input>-resolved.
+        ENDLOOP.
+        validate_filters( environment = notebook-environment model = notebook-model
+          filters = VALUE #( ( dimension = <input>-dimension members = pending ) ) ).
+      ENDDO.
+      IF pending IS NOT INITIAL. APPEND LINES OF adapter->fiscal_links( pending ) TO <input>-fiscal_links. ENDIF.
+      SORT <input>-resolved. DELETE ADJACENT DUPLICATES FROM <input>-resolved.
+      SORT <input>-fiscal_links BY dimension member.
+      DELETE ADJACENT DUPLICATES FROM <input>-fiscal_links COMPARING dimension member.
+    ENDLOOP.
   ENDMETHOD.
   METHOD validate_frozen.
     IF notebook-environment IS NOT INITIAL.
@@ -528,7 +651,7 @@ CLASS zcl_bn_bpc IMPLEMENTATION.
     ENDLOOP.
   ENDMETHOD.
   METHOD current_view.
-    LOOP AT inputs INTO DATA(input) WHERE type = 'member' OR type = 'range'.
+    LOOP AT inputs INTO DATA(input) WHERE purpose <> 'reference' AND ( type = 'member' OR type = 'range' ).
       IF input-resolved IS INITIAL. CONTINUE. ENDIF.
       READ TABLE result ASSIGNING FIELD-SYMBOL(<cv>) WITH KEY dimension = input-dimension.
       IF sy-subrc <> 0.

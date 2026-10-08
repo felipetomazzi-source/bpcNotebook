@@ -1,0 +1,159 @@
+{
+  "at": "2026-10-08T19:49:16.970Z",
+  "passed": true,
+  "notebookId": "E82AEA36D1571FD1B0EA2A83C3A84DCB",
+  "runId": "E82AEA36D1571FD1B0EA2AB1D4014DCB",
+  "state": "failed",
+  "error": {
+    "code": "TEST_FAILURE",
+    "message": "Intentional checkpoint test"
+  },
+  "checkpoints": [
+    {
+      "name": "INITIALISE",
+      "state": "succeeded",
+      "startedAt": "2026-10-08T19:49:12,8417320Z",
+      "finishedAt": "2026-10-08T19:49:16,4826950Z",
+      "durationUs": 3640915,
+      "inputs": [
+        "GENERIC_MODEL_READS"
+      ],
+      "outputs": [
+        "INITIALISE/INPUT_DATA",
+        "INITIALISE/SAP_REVENUES",
+        "INITIALISE/OUTPUT_DATA",
+        "INITIALISE/NEW_DATA",
+        "INITIALISE/CONN_REG_SPLIT",
+        "INITIALISE/L1_L2_MAPPING",
+        "INITIALISE/RSP_LOCATION_MATERIAL_RATIO",
+        "INITIALISE/RSP_LOCATION_GL_RATIO",
+        "INITIALISE/RSP_SUPPLIER_MATERIAL_RATIO",
+        "INITIALISE/CAL_LOCATION_GL_RATIO",
+        "INITIALISE/CAL_LOCATION_CONN_SEG_RATIO",
+        "INITIALISE/RSP_SUPPLIER_GL_RATIO",
+        "INITIALISE/CAL_SUPPLIER_GL_RATIO",
+        "INITIALISE/CAL_SUPPLIER_CONN_SEG_RATIO",
+        "INITIALISE/MAT_GROUP_MAPPING"
+      ]
+    },
+    {
+      "name": "TEST_BOUNDARY",
+      "state": "failed",
+      "startedAt": "2026-10-08T19:49:16,4852840Z",
+      "finishedAt": "2026-10-08T19:49:16,4940010Z",
+      "durationUs": 0,
+      "inputs": [],
+      "outputs": []
+    }
+  ],
+  "partial": true,
+  "tables": [
+    {
+      "name": "INITIALISE/INPUT_DATA",
+      "rowCount": 100,
+      "totalCount": 3550,
+      "truncated": true,
+      "elapsedUs": 3556320
+    },
+    {
+      "name": "INITIALISE/SAP_REVENUES",
+      "rowCount": 0,
+      "totalCount": 0,
+      "truncated": false,
+      "elapsedUs": 3566218
+    },
+    {
+      "name": "INITIALISE/OUTPUT_DATA",
+      "rowCount": 0,
+      "totalCount": 0,
+      "truncated": false,
+      "elapsedUs": 3574015
+    },
+    {
+      "name": "INITIALISE/NEW_DATA",
+      "rowCount": 0,
+      "totalCount": 0,
+      "truncated": false,
+      "elapsedUs": 3583130
+    },
+    {
+      "name": "INITIALISE/CONN_REG_SPLIT",
+      "rowCount": 0,
+      "totalCount": 0,
+      "truncated": false,
+      "elapsedUs": 3588540
+    },
+    {
+      "name": "INITIALISE/L1_L2_MAPPING",
+      "rowCount": 0,
+      "totalCount": 0,
+      "truncated": false,
+      "elapsedUs": 3593785
+    },
+    {
+      "name": "INITIALISE/RSP_LOCATION_MATERIAL_RATIO",
+      "rowCount": 0,
+      "totalCount": 0,
+      "truncated": false,
+      "elapsedUs": 3598997
+    },
+    {
+      "name": "INITIALISE/RSP_LOCATION_GL_RATIO",
+      "rowCount": 0,
+      "totalCount": 0,
+      "truncated": false,
+      "elapsedUs": 3604222
+    },
+    {
+      "name": "INITIALISE/RSP_SUPPLIER_MATERIAL_RATIO",
+      "rowCount": 0,
+      "totalCount": 0,
+      "truncated": false,
+      "elapsedUs": 3609429
+    },
+    {
+      "name": "INITIALISE/CAL_LOCATION_GL_RATIO",
+      "rowCount": 0,
+      "totalCount": 0,
+      "truncated": false,
+      "elapsedUs": 3614584
+    },
+    {
+      "name": "INITIALISE/CAL_LOCATION_CONN_SEG_RATIO",
+      "rowCount": 0,
+      "totalCount": 0,
+      "truncated": false,
+      "elapsedUs": 3619782
+    },
+    {
+      "name": "INITIALISE/RSP_SUPPLIER_GL_RATIO",
+      "rowCount": 0,
+      "totalCount": 0,
+      "truncated": false,
+      "elapsedUs": 3625022
+    },
+    {
+      "name": "INITIALISE/CAL_SUPPLIER_GL_RATIO",
+      "rowCount": 0,
+      "totalCount": 0,
+      "truncated": false,
+      "elapsedUs": 3630172
+    },
+    {
+      "name": "INITIALISE/CAL_SUPPLIER_CONN_SEG_RATIO",
+      "rowCount": 0,
+      "totalCount": 0,
+      "truncated": false,
+      "elapsedUs": 3635545
+    },
+    {
+      "name": "INITIALISE/MAT_GROUP_MAPPING",
+      "rowCount": 1,
+      "totalCount": 1,
+      "truncated": false,
+      "elapsedUs": 3638215
+    }
+  ],
+  "retryRejected": true,
+  "completedDatasets": 0
+}
