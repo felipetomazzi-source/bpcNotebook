@@ -56,9 +56,10 @@ export class Engine {
     writeFileSync(this.file + '.tmp', JSON.stringify(this.db)); renameSync(this.file + '.tmp', this.file);
   }
   audit(user, action, id) { this.db.audit.push({user, action, id, at: now()}); }
-  owned(collection, id, user) {
+  owned(collection, id, user, includeDeleted = false) {
     const item = this.db[collection][id];
     if (!item || item.owner !== user) fail(404, 'NOT_FOUND', 'Resource not found');
+    if (collection === 'notebooks' && item.deletedAt && !includeDeleted) fail(410, 'NOTEBOOK_DELETED', 'Notebook has been deleted');
     return item;
   }
   validateDefinition(n) {
@@ -102,7 +103,7 @@ export class Engine {
     version.checksum = hash(version); n.versions.push(version); n.current++;
     this.audit(user, 'SAVE', id); this.persist(); return this.get(id, user);
   }
-  list(user) { return Object.values(this.db.notebooks).filter(n => n.owner === user).map(n => {
+  list(user) { return Object.values(this.db.notebooks).filter(n => n.owner === user && !n.deletedAt).map(n => {
     const v = n.versions.at(-1); return {id: n.id, title: v.title, revision: v.revision, savedAt: v.savedAt};
   }); }
   fingerprint(n, cellId) {
@@ -130,7 +131,16 @@ export class Engine {
         stale: !this.isCurrent(n,o,user)} : null};
     }); return n;
   }
-  history(id, user) { return copy(this.owned('notebooks', id, user).versions); }
+  deleteNotebook(id, expectedRevision, user) {
+    const n = this.owned('notebooks', id, user);
+    if (n.current !== expectedRevision) fail(409, 'CONFLICT', 'Notebook changed; reload before deleting');
+    const active = Object.values(this.db.runs).filter(r => r.owner === user && r.notebookId === id)
+      .some(r => ['queued','running'].includes(this.run(r.id,user).state));
+    if (active) fail(409, 'NOTEBOOK_BUSY', 'Cancel or finish active executions before deleting this notebook');
+    n.deletedAt = now(); n.deletedBy = user; this.audit(user, 'DELETE', id); this.persist();
+    return {deleted:true};
+  }
+  history(id, user) { return copy(this.owned('notebooks', id, user, true).versions); }
   validate(id, cellId, user) {
     const n = this.get(id, user); const c = n.cells.find(c => c.id === cellId);
     if (!c) fail(404, 'CELL', 'Cell not found');
@@ -182,7 +192,7 @@ export class Engine {
   runs(notebookId, user) {
     this.owned('notebooks', notebookId, user);
     return Object.values(this.db.runs).filter(r => r.owner === user && r.notebookId === notebookId)
-      .sort((a,b) => b.createdAt.localeCompare(a.createdAt)).map(r => copy(r));
+      .sort((a,b) => b.createdAt.localeCompare(a.createdAt)).map(r => copy({id:r.id,notebookId:r.notebookId,state:r.state,scope:r.scope,createdAt:r.createdAt,finishedAt:r.finishedAt,results:r.results}));
   }
   cancel(id, user) {
     const r = this.owned('runs', id, user);

@@ -1,0 +1,160 @@
+{
+  "at": "2026-10-08T08:24:23.166Z",
+  "notebookId": "E82AEA36D1571FD1B0DE351A045782FC",
+  "run": {
+    "id": "E82AEA36D1571FD1B0DE351A045962FC",
+    "owner": "DEVELOPER",
+    "notebookId": "E82AEA36D1571FD1B0DE351A045782FC",
+    "state": "failed",
+    "scope": "all",
+    "jobName": "ZBN_E82AEA36D1571FD1B0DE",
+    "jobId": "21242100",
+    "native": true,
+    "createdAt": "2026-10-08T08:24:21,6167690Z",
+    "startedAt": "2026-10-08T08:24:21,8227110Z",
+    "finishedAt": "2026-10-08T08:24:23,8604200Z",
+    "progress": 0.5,
+    "durationMs": 0,
+    "cancelRequested": false,
+    "checksum": "AE2FA707A57E8863568CF7D5E053C4E4B726B69D7691F0351207C4EA9B0D3893",
+    "deadline": 20261008083421.617,
+    "snapshot": {
+      "id": "E82AEA36D1571FD1B0DE351A045782FC",
+      "title": "DEMREVID 003 - allocation inspection",
+      "revision": 1,
+      "environment": "CH_PLANNING",
+      "model": "DEMREVID",
+      "author": "DEVELOPER",
+      "savedAt": "2026-10-08T08:24:20,9994780Z",
+      "checksum": "DF3DB3BF9ED13D7CF1AAD177276E6C19F38E63ED6440F79575F0114191E4602F",
+      "inputs": [
+        {
+          "name": "CATEGORY",
+          "type": "member",
+          "value": "",
+          "dimension": "CATEGORY",
+          "hierarchy": "",
+          "required": true,
+          "selected": [
+            "Actual"
+          ],
+          "resolved": [
+            "Actual"
+          ]
+        },
+        {
+          "name": "TIME",
+          "type": "range",
+          "value": "",
+          "dimension": "TIME",
+          "hierarchy": "PARENTH1",
+          "required": true,
+          "selected": [
+            "2025.007"
+          ],
+          "resolved": [
+            "2025.007"
+          ]
+        },
+        {
+          "name": "FFLASMATGROUPS",
+          "type": "boolean",
+          "value": "true",
+          "dimension": "",
+          "hierarchy": "",
+          "required": false,
+          "selected": [],
+          "resolved": []
+        },
+        {
+          "name": "FFLASMATGROUPSID",
+          "type": "string",
+          "value": "MATGROUPID038",
+          "dimension": "",
+          "hierarchy": "",
+          "required": false,
+          "selected": [],
+          "resolved": []
+        },
+        {
+          "name": "STOP_AFTER",
+          "type": "string",
+          "value": "FFLAS_RATIOS_BY_MATERIAL",
+          "dimension": "",
+          "hierarchy": "",
+          "required": false,
+          "selected": [],
+          "resolved": []
+        },
+        {
+          "name": "ROW_LIMIT",
+          "type": "number",
+          "value": "200",
+          "dimension": "",
+          "hierarchy": "",
+          "required": false,
+          "selected": [],
+          "resolved": []
+        }
+      ],
+      "cells": [
+        {
+          "id": "steps",
+          "title": "Available allocation steps",
+          "source": "DATA steps TYPE zcl_bpc_demrevid_calc_003=>step_list.\nsteps = zcl_bpc_demrevid_calc_003=>get_steps( ).\nio->emit_table( name = 'STEPS' rows = steps ).",
+          "dependencies": [],
+          "sourceVersion": 1,
+          "checksum": "B0113B5307885013F8FB2BCEDD8A943AA6E2DC3BC5C71D7B77D9E6A3423CFD43",
+          "output": {
+            "runId": "",
+            "cellId": "",
+            "revision": 0,
+            "rowCount": 0,
+            "stale": false
+          }
+        },
+        {
+          "id": "inspect",
+          "title": "Inspect allocation through selected step",
+          "source": "zcl_bpc_demrevid_notebook=>execute(\n  io = io\n  stop_after = io->input( 'STOP_AFTER' )\n  row_limit = CONV i( io->input( 'ROW_LIMIT' ) ) ).",
+          "dependencies": [
+            "steps"
+          ],
+          "sourceVersion": 1,
+          "checksum": "AC88C3918D32275D57735878E6D99D31A4B5F6916A44F14DB3D1170902C7EE21",
+          "output": {
+            "runId": "",
+            "cellId": "",
+            "revision": 0,
+            "rowCount": 0,
+            "stale": false
+          }
+        }
+      ]
+    },
+    "bindings": [
+      {
+        "cellId": "steps",
+        "runId": "E82AEA36D1571FD1B0DE351A045962FC",
+        "revision": 1
+      }
+    ],
+    "frozenBindings": [],
+    "messages": [],
+    "results": [
+      {
+        "cellId": "steps",
+        "runId": "E82AEA36D1571FD1B0DE351A045962FC",
+        "revision": 1,
+        "rowCount": 0,
+        "durationMs": 0,
+        "checksum": "07FF46CAD2D11BAA1E161DDCC076253E41D701F4A6327375F8A40980E380A32B"
+      }
+    ],
+    "diagnostics": [],
+    "error": {
+      "code": "JOB_TERMINATED",
+      "message": "SAP job ended without a completed notebook result; inspect SM37/ST22"
+    }
+  }
+}

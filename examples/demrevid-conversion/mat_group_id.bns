@@ -1,0 +1,4 @@
+dimension dim = DEMREVID-MAT_GROUP_ID
+members rows = dim
+show rows as "MAT_GROUP_ID_STORED_MEMBERS"
+message text(count(rows))

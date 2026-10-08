@@ -15,7 +15,6 @@ function walk(dir){for(const entry of readdirSync(dir,{withFileTypes:true})){
  if(!pages.includes(internal))throw Error('BSP metadata lacks page '+internal+'; import and serialize updated metadata in SAP.');
  const name='zbpc_notebook.wapa.'+internal.toLowerCase().replaceAll('/','_-');expected.add(name);
  let text=readUtf8(path);
- if(external==='index.html')text=text.replace('https://ui5.sap.com/1.120.41/resources/sap-ui-core.js','/sap/public/bc/ui5_ui5/resources/sap-ui-core.js');
  writeFileSync(join('src',name),bspContent(text),'utf8');
 }}
 walk('webapp');

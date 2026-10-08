@@ -1,5 +1,11 @@
 CLASS zcl_bn_store DEFINITION PUBLIC FINAL CREATE PUBLIC.
   PUBLIC SECTION.
+    TYPES: BEGIN OF ty_document,
+             id TYPE string, revision TYPE i, payload TYPE string, checksum TYPE string,
+           END OF ty_document,
+           tt_documents TYPE STANDARD TABLE OF ty_document WITH DEFAULT KEY.
+    CLASS-METHODS documents IMPORTING kind TYPE char1 RETURNING VALUE(result) TYPE tt_documents RAISING zcx_bn.
+    CLASS-METHODS lock_notebook IMPORTING id TYPE string RETURNING VALUE(revision) TYPE i RAISING zcx_bn.
     CLASS-METHODS read IMPORTING kind TYPE char1 id TYPE string revision TYPE i DEFAULT 0
       RETURNING VALUE(payload) TYPE string RAISING zcx_bn.
     CLASS-METHODS write IMPORTING kind TYPE char1 id TYPE string payload TYPE string expected TYPE i
@@ -9,6 +15,26 @@ CLASS zcl_bn_store DEFINITION PUBLIC FINAL CREATE PUBLIC.
     CLASS-METHODS lock_run IMPORTING id TYPE string RETURNING VALUE(revision) TYPE i RAISING zcx_bn.
 ENDCLASS.
 CLASS zcl_bn_store IMPLEMENTATION.
+  METHOD documents.
+    SELECT h~id, d~revision, d~payload, d~checksum FROM zbn_head AS h
+      INNER JOIN zbn_doc AS d ON d~kind = h~kind AND d~id = h~id AND d~revision = h~revision
+      INTO CORRESPONDING FIELDS OF TABLE @result WHERE h~kind = @kind AND h~owner = @sy-uname.
+    LOOP AT result INTO DATA(document).
+      IF zcl_bn_types=>hash( document-payload ) <> document-checksum.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'INTEGRITY' detail = 'Document checksum mismatch' status = 409.
+      ENDIF.
+    ENDLOOP.
+  ENDMETHOD.
+  METHOD lock_notebook.
+    SELECT SINGLE FOR UPDATE revision FROM zbn_head INTO @revision
+      WHERE kind = 'N' AND id = @id AND owner = @sy-uname.
+    IF sy-subrc <> 0.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'NOT_FOUND' detail = 'Notebook not found' status = 404.
+    ENDIF.
+    IF current( kind = 'A' id = id ) > 0.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'NOTEBOOK_DELETED' detail = 'Notebook has been deleted' status = 410.
+    ENDIF.
+  ENDMETHOD.
   METHOD read.
     DATA head TYPE zbn_head.
     SELECT SINGLE * FROM zbn_head INTO @head

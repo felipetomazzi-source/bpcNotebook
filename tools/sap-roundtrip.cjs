@@ -10,7 +10,7 @@ const evidence={at:new Date().toISOString(),method:'abapGit object deserializers
 const client=require('./adt-config.cjs')();
 const mode=process.argv.includes('--import')?'import':'serialize';
 const dir=process.argv.find(a=>a.startsWith('--output='))?.slice(9)||'.local/sap-serialized';
-const objects=fs.readdirSync('src').filter(n=>/\.(clas|prog|tabl|wapa|sicf|devc)\.xml$/.test(n)).map(n=>({filename:n,type:n.split('.').at(-2).toUpperCase(),name:n.endsWith('.devc.xml')?packageTarget:n.split('.')[0].toUpperCase()}));
+const objects=fs.readdirSync('src').filter(n=>/\.(clas|prog|tabl|wapa|sicf|devc|enho)\.xml$/.test(n)).map(n=>({filename:n,type:n.split('.').at(-2).toUpperCase(),name:n.endsWith('.devc.xml')?packageTarget:n.split('.')[0].toUpperCase()}));
 const imported=objects;
 const selected=process.argv.includes('--native-only')?objects.filter(o=>['CLAS','PROG','TABL'].includes(o.type)):imported;
 const q=s=>"'"+s.replaceAll("'","''")+"'";

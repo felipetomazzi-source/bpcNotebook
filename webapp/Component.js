@@ -4,9 +4,12 @@ sap.ui.define(
     "sap/m/library",
     "sap/m/MessageBox",
     "sap/m/MessageToast",
+    "sap/ui/codeeditor/CodeEditor",
+    "sap/ui/codeeditor/js/ace/ace",
     "bpc/notebook/model/Api",
+    "bpc/notebook/model/Script",
   ],
-  function (UIComponent, library, MessageBox, MessageToast, Api) {
+  function (UIComponent, library, MessageBox, MessageToast, CodeEditor, Ace, Api, Script) {
     "use strict";
     var m = sap.m;
     function displayTime(value) {
@@ -32,12 +35,13 @@ sap.ui.define(
           },
         }).addStyleClass("notebookList");
         this.sidebar = new m.VBox({
-          width: "252px",
+          width: "336px",
           items: [
             new m.Title({ text: "WORKSPACE", level: "H5" }),
             new m.Text({ text: "My notebooks" }).addStyleClass("sideTitle"),
             new m.Button({
               text: "New notebook",
+              type: "Emphasized",
               icon: "sap-icon://add",
               width: "100%",
               press: function () {
@@ -58,7 +62,7 @@ sap.ui.define(
             ),
           ],
         }).addStyleClass("sidebar");
-        this.title = new m.Title({ text: "Your next calculation starts here", level: "H1" }).addStyleClass("notebookTitle");
+        this.title = new m.Title({ text: "Your next calculation starts here", level: "H1", titleStyle: "H2", wrapping: true }).addStyleClass("notebookTitle");
         this.meta = new m.Text({ text: "A workspace for ideas, calculations, and results you can trust." }).addStyleClass("notebookMeta");
         this.inputs = new m.HBox({ wrap: "Wrap" }).addStyleClass("inputs");
         this.cells = new m.VBox().addStyleClass("cells");
@@ -74,19 +78,25 @@ sap.ui.define(
         this.outputSelect = new m.Select({
           change: function () {
             self.pageOffset = 0;
+            self.tableName = "";
             self.preview();
           },
         });
+        this.datasetSelect = new m.Select({ visible: false, change: function(e) {
+          self.tableName = e.getSource().getSelectedKey(); self.pageOffset = 0; self.preview();
+        }});
         this.table = new m.Table({
+          autoPopinMode: true,
+          popinLayout: "GridSmall",
           columns: [
             new m.Column({ header: new m.Label({ text: "Cost centre" }) }),
             new m.Column({ header: new m.Label({ text: "Amount" }) }),
           ],
         });
         this.pageLabel = new m.Text({ text: "No output selected" });
-        this.resultBox = new m.VBox({
-          items: [
-            new m.Title({ text: "Execution review", level: "H3" }),
+        this.resultBox = new m.Panel({
+          content: [
+            new m.Title({ text: "Execution review", level: "H3", titleStyle: "H3" }),
             this.runList,
             new m.HBox({
               items: [
@@ -117,6 +127,7 @@ sap.ui.define(
             this.runDetails,
             this.runMessages,
             this.outputSelect,
+            this.datasetSelect,
             this.table,
             new m.HBox({
               alignItems: "Center",
@@ -144,7 +155,7 @@ sap.ui.define(
             }),
           ],
         }).addStyleClass("results");
-        var toolbar = new m.Toolbar({
+        var toolbar = new m.OverflowToolbar({
           content: [
             new m.Button({
               text: "Save version",
@@ -160,6 +171,7 @@ sap.ui.define(
                 self.addCell();
               },
             }),
+            new m.Button({text:"Add script cell",icon:"sap-icon://add",press:function () { self.addCell(true); }}),
             new m.Button({
               text: "Inputs",
               press: function () {
@@ -176,6 +188,9 @@ sap.ui.define(
                 self.renderNotebook(); self.mark();
               }); },
             }),
+            new m.Button({text:"Delete notebook",icon:"sap-icon://delete",press:function () { self.deleteNotebook(self.notebook); }}),
+            new m.Button({text:"Script Logic",icon:"sap-icon://source-code",press:function () { self.logicHandler(); }}),
+            new m.Button({text:"BPC code", icon:"sap-icon://source-code", press:function () { self.codeAssistant(); }}),
             new m.Button({
               text: "Versions",
               icon: "sap-icon://history",
@@ -194,7 +209,7 @@ sap.ui.define(
             }),
           ],
         }).addStyleClass("notebookToolbar");
-        var main = new m.VBox({
+        var main = this.workspace = new m.VBox({
           width: "100%",
           items: [this.title, this.meta, toolbar, this.inputs, this.cells, this.resultBox],
         }).addStyleClass("main");
@@ -209,12 +224,17 @@ sap.ui.define(
         var page = new m.Page({
           showHeader: false,
           content: [
-            new m.Toolbar({
+            new m.OverflowToolbar({
               content: [
-                new sap.ui.core.Icon({ src: "sap-icon://document-text" }).addStyleClass("brandMark"),
+                new m.Avatar({ initials: "BN", displaySize: "XS", backgroundColor: "Accent5" }),
                 new m.Title({ text: "BPC Notebook" }),
-                new m.Text({ text: "CALCULATION WORKSPACE" }),
                 new m.ToolbarSpacer(),
+                new m.Select({
+                  tooltip: "Appearance", selectedKey: sap.ui.getCore().getConfiguration().getTheme(),
+                  items: [new sap.ui.core.Item({key:"sap_horizon_dark",text:"Horizon Dark"}),
+                    new sap.ui.core.Item({key:"sap_horizon",text:"Horizon Light"})],
+                  change: function(e) { sap.ui.getCore().applyTheme(e.getSource().getSelectedKey()); }
+                }),
                 new m.ObjectStatus({
                   text: Api.local
                     ? "Local prototype"
@@ -242,52 +262,106 @@ sap.ui.define(
       refresh: function () {
         var self = this;
         return Api.request("/notebooks").then(function (list) {
-          self.list.removeAllItems();
+          self.list.destroyItems();
           list.forEach(function (n) {
             self.list.addItem(
-              new m.StandardListItem({
-                title: n.title,
-                description: "Revision " + n.revision,
-                icon: "sap-icon://document-text",
-              }).data("id", n.id),
+              new m.CustomListItem({tooltip: n.title, content: [
+                new m.HBox({alignItems:"Center", items:[
+                  new sap.ui.core.Icon({src:"sap-icon://document-text"}).addStyleClass("sapUiSmallMarginEnd"),
+                  new m.VBox({width:"100%", items:[
+                    new m.Text({wrapping:true}).setText(n.title),
+                    new m.ObjectStatus({text:"Revision " + n.revision})
+                  ]})
+                  ,new m.Button({icon:"sap-icon://delete",type:"Transparent",tooltip:"Delete " + n.title,press:function () { self.deleteNotebook(n); }})
+                ]}).addStyleClass("sapUiSmallMargin")
+              ]}).data("id", n.id),
             );
           });
         });
       },
-      create: function (isDemo) {
+      leaveNotebook: function (next) {
         var self = this;
-        if (this.dirty) {
-          MessageBox.warning("Save the current notebook before creating another.");
-          return;
+        if (!this.dirty) { next(); return; }
+        MessageBox.warning("This notebook has unsaved changes.", {actions:["Save","Discard",MessageBox.Action.CANCEL],
+          emphasizedAction:"Save",onClose:function (action) {
+            if (action === "Discard") { next(); }
+            else if (action === "Save") { self.save().then(function () { if (!self.dirty) { next(); } }).catch(function () {}); }
+            else { self.list.getItems().forEach(function (item) { if (self.notebook && item.data("id") === self.notebook.id) { self.list.setSelectedItem(item,true); } }); }
+          }});
+      },
+      removeCell: function (id) {
+        var self = this, notebook = this.notebook;
+        if (!notebook) { return; }
+        var removed = [id], changed = true;
+        while (changed) {
+          changed = false;
+          notebook.cells.forEach(function (cell) {
+            if (removed.indexOf(cell.id) < 0 && cell.dependencies.some(function (dep) { return removed.indexOf(dep) >= 0; })) {
+              removed.push(cell.id); changed = true;
+            }
+          });
         }
+        var titles = notebook.cells.filter(function (cell) { return removed.indexOf(cell.id) >= 0; }).map(function (cell) { return cell.title; });
+        var action = removed.length > 1 ? "Delete " + removed.length + " cells" : "Delete cell";
+        MessageBox.warning((removed.length > 1 ? "The dependent cells must also be removed:\n" : "Delete this cell?\n") + titles.join("\n") +
+          "\n\nSave version applies this change. Previous versions and executions are retained.", {actions:[action,MessageBox.Action.CANCEL],onClose:function (choice) {
+            if (choice !== action || self.notebook !== notebook) { return; }
+            notebook.cells = notebook.cells.filter(function (cell) { return removed.indexOf(cell.id) < 0; });
+            removed.forEach(function (cellId) { delete self.scriptDrafts[cellId]; });
+            self.activeCell = null; self.renderNotebook(); self.mark();
+          }});
+      },
+      clearNotebook: function () {
+        this.resetReview(); this.notebook = null; this.scriptNotebook = null; this.scriptDrafts = {}; this.dirty = false;
+        this.cells.destroyItems(); this.inputs.destroyItems(); this.title.setText("Select a notebook or create one"); this.meta.setText("");
+      },
+      deleteNotebook: function (notebook) {
+        var self = this;
+        if (!notebook) { return; }
+        MessageBox.warning("Delete “" + notebook.title + "”?\nIt will be removed from your notebook list. Saved versions and executions are retained; bound Script Logic handlers will stop running it." +
+          (self.notebook && self.notebook.id === notebook.id && self.dirty ? "\nUnsaved changes will be discarded." : ""),
+          {actions:["Delete notebook",MessageBox.Action.CANCEL],onClose:function (action) {
+            if (action !== "Delete notebook") { return; }
+            Api.request("/delete-notebook","POST",{notebookId:notebook.id,expectedRevision:notebook.revision}).then(function () {
+              if (self.notebook && self.notebook.id === notebook.id) { self.clearNotebook(); }
+              self.refresh(); MessageToast.show("Notebook deleted");
+            }).catch(self.error.bind(self));
+          }});
+      },
+      create: function (isDemo, confirmed) {
+        var self = this;
+        if (!confirmed) { this.leaveNotebook(function () { self.create(isDemo,true); }); return; }
         var data = isDemo ? { demo: true } : { title: "Untitled calculation", inputs: [], cells: [] };
-        function create(data) { return Api.request("/notebooks", "POST", data)
+        function create(data) {
+          var token = self.navigationToken = (self.navigationToken || 0) + 1;
+          self.workspace.setBusy(true); self.resetReview();
+          return Api.request("/notebooks", "POST", data)
           .then(function (n) {
-            self.resetReview();
-            self.notebook = n;
+            if (self.navigationToken !== token) { return; }
+            self.notebook = n; self.scriptNotebook = null;
             self.renderNotebook();
             self.refresh();
           })
-          .catch(self.error.bind(self)); }
+          .catch(function (error) { if (self.navigationToken === token) { self.error(error); } })
+          .finally(function () { if (self.navigationToken === token) { self.workspace.setBusy(false); } }); }
         if (isDemo && !Api.local) {
           this.chooseContext(function (ctx) { data.environment = ctx.environment; data.model = ctx.model; create(data); });
         } else { create(data); }
       },
-      open: function (id) {
+      open: function (id, confirmed) {
         var self = this;
-        if (this.dirty) {
-          MessageBox.warning("Save the current notebook before switching.");
-          return;
-        }
+        if (!confirmed) { this.leaveNotebook(function () { self.open(id,true); }); return; }
+        if (this.notebook && this.notebook.id === id && !this.dirty) { return; }
+        var token = this.navigationToken = (this.navigationToken || 0) + 1;
+        this.workspace.setBusy(true); this.resetReview();
         Api.request("/notebook?id=" + encodeURIComponent(id))
           .then(function (n) {
-            self.resetReview();
-            self.notebook = n;
-            self.runId = null;
-            self.renderNotebook();
-            self.loadRuns();
+            if (self.navigationToken !== token) { return; }
+            self.notebook = n; self.scriptNotebook = null;
+            self.renderNotebook(); self.loadRuns().catch(self.error.bind(self));
           })
-          .catch(this.error.bind(this));
+          .catch(function (error) { if (self.navigationToken === token) { self.error(error); } })
+          .finally(function () { if (self.navigationToken === token) { self.workspace.setBusy(false); } });
       },
       mark: function () {
         this.dirty = true;
@@ -304,6 +378,9 @@ sap.ui.define(
         clearTimeout(this.poll);
         this.runId = null;
         this.currentRun = null;
+        this.previewToken = (this.previewToken || 0) + 1;
+        this.tableName = "";
+        this.datasetSelect.removeAllItems(); this.datasetSelect.setVisible(false);
         this.pageOffset = 0;
         this.runList.removeAllItems();
         this.outputSelect.removeAllItems();
@@ -316,12 +393,13 @@ sap.ui.define(
       renderNotebook: function () {
         var self = this,
           n = this.notebook;
+        if (this.scriptNotebook !== n.id) { this.scriptDrafts = {}; this.scriptNotebook = n.id; }
         this.dirty = false;
         this.title.setText(n.title);
         this.meta.setText(
           "Revision " + n.revision + " · " + n.cells.length + " cells · " + n.author + " · " + displayTime(n.savedAt),
         );
-        this.inputs.removeAllItems();
+        this.inputs.destroyItems();
         if (n.environment) {
           this.inputs.addItem(new m.VBox({items:[new m.Label({text:"BPC context"}),
             new m.Text({text:n.environment + " / " + n.model})]}));
@@ -345,7 +423,7 @@ sap.ui.define(
             }),
           );
         });
-        this.cells.removeAllItems();
+        this.cells.destroyItems();
         n.cells.forEach(function (c, index) {
           var state = new m.ObjectStatus({
             text: c.output
@@ -355,20 +433,39 @@ sap.ui.define(
               : "Not executed",
             state: c.output ? (c.output.stale ? "Warning" : "Success") : "None",
           }).addStyleClass("cellStatus");
-          var box = new m.VBox({
-            items: [
-              new m.Toolbar({
+          var draft = self.scriptDrafts[c.id] || Script.unpack(c.source);
+          self.scriptDrafts[c.id] = draft;
+          var scriptStatus = new m.ObjectStatus({visible:draft.language === "script",text:"Notebook Script · generates ABAP on save"});
+          if (draft.error) { scriptStatus.setText(draft.error.message); scriptStatus.setState("Error"); }
+          var editor = new CodeEditor({
+            width:"100%", height:"20rem", type:draft.language === "script" ? "text" : "abap", lineNumbers:true,
+            liveChange:function(e) {
+              var value = e.getParameter("value");
+              if (value.replace(/\r\n|\r/g,"\n") === draft.text.replace(/\r\n|\r/g,"\n")) { return; }
+              draft.text = value;
+              if (draft.language === "script") {
+                try { c.source = Script.compile(value); draft.error = null; scriptStatus.setText("Script ready · generates ABAP on save"); scriptStatus.setState("Success"); }
+                catch (error) { draft.error = error; scriptStatus.setText(error.message); scriptStatus.setState("Error"); }
+              } else { c.source = value; }
+              self.activeCell = c.id; self.mark();
+            }
+          }).setValue(draft.text);
+          editor.addEventDelegate({onfocusin:function () { self.activeCell = c.id; }});
+          if (draft.language === "script") { editor.addEventDelegate({onAfterRendering:function () { self.configureScriptEditor(editor,draft); }}); }
+          var box = new m.Panel({
+            content: [
+              new m.OverflowToolbar({
                 content: [
                   new m.Input({
-                    value: c.title,
                     width: "52%",
                     change: function (e) {
                       c.title = e.getSource().getValue();
                       self.mark();
                     },
-                  }).addStyleClass("cellTitle"),
+                  }).setValue(c.title).addStyleClass("cellTitle"),
                   state,
                   new m.ToolbarSpacer(),
+                  new m.Button({icon:"sap-icon://delete",tooltip:"Delete cell " + c.title,press:function () { self.removeCell(c.id); }}),
                   new m.Button({
                     icon: "sap-icon://navigation-up-arrow",
                     tooltip: "Move cell up",
@@ -396,14 +493,8 @@ sap.ui.define(
               new m.Text({ text: "Cell " + c.id + " · source v" + c.sourceVersion }).addStyleClass(
                 "cellMeta",
               ),
-              new m.TextArea({
-                width: "100%",
-                rows: Math.min(15, Math.max(5, c.source.split("\n").length)),
-                liveChange: function (e) {
-                  c.source = e.getSource().getValue();
-                  self.mark();
-                },
-              }).setValue(c.source).addStyleClass("code"),
+              editor,
+              scriptStatus,
               new m.HBox({
                 alignItems: "Center",
                 wrap: "Wrap",
@@ -425,6 +516,11 @@ sap.ui.define(
                       self.mark();
                     },
                   }),
+                  new m.Button({text:draft.language === "script" ? "Script help" : "BPC code",icon:"sap-icon://source-code",
+                    press:function () { if (draft.language === "script") { self.scriptHelp(c.id); } else { self.codeAssistant(c.id); } }}),
+                  new m.Button({text:"Generated ABAP",visible:draft.language === "script",press:function () {
+                    try { self.showGenerated(Script.compile(draft.text)); } catch (error) { self.error(error); }
+                  }}),
                   new m.Button({
                     text: "Validate",
                     press: function () {
@@ -449,7 +545,7 @@ sap.ui.define(
             ],
           })
             .addStyleClass("cell")
-            .data("status", state);
+            .data("status", state).data("cellId",c.id).data("editor",editor);
           self.cells.addItem(box);
         });
       },
@@ -458,11 +554,17 @@ sap.ui.define(
         if (!this.notebook) {
           return Promise.resolve();
         }
+        try {
+          this.notebook.cells.forEach(function (cell) {
+            var draft = self.scriptDrafts[cell.id];
+            if (draft && draft.language === "script") { cell.source = Script.compile(draft.text); }
+          });
+        } catch (error) { this.error(error); return Promise.resolve(); }
         var payload = JSON.parse(JSON.stringify(this.notebook));
         payload.expectedRevision = payload.revision;
         return Api.request("/notebook", "PUT", payload)
           .then(function (n) {
-            self.notebook = n;
+            self.notebook = n; self.scriptNotebook = null;
             self.renderNotebook();
             self.refresh();
             MessageToast.show("Immutable version saved");
@@ -472,20 +574,329 @@ sap.ui.define(
             throw e;
           });
       },
-      addCell: function () {
+      logicHandler: function () {
+        var self = this, notebook = this.notebook;
+        if (!notebook) { return; }
+        if (Api.local) { MessageBox.information("Script Logic handlers require SAP."); return; }
+        if (this.dirty) { MessageBox.information("Save the notebook version before binding a Script Logic handler."); return; }
+        var input = new m.Input({value:"",placeholder:"For example ALLOC_REVENUES",maxLength:30});
+        var revision = new m.Text({text:"Saved notebook revision " + notebook.revision + " · " + notebook.environment + " / " + notebook.model});
+        var editor = new CodeEditor({type:"text",lineNumbers:true,editable:false,width:"100%",height:"20rem"});
+        var mode = new m.Select({selectedKey:"preview",items:[
+          new sap.ui.core.Item({key:"preview",text:"Preview — WRITE OFF"}),
+          new sap.ui.core.Item({key:"allocation",text:"Allocation — return validated delta"})]});
+        var bindingRevision = 0, checkedName = "", bound = false;
+        var status = new m.MessageStrip({text:"Bind a named handler to this saved revision. Later notebook edits require an explicit rebind.",type:"Information",showIcon:true});
+        function sample() {
+          var allocation = mode.getSelectedKey() === "allocation";
+          var lines = ["*START_BADI NOTEBOOK","QUERY = OFF","WRITE = " + (allocation ? "ON" : "OFF"),
+            "EXECUTION = " + (allocation ? "ALLOCATION" : "PREVIEW"),"HANDLER = " + input.getValue().toUpperCase()];
+          if (notebook.inputs.some(function (p) { return p.purpose === "reference"; })) { lines.push("READ_REFERENCES = DECLARED"); }
+          notebook.inputs.forEach(function (p) {
+            if (p.purpose === "reference") { return; }
+            lines.push("// Optional override for " + p.name + " (" + p.type + ")");
+            lines.push("// INPUT_" + p.name.toUpperCase() + " = $" + p.name.toUpperCase() + "$");
+            if ((p.type === "member" || p.type === "range") && p.hierarchy) {
+              lines.push("// HIERARCHY_" + p.name.toUpperCase() + " = " + p.hierarchy);
+            }
+          });
+          lines.push("*END_BADI"); editor.setValue(lines.join("\n"));
+        }
+        var bind = new m.Button({text:"Bind saved version",type:"Emphasized",enabled:false,press:function () {
+          if (checkedName !== input.getValue().toUpperCase()) { return; }
+          bind.setEnabled(false);
+          Api.request("/logic-handler","POST",{handler:checkedName,handlerRevision:bindingRevision,
+            notebookId:notebook.id,expectedRevision:notebook.revision,executionMode:mode.getSelectedKey()}).then(function (handler) {
+            bindingRevision = handler.revision; bound = true; sample();
+            status.setType("Success"); status.setText("Handler " + handler.name + " is bound to notebook revision " + handler.notebookRevision + ". Copy this Script Logic block.");
+            MessageToast.show("Script Logic handler saved");
+          }).catch(function (error) { self.error(error); }).finally(function () { bind.setEnabled(true); });
+        }});
+        mode.attachChange(function () { bound = false; sample(); });
+        input.attachChange(function () {
+          var name = input.getValue().toUpperCase(); input.setValue(name); checkedName = ""; bound = false; bind.setEnabled(false); sample();
+          if (!/^[A-Z][A-Z0-9_]{0,29}$/.test(name)) { status.setType("Error"); status.setText("Enter a handler identifier of 1 to 30 characters."); return; }
+          Api.request("/logic-handler?id=" + encodeURIComponent(name)).then(function (handler) {
+            if (input.getValue() !== name) { return; }
+            checkedName = name; bindingRevision = handler.revision; bind.setEnabled(true); status.setType("Information");
+            status.setText("Existing handler: notebook " + handler.notebookId + ", revision " + handler.notebookRevision + ". Bind saved version replaces this mapping.");
+          }).catch(function (error) {
+            if (input.getValue() !== name) { return; }
+            if (error.message.indexOf("NOT_FOUND:") === 0) {
+              checkedName = name; bindingRevision = 0; bind.setEnabled(true); status.setType("Information"); status.setText("New handler. Bind it to this saved notebook version.");
+            } else { self.error(error); }
+          });
+        });
+        var dialog = new m.Dialog({title:"Script Logic handler",contentWidth:"50rem",content:[new m.VBox({items:[
+          revision,new m.Label({text:"Handler",labelFor:input}),input,new m.Label({text:"Execution contract"}),mode,status,
+          new m.Text({text:"Output selections stay inside the BPC current view. " +
+            "READ_REFERENCES = DECLARED explicitly permits only the reviewed reference dimensions to use their frozen read scope; it never widens output periods. " +
+            "Allocation requires a bound allocation handler and a final delta dataset."}),editor
+        ]}).addStyleClass("sapUiSmallMargin")],buttons:[bind,new m.Button({text:"Copy block",press:function () {
+          if (!bound) { MessageToast.show("Bind the handler first"); return; }
+          if (!navigator.clipboard) { MessageBox.information("Select and copy the Script Logic text above."); return; }
+          navigator.clipboard.writeText(editor.getValue()).then(function () { MessageToast.show("Script Logic copied"); }).catch(function () { MessageBox.information("Select and copy the Script Logic text above."); });
+        }}),new m.Button({text:"Close",press:function () { dialog.close(); }})],afterClose:function () { dialog.destroy(); }});
+        dialog.open();
+      },
+      addCell: function (script) {
         if (!this.notebook) {
           return;
         }
         var n = this.notebook;
         n.cells.push({
           id: "cell_" + Date.now(),
-          title: "New ABAP cell",
-          source: "io->message( 'New cell' ).",
+          title: script ? "New Notebook Script cell" : "New ABAP cell",
+          source: script ? Script.compile('message "New script cell"') : "io->message( 'New cell' ).",
           dependencies: [],
           sourceVersion: 0,
         });
         this.renderNotebook();
         this.mark();
+      },
+      showGenerated: function (source) {
+        var dialog = new m.Dialog({title:"Generated ABAP · saved execution source",contentWidth:"70rem",
+          content:[new CodeEditor({type:"abap",lineNumbers:true,editable:false,width:"100%",height:"32rem"}).setValue(source)],
+          endButton:new m.Button({text:"Close",press:function () { dialog.close(); }}),afterClose:function () { dialog.destroy(); }});
+        dialog.open();
+      },
+      scriptHelp: function (cellId) {
+        var self = this, model = this.notebook.model || "MODEL";
+        var sample = "# Ctrl+Space opens suggestions; MODEL- offers dimensions\n" +
+          "dimension materials = " + model + "-DIMENSION\n" +
+          "members memberRows = materials\nshow memberRows as \"MEMBERS\"\n" +
+          "model plan = " + model + "\n" +
+          "data facts = plan where TIME = range(\"TIME\") limit 10000\n" +
+          "let factor = number(input(\"factor\"))\nfor row in facts\n" +
+          "  row.SIGNEDDATA = row.SIGNEDDATA * factor\nend\nshow facts as \"FACTS\"\n" +
+          "# Stored property: let label = materials-EVDESCRIPTION(\"MEMBER_ID\")";
+        var area = new CodeEditor({type:"text",lineNumbers:true,width:"100%",height:"26rem"}).setValue(sample);
+        var dialog = new m.Dialog({title:"Notebook Script · examples",contentWidth:"65rem",content:[
+          new m.MessageStrip({text:"Replace DIMENSION and parameter names with your notebook's definitions. Reads use frozen selections and backend authorization.",type:"Information"}),
+          area],beginButton:new m.Button({text:"Append example",press:function () {
+            var box = self.cells.getItems().filter(function (b) { return b.data("cellId") === cellId; })[0];
+            var editor = box.data("editor"); editor.setValue(editor.getCurrentValue() + "\n" + area.getCurrentValue()); dialog.close();
+          }}),endButton:new m.Button({text:"Close",press:function () { dialog.close(); }}),afterClose:function () { dialog.destroy(); }});
+        dialog.open();
+      },
+      scriptMetadata: function (kind, model, dimension) {
+        var n = this.notebook, key = [n.environment,model,kind,dimension || ""].join("/");
+        this.scriptMetadataCache = this.scriptMetadataCache || {};
+        if (this.scriptMetadataCache[key]) { return this.scriptMetadataCache[key]; }
+        if (!n.environment) { return Promise.resolve([]); }
+        var all = [], cache = this.scriptMetadataCache;
+        function load(offset) {
+          return Api.request("/metadata","POST",{kind:kind,environment:n.environment,model:model,dimension:dimension || "",offset:offset})
+            .then(function (data) {
+              if (data.more && !data.items.length) { throw new Error("Metadata paging made no progress"); }
+              all = all.concat(data.items); return data.more ? load(offset + data.items.length) : all;
+            });
+        }
+        cache[key] = load(0).catch(function (error) { delete cache[key]; throw error; }); return cache[key];
+      },
+      scriptSuggestions: function (text, prefix) {
+        var n = this.notebook;
+        var names = prefix.split("-"), model = names[0], dimension;
+        function choices(items, base, kind) {
+          return items.map(function (item) { return {caption:base + item.id + (item.description ? " · " + item.description : ""),
+            value:base + item.id,meta:kind,score:1000}; });
+        }
+        if (names.length > 1) {
+          // Aliases are resolved from the authored declaration, never from hardcoded dimension lists.
+          var pattern = new RegExp("^\\s*dimension\\s+" + model + "\\s*=\\s*([A-Za-z_][A-Za-z0-9_]*)(?:-([A-Za-z_][A-Za-z0-9_]*))?\\s*(?:#.*)?$","m");
+          var alias = text.match(pattern);
+          var modelAlias = text.match(new RegExp("^\\s*model\\s+" + model + "\\s*=\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*(?:#.*)?$","m"));
+          if (alias) { model = alias[2] ? alias[1] : n.model; dimension = alias[2] || alias[1]; }
+          else if (modelAlias) { model = modelAlias[1]; if (names.length > 2) { dimension = names[1]; } }
+          else if (names.length > 2) { dimension = names[1]; }
+          var contextAlias = text.match(new RegExp("^\\s*model\\s+" + model + "\\s*=\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*(?:#.*)?$","m"));
+          if (contextAlias) { model = contextAlias[1]; }
+          if (dimension) {
+            var base = alias ? names[0] + "-" : names[0] + "-" + dimension + "-";
+            return this.scriptMetadata("properties",model,dimension).then(function (items) { return choices(items,base,"property"); });
+          }
+          return this.scriptMetadata("dimensions",model).then(function (items) { return choices(items,names[0] + "-","dimension"); });
+        }
+        var words = ["dimension","members","model","data","where","limit","let","for","in","if","else","end","show","as",
+          "table","append","key","amount","read","emit","message","input","member","range","selection","number","text","count","concat","true","false"];
+        var result = words.map(function (word) { return {caption:word,value:word,meta:"script",score:50}; });
+        return this.scriptMetadata("models","").then(function (items) { return result.concat(choices(items,"","model")); });
+      },
+      configureScriptEditor: function (control, draft) {
+        // UI5 exposes the Ace instance for editor extensions. Keep that dependency isolated here.
+        // Completion needs cursor/session access beyond CodeEditor's global custom-completer interface.
+        if (!control.getInternalEditorInstance) { return; }
+        var self = this, editor = control.getInternalEditorInstance();
+        var Mode = Ace.require("ace/mode/text").Mode, Tokenizer = Ace.require("ace/tokenizer").Tokenizer;
+        var mode = new Mode();
+        mode.$tokenizer = new Tokenizer({start:[
+          {token:"comment",regex:"#.*$"},
+          {token:"string",regex:'"(?:[^"\\\\]|\\\\.)*"'},
+          {token:"constant.numeric",regex:"\\b[0-9]+(?:\\.[0-9]+)?\\b"},
+          {token:"keyword",regex:"\\b(?:dimension|members|model|data|where|limit|let|for|in|if|else|end|show|as|table|append|key|amount|read|emit|message|and|or|not)\\b"},
+          {token:"support.function",regex:"\\b(?:input|member|range|selection|number|text|count|concat)\\b"},
+          {token:"constant.language",regex:"\\b(?:true|false)\\b"},
+          {token:"support.type",regex:"\\b[A-Z][A-Z0-9_]*(?:-[A-Z][A-Z0-9_]*)*\\b"}
+        ]});
+        editor.session.setMode(mode);
+        editor.setOptions({enableBasicAutocompletion:true,enableLiveAutocompletion:false});
+        editor.completers = [{identifierRegexps:[/[A-Za-z0-9_\-]/],
+          getCompletions:function (active, session, position, prefix, callback) {
+            var match = session.getLine(position.row).slice(0,position.column).match(/[A-Za-z_][A-Za-z0-9_-]*$/);
+            prefix = match ? match[0] : "";
+            self.scriptSuggestions(session.getValue(),prefix).then(function (items) {
+              if (!control.bIsDestroyed && active === editor) { callback(null,items); }
+              else { callback(null,[]); }
+            }).catch(function () { callback(null,[]); });
+          }}];
+        if (!control.data("scriptCompletionInstalled")) {
+          control.data("scriptCompletionInstalled",true);
+          editor.on("change",function (delta) {
+            if (delta.action === "insert" && delta.lines.length === 1 && delta.lines[0] === "-") {
+              setTimeout(function () {
+                if (!control.bIsDestroyed && editor.isFocused()) { editor.execCommand("startAutocomplete"); }
+              },0);
+            }
+          });
+        }
+      },
+      codeAssistant: function (cellId) {
+        var self = this, n = this.notebook;
+        if (!n || !n.cells.length) { MessageBox.warning("Open a notebook and add a cell first."); return; }
+        if (!n.environment || !n.model) { MessageBox.warning("Choose the notebook's BPC model first."); return; }
+        cellId = cellId || this.activeCell || n.cells[0].id;
+        var cell = n.cells.filter(function(c) { return c.id === cellId; })[0];
+        if (!cell) { cell = n.cells[0]; cellId = cell.id; }
+        this.activeCell = cellId;
+        if (this.scriptDrafts[cellId] && this.scriptDrafts[cellId].language === "script") { this.scriptHelp(cellId); return; }
+        var chosen = {model:n.model,dimension:"",property:"",member:"",field:""};
+        var modelText = new m.Text({text:n.environment + " / " + n.model}).addStyleClass("sapUiTinyMarginEnd");
+        var dimensionText = new m.Text({text:"Choose a dimension"}).addStyleClass("sapUiTinyMarginEnd");
+        var propertyText = new m.Text({text:"Choose a stored property"}).addStyleClass("sapUiTinyMarginEnd");
+        var memberText = new m.Text({text:"Choose a member"}).addStyleClass("sapUiTinyMarginEnd");
+        var fieldText = new m.Text({text:"Choose a model field"}).addStyleClass("sapUiTinyMarginEnd");
+        var action = new m.Select({width:"100%",selectedKey:"members",change:update,items:[
+          new sap.ui.core.Item({key:"members",text:"Read dimension members and stored properties"}),
+          new sap.ui.core.Item({key:"properties",text:"Discover stored property fields"}),
+          new sap.ui.core.Item({key:"hierarchies",text:"List hierarchy names (no expansion)"}),
+          new sap.ui.core.Item({key:"property",text:"Read one member's stored property"}),
+          new sap.ui.core.Item({key:"model",text:"Read model data using frozen selections"}),
+          new sap.ui.core.Item({key:"filter",text:"Read model with an additional base-member filter"}),
+          new sap.ui.core.Item({key:"field",text:"Read a model field"})
+        ]});
+        var dimensionButton, propertyButton, memberButton, fieldButton;
+        var preview = new m.TextArea({width:"100%",rows:14,editable:false}).addStyleClass("code");
+        var insert = new m.Button({text:"Insert into cell",type:"Emphasized",enabled:false,press:function () {
+          self.insertCode(cellId,preview.getValue()); dialog.close();
+        }});
+        var dialog = new m.Dialog({title:"BPC code · " + cell.title,contentWidth:"760px",content:[new m.VBox({items:[
+          new m.MessageStrip({text:"Read-only SAP adapters. Model reads keep frozen selections and require base IDs. " +
+            "Stored properties do not include virtual or Chorus enrichment.",showIcon:true,type:"Information"}),
+          new m.Label({text:"Operation",labelFor:action}), action,
+          new m.HBox({alignItems:"Center",wrap:"Wrap",items:[modelText,
+          new m.Button({text:"Choose model",press:function () {
+            self.chooseMetadata({kind:"models",environment:n.environment},false,[chosen.model],function(ids) {
+              chosen = {model:ids[0],dimension:"",property:"",member:"",field:""};
+              modelText.setText(n.environment + " / " + chosen.model); dimensionText.setText("Choose a dimension");
+              propertyText.setText("Choose a stored property"); memberText.setText("Choose a member");
+              fieldText.setText("Choose a model field"); update();
+            });
+          }})]}).addStyleClass("sapUiTinyMarginTop"),
+          new m.HBox({alignItems:"Center",wrap:"Wrap",items:[dimensionText,
+          dimensionButton = new m.Button({text:"Choose dimension",press:function () {
+            self.chooseMetadata(query("dimensions"),false,[],function(ids) {
+              chosen.dimension = ids[0]; chosen.property = ""; chosen.member = "";
+              dimensionText.setText(chosen.dimension); propertyText.setText("Choose a stored property");
+              memberText.setText("Choose a member"); update();
+            });
+          }})]}).addStyleClass("sapUiTinyMarginTop"),
+          new m.HBox({alignItems:"Center",wrap:"Wrap",items:[propertyText,
+          propertyButton = new m.Button({text:"Discover / choose stored property",press:function () {
+            if (!dimensionReady()) { return; }
+            self.chooseMetadata(query("properties"),false,[],function(ids) {
+              chosen.property = ids[0]; propertyText.setText(chosen.property); update();
+            });
+          }})]}).addStyleClass("sapUiTinyMarginTop"),
+          new m.HBox({alignItems:"Center",wrap:"Wrap",items:[memberText,
+          memberButton = new m.Button({text:"Search dimension members",press:function () {
+            if (!dimensionReady()) { return; }
+            var request = query("members"); request.baseOnly = action.getSelectedKey() === "filter";
+            self.chooseMetadata(request,false,[],function(ids,hierarchy,items,nodes) {
+              chosen.member = ids[0]; chosen.memberIsNode = !!nodes[ids[0]];
+              memberText.setText(chosen.member + (chosen.memberIsNode ? " (node)" : "")); update();
+            });
+          }})]}).addStyleClass("sapUiTinyMarginTop"),
+          new m.HBox({alignItems:"Center",wrap:"Wrap",items:[fieldText,
+          fieldButton = new m.Button({text:"Discover / choose model field",press:function () {
+            self.chooseMetadata(query("fields"),false,[],function(ids) { chosen.field = ids[0]; fieldText.setText(chosen.field); update(); });
+          }})]}).addStyleClass("sapUiTinyMarginTop"),
+          new m.Label({text:"Code to append to the active cell",labelFor:preview}).addStyleClass("sapUiSmallMarginTop"), preview
+        ]}).addStyleClass("sapUiSmallMargin")],beginButton:insert,endButton:new m.Button({text:"Cancel",press:function () { dialog.close(); }}),
+          afterClose:function () { dialog.destroy(); }});
+        function query(kind) { return {kind:kind,environment:n.environment,model:chosen.model,dimension:chosen.dimension}; }
+        function dimensionReady() {
+          if (!chosen.dimension) { MessageBox.warning("Choose a dimension first."); return false; } return true;
+        }
+        function update() {
+          var key = action.getSelectedKey(), ready = true;
+          var needsDimension = ["members","properties","hierarchies","property","filter"].indexOf(key) >= 0;
+          dimensionText.setVisible(needsDimension); dimensionButton.setVisible(needsDimension);
+          propertyText.setVisible(key === "property"); propertyButton.setVisible(key === "property");
+          memberText.setVisible(key === "property" || key === "filter"); memberButton.setVisible(key === "property" || key === "filter");
+          fieldText.setVisible(key === "field"); fieldButton.setVisible(key === "field");
+          if (["members","properties","hierarchies","property","filter"].indexOf(key) >= 0 && !chosen.dimension) { ready = false; }
+          if (key === "property" && (!chosen.property || !chosen.member)) { ready = false; }
+          if (key === "filter" && (!chosen.member || chosen.memberIsNode) || key === "field" && !chosen.field) { ready = false; }
+          insert.setEnabled(ready); preview.setValue(ready ? self.bpcSnippet(cell,chosen,key) : "Choose metadata above to build valid ABAP.");
+        }
+        dialog.open(); update();
+      },
+      bpcSnippet: function (cell, chosen, action) {
+        var suffix = 1;
+        while (cell.source.indexOf("bpc_adapter_" + suffix) >= 0) { suffix++; }
+        function literal(value) { return "'" + String(value).replace(/'/g,"''") + "'"; }
+        var adapter = "bpc_adapter_" + suffix, data = "bpc_data_" + suffix, rows = "<bpc_rows_" + suffix + ">";
+        var dimension = ["members","properties","hierarchies","property"].indexOf(action) >= 0;
+        var lines = ["DATA(" + adapter + ") = io->" + (dimension ? "bpc_dimension(" : "bpc_model("),
+          dimension ? "  name = " + literal(chosen.dimension) + " model_name = " + literal(chosen.model) + " )."
+            : "  name = " + literal(chosen.model) + " )."];
+        if (action === "property") {
+          lines.push("DATA(bpc_value_" + suffix + ") = " + adapter + "->property(",
+            "  member = " + literal(chosen.member) + " name = " + literal(chosen.property) + " ).",
+            "io->message( bpc_value_" + suffix + " ).");
+        } else if (action === "hierarchies") {
+          lines.push("DATA(bpc_hierarchies_" + suffix + ") = " + adapter + "->hierarchies( ).",
+            "LOOP AT bpc_hierarchies_" + suffix + " INTO DATA(bpc_hierarchy_" + suffix + ").",
+            "  io->message( bpc_hierarchy_" + suffix + " ).", "ENDLOOP.");
+        } else if (action === "properties") {
+          lines.push("DATA(bpc_properties_" + suffix + ") = " + adapter + "->properties( ).",
+            "io->emit_table( name = 'PROPERTIES_" + suffix + "' rows = bpc_properties_" + suffix + " ).");
+        } else {
+          if (action === "filter") {
+            lines.push("DATA(" + data + ") = " + adapter + "->read_data(",
+              "  filters = VALUE #( ( dimension = " + literal(chosen.dimension),
+              "    members = VALUE #( ( CONV string( " + literal(chosen.member) + " ) ) ) ) ) ).");
+          } else { lines.push("DATA(" + data + ") = " + adapter + "->" + (dimension ? "member_data" : "read_data") + "( )."); }
+          lines.push("FIELD-SYMBOLS " + rows + " TYPE STANDARD TABLE.","ASSIGN " + data + "->* TO " + rows + ".",
+            "io->emit_table( name = '" + (dimension ? "MEMBERS_" : "MODEL_") + suffix + "' rows = " + rows + " ).");
+          if (action === "field") {
+            lines.push("FIELD-SYMBOLS <bpc_row_" + suffix + "> TYPE any.","FIELD-SYMBOLS <bpc_field_" + suffix + "> TYPE any.",
+              "READ TABLE " + rows + " ASSIGNING <bpc_row_" + suffix + "> INDEX 1.","IF sy-subrc = 0.",
+              "  ASSIGN COMPONENT " + literal(chosen.field) + " OF STRUCTURE <bpc_row_" + suffix + "> TO <bpc_field_" + suffix + ">.",
+              "  IF sy-subrc = 0. io->message( CONV string( <bpc_field_" + suffix + "> ) ). ENDIF.","ENDIF.");
+          }
+        }
+        return lines.join("\n");
+      },
+      insertCode: function (cellId, snippet) {
+        var cell = this.notebook.cells.filter(function(c) { return c.id === cellId; })[0];
+        if (this.scriptDrafts[cellId] && this.scriptDrafts[cellId].language === "script") { this.scriptHelp(cellId); return; }
+        if (!cell) { MessageBox.warning("The cell is no longer available."); return; }
+        cell.source += (cell.source && !/\n$/.test(cell.source) ? "\n" : "") + snippet + "\n";
+        this.cells.getItems().forEach(function(box) {
+          if (box.data("cellId") === cellId) { box.data("editor").setValue(cell.source); box.data("editor").focus(); }
+        });
+        this.activeCell = cellId; this.mark(); MessageToast.show("BPC code inserted. Validate the cell before running.");
       },
       chooseContext: function (done) {
         var self = this;
@@ -497,7 +908,7 @@ sap.ui.define(
         });
       },
       chooseMetadata: function (query, multiple, initial, done) {
-        var self = this, selected = {}, generation = 0, offset = 0, searchTimer;
+        var self = this, selected = {}, selectedNodes = {}, generation = 0, offset = 0, searchTimer;
         (initial || []).forEach(function (id) { selected[id] = true; });
         var list = new m.List({includeItemInSelection:true, mode:multiple ? "MultiSelect" : "SingleSelectLeft",
           selectionChange:function (e) {
@@ -518,7 +929,8 @@ sap.ui.define(
           beginButton:new m.Button({text:"Apply selection", press:function () {
             var ids = Object.keys(selected);
             if (!multiple && ids.length !== 1) { MessageBox.warning("Select one item."); return; }
-            done(ids, query.hierarchy || "", list.getItems()); dialog.close();
+            if (query.baseOnly && ids.some(function (id) { return selectedNodes[id]; })) { MessageBox.warning("Select a base member. Model read filters do not expand hierarchy nodes."); return; }
+            done(ids, query.hierarchy || "", list.getItems(), selectedNodes); dialog.close();
           }}),
           endButton:new m.Button({text:"Cancel",press:function () { dialog.close(); }}),
           afterClose:function () { generation++; clearTimeout(searchTimer); dialog.destroy(); }});
@@ -538,9 +950,10 @@ sap.ui.define(
             }
             if (!append) { list.removeAllItems(); }
             result.items.forEach(function (member) {
+              selectedNodes[member.id] = member.isNode;
               var item = new m.StandardListItem({info:member.isNode ? "Node" : "", selected:!!selected[member.id]});
               item.setTitle(member.id); item.setDescription(member.description || member.id);
-              item.data("memberId",member.id); item.data("description",member.description); list.addItem(item);
+              item.data("memberId",member.id); item.data("isNode",member.isNode); item.data("description",member.description); list.addItem(item);
             });
             offset += result.items.length; more.setVisible(result.more); list.setBusy(false);
           }).catch(function (e) { if (token === generation) { list.setBusy(false); self.error(e); } });
@@ -560,7 +973,7 @@ sap.ui.define(
                 self.renderNotebook(); self.mark();
               });
           }});
-        this.inputs.addItem(new m.VBox({items:[new m.Label({text:p.name + (p.required ? " *" : "") + " · " + p.dimension}),
+        this.inputs.addItem(new m.VBox({items:[new m.Label({text:p.name + (p.required ? " *" : "") + " · " + p.dimension + (p.purpose === "reference" ? " · Reference reads" : " · Calculation selection")}),
           display, new m.Text({text:p.resolved.length ? p.resolved.length + " resolved member(s) · " + (p.hierarchy || "single member")
             : "Save to resolve and validate selection"}),
           new m.Button({text:"Clear",type:"Transparent",press:function () {
@@ -583,7 +996,9 @@ sap.ui.define(
           contentWidth: "550px",
           content: [
             new m.Text({
-              text: "JSON array: name, type (number/string/boolean/member/range). Scalars use value. BPC inputs use dimension, hierarchy, required and selected (IDs). Resolved IDs are backend-owned. Choose BPC model first.",
+              text: "JSON array: name, type (number/string/boolean/member/range). Scalars use value. BPC inputs use dimension, hierarchy, required and selected (IDs). " +
+                "Reference inputs use purpose: reference; optional lookbackFrom names an output selection and lookbackSteps is 1–24. References never become output periods. " +
+                "Resolved IDs and fiscal links are backend-owned. Choose BPC model first.",
             }),
             new m.Label({text:"New dimension parameter"}),
             new m.Input({placeholder:"Parameter name (defaults to dimension ID)",change:function (e) {
@@ -657,7 +1072,8 @@ sap.ui.define(
               result.diagnostics.length
                 ? result.diagnostics
                     .map(function (d) {
-                      return "Line " + d.line + ": " + d.message;
+                      var cell = self.notebook.cells.filter(function(c) { return c.id === id; })[0];
+                      return "Line " + Script.sourceLine(cell.source,d.line) + ": " + d.message;
                     })
                     .join("\n")
                 : result.native
@@ -716,7 +1132,9 @@ sap.ui.define(
         if (!this.notebook) {
           return Promise.resolve();
         }
-        return Api.request("/runs?notebookId=" + encodeURIComponent(this.notebook.id)).then(function (runs) {
+        var notebookId = this.notebook.id;
+        return Api.request("/runs?notebookId=" + encodeURIComponent(notebookId)).then(function (runs) {
+          if (!self.notebook || self.notebook.id !== notebookId) { return; }
           self.runList.removeAllItems();
           runs.forEach(function (r) {
             self.runList.addItem(
@@ -725,6 +1143,8 @@ sap.ui.define(
           });
           if (self.runId) {
             self.runList.setSelectedKey(self.runId);
+          } else if (runs.length) {
+            self.runList.setSelectedKey(runs[0].id); self.inspect(runs[0].id);
           }
         });
       },
@@ -734,7 +1154,7 @@ sap.ui.define(
           return;
         }
         if (this.runId !== id) {
-          this.pageOffset = 0;
+          this.pageOffset = 0; this.tableName = "";
         }
         this.runId = id;
         clearTimeout(this.poll);
@@ -752,25 +1172,29 @@ sap.ui.define(
               "Frozen revision " +
                 r.snapshot.revision +
                 " · " +
-                r.jobName +
-                " / " +
-                r.jobId +
+                (r.scope === "logic" ? "Script Logic · " + r.handler + " · binding " + r.handlerRevision : r.jobName + " / " + r.jobId) +
                 " · " +
                 (r.durationMs || 0) +
                 " ms",
             );
             self.runMessages.removeAllItems();
             r.messages.forEach(function (v) {
-              self.runMessages.addItem(new m.Text({ text: v.cellId + ": " + v.text }));
+              self.runMessages.addItem(new m.Text().setText(v.cellId + ": " + v.text));
             });
             if (r.error) {
               self.runMessages.addItem(
                 new m.MessageStrip({ text: r.error.code + ": " + r.error.message, type: "Error" }),
               );
             }
+            (r.checkpoints || []).forEach(function (step) {
+              self.runMessages.addItem(new m.ObjectStatus({text:step.name + " · " + step.state + " · " + (step.durationUs / 1000) + " ms",
+                state:step.state === "succeeded" ? "Success" : "Error"}));
+            });
+            var outputs = r.results.slice();
+            if (r.checkpointCell) { outputs.push({cellId:r.checkpointCell,rowCount:"partial checkpoint previews",durationMs:r.durationMs}); }
             var selected = self.outputSelect.getSelectedKey();
             self.outputSelect.removeAllItems();
-            r.results.forEach(function (o) {
+            outputs.forEach(function (o) {
               self.outputSelect.addItem(
                 new sap.ui.core.Item({
                   key: o.cellId,
@@ -779,15 +1203,16 @@ sap.ui.define(
               );
             });
             self.outputSelect.setSelectedKey(
-              r.results.some(function (o) {
+              outputs.some(function (o) {
                 return o.cellId === selected;
               })
                 ? selected
-                : r.results.length
-                  ? r.results[0].cellId
+                : outputs.length
+                  ? outputs[0].cellId
                   : "",
             );
-            if (r.results.length) {
+            if (self.outputSelect.getSelectedKey() !== selected) { self.tableName = ""; }
+            if (outputs.length) {
               self.preview();
             } else {
               self.table.removeAllItems();
@@ -804,7 +1229,7 @@ sap.ui.define(
                   if (!self.notebook || self.notebook.id !== n.id || self.dirty) {
                     return;
                   }
-                  self.notebook = n;
+                  self.notebook = n; self.scriptNotebook = null;
                   self.renderNotebook();
                 });
               }
@@ -823,6 +1248,12 @@ sap.ui.define(
         }
       },
       retry: function () {
+        if (this.currentRun && this.currentRun.snapshot.inputs.some(function (p) { return p.purpose === "reference"; })) {
+          MessageBox.information("Reference calculations require a new run with a new data snapshot. Use Run all; historical retry is unavailable."); return;
+        }
+        if (this.currentRun && this.currentRun.scope === "logic") {
+          MessageBox.information("Invoke the handler again from Script Logic to preserve its current view and transaction."); return;
+        }
         var self = this;
         if (!this.runId || this.submitting) {
           return;
@@ -884,6 +1315,8 @@ sap.ui.define(
         if (!id || !this.runId) {
           return;
         }
+        var requestRun = this.runId, token = (this.previewToken || 0) + 1;
+        this.previewToken = token;
         Api.request(
           "/output?runId=" +
             encodeURIComponent(this.runId) +
@@ -891,35 +1324,43 @@ sap.ui.define(
             encodeURIComponent(id) +
             "&revision=1&offset=" +
             this.pageOffset +
-            "&limit=2",
+            "&limit=2&table=" + encodeURIComponent(this.tableName || ""),
         )
           .then(function (page) {
+            if (self.previewToken !== token || self.runId !== requestRun) { return; }
             self.total = page.total;
             self.table.removeAllItems();
+            self.table.destroyColumns();
+            (page.schema || []).forEach(function(column,index) {
+              self.table.addColumn(new m.Column({header: new m.Label({text: column.name,wrapping:true}),
+                importance:index < 2 || column.name.toUpperCase() === "SIGNEDDATA" ? "High" : "Low"}));
+            });
+            self.datasetSelect.removeAllItems();
+            self.datasetSelect.setVisible(!!(page.tables && page.tables.length));
+            (page.tables || []).forEach(function(t) {
+              self.datasetSelect.addItem(new sap.ui.core.Item({key:t.name,text:t.name + " · " + t.totalCount + " rows"}));
+            });
+            self.tableName = page.tableName || "";
+            self.datasetSelect.setSelectedKey(self.tableName);
             page.rows.forEach(function (row) {
-              self.table.addItem(
-                new m.ColumnListItem({
-                  cells: [
-                    new m.Text({ text: row.key }),
-                    new m.Text({
-                      text: Number(row.amount).toLocaleString(undefined, { maximumFractionDigits: 2 }),
-                    }),
-                  ],
-                }),
-              );
+              self.table.addItem(new m.ColumnListItem({cells: (page.schema || []).map(function(column,index) {
+                // Keep exact decimal text and member IDs; avoid JavaScript numeric rounding.
+                var value = row.values ? row.values[index] : row[column.name];
+                return new m.Text().setText(value == null ? "" : String(value));
+              })}));
             });
             self.pageLabel.setText(
-              page.offset +
+              page.total === 0 ? "0 rows · output revision " + page.revision : page.offset +
                 1 +
                 "–" +
                 Math.min(page.offset + page.limit, page.total) +
                 " of " +
                 page.total +
                 " · output revision " +
-                page.revision,
+                page.revision + (page.partial ? " · incomplete calculation checkpoints" : "") + (page.truncated ? " · preview of " + page.sourceTotal + " source rows" : ""),
             );
           })
-          .catch(self.error.bind(self));
+          .catch(function(e) { if (self.previewToken === token && self.runId === requestRun) { self.error(e); } });
       },
       history: function () {
         var self = this;

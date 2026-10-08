@@ -27,6 +27,7 @@ export function createServer(engine = new Engine({file: resolve('.local/store.js
         else if (path === '/notebooks' && req.method === 'POST') value = engine.create(body.demo ? demo() : body,user);
         else if (path === '/notebook' && req.method === 'GET') value = engine.get(p.get('id'),user);
         else if (path === '/notebook' && req.method === 'PUT') value = engine.save(body.id,body,user);
+        else if (path === '/delete-notebook' && req.method === 'POST') value = engine.deleteNotebook(body.notebookId,body.expectedRevision,user);
         else if (path === '/versions' && req.method === 'GET') value = engine.history(p.get('id'),user);
         else if (path === '/validate' && req.method === 'POST') value = engine.validate(body.notebookId,body.cellId,user);
         else if (path === '/runs' && req.method === 'POST') value = engine.submit(body,user);

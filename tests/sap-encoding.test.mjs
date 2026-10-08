@@ -26,7 +26,7 @@ test('packaging leaves native sources and SAP metadata byte-identical and is ide
 test('repository bytes match the recorded real SAP serialization',()=>{
  const evidence=JSON.parse(readUtf8('docs/evidence/sap-roundtrip.json'));
  assert.equal(evidence.passed,true);
- assert.equal(evidence.files.length,41);
+ assert.equal(evidence.files.length,56);
  for(const file of evidence.files){
   const path=file.filename==='.abapgit.xml'?file.filename:'src/'+file.filename;
   const bytes=readFileSync(path);

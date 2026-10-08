@@ -1,0 +1,9 @@
+let periods = range("TIME")
+let categoryId = member("CATEGORY")
+table summary
+append summary key = "PERIOD_COUNT" amount = count(periods)
+emit summary
+show summary as "CONTEXT_COUNTS"
+message concat("CATEGORY ", categoryId)
+message concat("Network Services suppression ", input("FFLASMATGROUPS"))
+message "Read-stage conversion only; no allocation or writeback"

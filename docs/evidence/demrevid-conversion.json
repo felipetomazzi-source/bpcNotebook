@@ -1,0 +1,509 @@
+{
+  "at": "2026-10-08T12:43:54.930Z",
+  "notebookId": "E82AEA36D1571FD1B0E2BD7EF9940724",
+  "revision": 1,
+  "environment": "CH_PLANNING",
+  "model": "DEMREVID",
+  "inputs": [
+    {
+      "name": "CATEGORY",
+      "type": "member",
+      "value": "",
+      "dimension": "CATEGORY",
+      "hierarchy": "",
+      "required": true,
+      "selected": [
+        "Actual"
+      ],
+      "resolved": [
+        "Actual"
+      ]
+    },
+    {
+      "name": "TIME",
+      "type": "range",
+      "value": "",
+      "dimension": "TIME",
+      "hierarchy": "PARENTH2",
+      "required": true,
+      "selected": [
+        "2025.REG"
+      ],
+      "resolved": [
+        "2025.007",
+        "2025.008",
+        "2025.009",
+        "2025.010",
+        "2025.011",
+        "2025.012",
+        "2026.001",
+        "2026.002",
+        "2026.003",
+        "2026.004",
+        "2026.005",
+        "2026.006"
+      ]
+    },
+    {
+      "name": "FFLASMATGROUPS",
+      "type": "boolean",
+      "value": true
+    },
+    {
+      "name": "FFLASMATGROUPSID",
+      "type": "string",
+      "value": "MATGROUPID038"
+    },
+    {
+      "name": "DEBUG",
+      "type": "string",
+      "value": "OFF"
+    },
+    {
+      "name": "HSNS_REALLOC_LOCATIONS",
+      "type": "string",
+      "value": ""
+    }
+  ],
+  "validations": [
+    {
+      "cellId": "context",
+      "native": true,
+      "supported": true,
+      "diagnostics": []
+    },
+    {
+      "cellId": "matconn",
+      "native": true,
+      "supported": true,
+      "diagnostics": []
+    },
+    {
+      "cellId": "product_type",
+      "native": true,
+      "supported": true,
+      "diagnostics": []
+    },
+    {
+      "cellId": "mat_group_id",
+      "native": true,
+      "supported": true,
+      "diagnostics": []
+    },
+    {
+      "cellId": "selected_facts",
+      "native": true,
+      "supported": true,
+      "diagnostics": []
+    },
+    {
+      "cellId": "conversion_status",
+      "native": true,
+      "supported": true,
+      "diagnostics": []
+    }
+  ],
+  "businessEquivalent": false,
+  "limitations": [
+    "TIME_NA reference data omitted by frozen adapter scope",
+    "Prior-period reads require a separate explicit authorized read scope",
+    "Grouped allocation, keyed lookup, hierarchy traversal and rounding steps retained, not ported",
+    "No full-table dependency handoff",
+    "No writeback or NOTEBOOK handler binding"
+  ],
+  "run": {
+    "id": "E82AEA36D1571FD1B0E2BDA46FBA4727",
+    "state": "succeeded",
+    "error": {
+      "code": "",
+      "message": ""
+    },
+    "results": [
+      {
+        "cellId": "context",
+        "runId": "E82AEA36D1571FD1B0E2BDA46FBA4727",
+        "revision": 1,
+        "rowCount": 2,
+        "durationMs": 0,
+        "checksum": "189B3206AB0A8261AAFE71DDA7959D601F33379635A5F1148C2FCD23269B9F1D",
+        "createdAt": "2026-10-08T12:43:57,4096260Z"
+      },
+      {
+        "cellId": "matconn",
+        "runId": "E82AEA36D1571FD1B0E2BDA46FBA4727",
+        "revision": 1,
+        "rowCount": 5000,
+        "durationMs": 757,
+        "checksum": "0A45F3B3ED2D05DD3A306F2A33BD56F69673B964B26E5AE330DDC7C564F37E66",
+        "createdAt": "2026-10-08T12:43:58,2105400Z"
+      },
+      {
+        "cellId": "product_type",
+        "runId": "E82AEA36D1571FD1B0E2BDA46FBA4727",
+        "revision": 1,
+        "rowCount": 9,
+        "durationMs": 162,
+        "checksum": "7B5C1D46BA7A427DD4BC6D7303B07D215F6E4054AAAE4B8EC6B6F898CC137D56",
+        "createdAt": "2026-10-08T12:43:58,7940910Z"
+      },
+      {
+        "cellId": "mat_group_id",
+        "runId": "E82AEA36D1571FD1B0E2BDA46FBA4727",
+        "revision": 1,
+        "rowCount": 202,
+        "durationMs": 193,
+        "checksum": "1CB5351E102BD389069B28938D7FE01283FBABF4A5402ADDAACF646C3BF5B20F",
+        "createdAt": "2026-10-08T12:43:59,0216390Z"
+      },
+      {
+        "cellId": "selected_facts",
+        "runId": "E82AEA36D1571FD1B0E2BDA46FBA4727",
+        "revision": 1,
+        "rowCount": 4,
+        "durationMs": 927,
+        "checksum": "F0ACFDEC4139C81353F7A481B4C0C4A1192B63C3F6B2EEE7BED46A6E2E0F2E3E",
+        "createdAt": "2026-10-08T12:43:59,9996150Z"
+      },
+      {
+        "cellId": "conversion_status",
+        "runId": "E82AEA36D1571FD1B0E2BDA46FBA4727",
+        "revision": 1,
+        "rowCount": 22,
+        "durationMs": 2,
+        "checksum": "94FABDA3E3B7706A56691C003803D77405070E6D156213AC45C2D020C13E0E7E",
+        "createdAt": "2026-10-08T12:44:00,0423360Z"
+      }
+    ]
+  },
+  "outputSchemas": [
+    {
+      "cellId": "context",
+      "tables": [
+        {
+          "name": "CONTEXT_COUNTS",
+          "rowCount": 1,
+          "totalCount": 1,
+          "truncated": false,
+          "elapsedUs": 0
+        }
+      ],
+      "schema": [
+        {
+          "name": "key",
+          "type": "string"
+        },
+        {
+          "name": "amount",
+          "type": "decimal"
+        }
+      ],
+      "sourceTotal": 1,
+      "total": 1
+    },
+    {
+      "cellId": "matconn",
+      "tables": [
+        {
+          "name": "MATCONN_STORED_MEMBERS",
+          "rowCount": 5000,
+          "totalCount": 7391,
+          "truncated": true,
+          "elapsedUs": 0
+        }
+      ],
+      "schema": [
+        {
+          "name": "id",
+          "type": "string"
+        },
+        {
+          "name": "calc",
+          "type": "string"
+        },
+        {
+          "name": "evdescription",
+          "type": "string"
+        },
+        {
+          "name": "hir",
+          "type": "string"
+        },
+        {
+          "name": "product_type",
+          "type": "string"
+        },
+        {
+          "name": "prod_category",
+          "type": "string"
+        },
+        {
+          "name": "prod_family",
+          "type": "string"
+        },
+        {
+          "name": "prod_group",
+          "type": "string"
+        },
+        {
+          "name": "prod_type",
+          "type": "string"
+        },
+        {
+          "name": "rev_id_group",
+          "type": "string"
+        },
+        {
+          "name": "rev_id_group_desc",
+          "type": "string"
+        },
+        {
+          "name": "scaling",
+          "type": "string"
+        },
+        {
+          "name": "parenth1",
+          "type": "string"
+        }
+      ],
+      "sourceTotal": 7391,
+      "total": 5000
+    },
+    {
+      "cellId": "product_type",
+      "tables": [
+        {
+          "name": "PRODUCT_TYPE_STORED_MEMBERS",
+          "rowCount": 9,
+          "totalCount": 9,
+          "truncated": false,
+          "elapsedUs": 0
+        }
+      ],
+      "schema": [
+        {
+          "name": "id",
+          "type": "string"
+        },
+        {
+          "name": "alternative_text",
+          "type": "string"
+        },
+        {
+          "name": "calc",
+          "type": "string"
+        },
+        {
+          "name": "evdescription",
+          "type": "string"
+        },
+        {
+          "name": "hir",
+          "type": "string"
+        },
+        {
+          "name": "rev_id_group",
+          "type": "string"
+        },
+        {
+          "name": "rev_id_group_desc",
+          "type": "string"
+        },
+        {
+          "name": "scaling",
+          "type": "string"
+        },
+        {
+          "name": "parenth1",
+          "type": "string"
+        }
+      ],
+      "sourceTotal": 9,
+      "total": 9
+    },
+    {
+      "cellId": "mat_group_id",
+      "tables": [
+        {
+          "name": "MAT_GROUP_ID_STORED_MEMBERS",
+          "rowCount": 202,
+          "totalCount": 202,
+          "truncated": false,
+          "elapsedUs": 0
+        }
+      ],
+      "schema": [
+        {
+          "name": "id",
+          "type": "string"
+        },
+        {
+          "name": "appendix_price",
+          "type": "string"
+        },
+        {
+          "name": "calc",
+          "type": "string"
+        },
+        {
+          "name": "evdescription",
+          "type": "string"
+        },
+        {
+          "name": "hir",
+          "type": "string"
+        },
+        {
+          "name": "rev_id_group",
+          "type": "string"
+        },
+        {
+          "name": "scaling",
+          "type": "string"
+        },
+        {
+          "name": "parenth1",
+          "type": "string"
+        }
+      ],
+      "sourceTotal": 202,
+      "total": 202
+    },
+    {
+      "cellId": "selected_facts",
+      "tables": [
+        {
+          "name": "SELECTED_PERIOD_FACTS",
+          "rowCount": 0,
+          "totalCount": 0,
+          "truncated": false,
+          "elapsedUs": 0
+        },
+        {
+          "name": "READ_COUNTS",
+          "rowCount": 2,
+          "totalCount": 2,
+          "truncated": false,
+          "elapsedUs": 0
+        }
+      ],
+      "schema": [
+        {
+          "name": "account",
+          "type": "string"
+        },
+        {
+          "name": "audittrail",
+          "type": "string"
+        },
+        {
+          "name": "category",
+          "type": "string"
+        },
+        {
+          "name": "conn_reg_split",
+          "type": "string"
+        },
+        {
+          "name": "costcentre",
+          "type": "string"
+        },
+        {
+          "name": "demrevid_kfs",
+          "type": "string"
+        },
+        {
+          "name": "doc_typ",
+          "type": "string"
+        },
+        {
+          "name": "fflas",
+          "type": "string"
+        },
+        {
+          "name": "fflas_subset",
+          "type": "string"
+        },
+        {
+          "name": "geo_drivers",
+          "type": "string"
+        },
+        {
+          "name": "lfc_win_supplier",
+          "type": "string"
+        },
+        {
+          "name": "matconn",
+          "type": "string"
+        },
+        {
+          "name": "matremap",
+          "type": "string"
+        },
+        {
+          "name": "mat_group_id",
+          "type": "string"
+        },
+        {
+          "name": "product_type",
+          "type": "string"
+        },
+        {
+          "name": "reg_fflas_serv",
+          "type": "string"
+        },
+        {
+          "name": "rev_id_group",
+          "type": "string"
+        },
+        {
+          "name": "rsp_service_id",
+          "type": "string"
+        },
+        {
+          "name": "time",
+          "type": "string"
+        },
+        {
+          "name": "ufb_dr_id",
+          "type": "string"
+        },
+        {
+          "name": "signeddata",
+          "type": "decimal"
+        }
+      ],
+      "sourceTotal": 0,
+      "total": 0
+    },
+    {
+      "cellId": "conversion_status",
+      "tables": [
+        {
+          "name": "CONVERSION_STATUS",
+          "rowCount": 20,
+          "totalCount": 20,
+          "truncated": false,
+          "elapsedUs": 0
+        }
+      ],
+      "schema": [
+        {
+          "name": "step_id",
+          "type": "string"
+        },
+        {
+          "name": "method_name",
+          "type": "string"
+        },
+        {
+          "name": "status",
+          "type": "string"
+        }
+      ],
+      "sourceTotal": 20,
+      "total": 20
+    }
+  ],
+  "rawRowCount": "0",
+  "passed": true
+}
