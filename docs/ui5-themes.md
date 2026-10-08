@@ -9,3 +9,5 @@ The stylesheet contains layout rules and a monospace font for ABAP source only. 
 SAP theme documentation: https://learning.sap.com/courses/learning-the-basics-of-sap-fiori/using-the-ui-theme-designer_e269f16a-7009-4467-9b6f-4d3dd689da32
 
 Verification includes the deployed dark and light themes, 390px and desktop viewports, the existing application tests, and an actual abapGit import followed by SAP serialization and byte comparison. Theme screenshots are in `docs/evidence/horizon-dark.png` and `docs/evidence/horizon-light.png`.
+
+Cell source uses the standard sap.ui.codeeditor.CodeEditor in ABAP mode with visible line numbers. SAP's editor highlights ABAP keywords, types, operators, strings, numeric literals and comments. Its default palette follows the application theme (Nord Dark in Evening Horizon and Tomorrow in Morning Horizon). Live edits update the notebook source and invalidate previous outputs; programmatic initialization does not mark the notebook as changed. Screenshots are in docs/evidence/abap-editor-dark.png and docs/evidence/abap-editor-light.png.

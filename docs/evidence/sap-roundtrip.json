@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-08T09:56:51.291Z",
+  "at": "2026-10-08T10:25:01.085Z",
   "method": "abapGit object deserializers and serializers through ADT classrun",
   "objectPackage": "ZBPC_NOTEBOOK",
   "packageMetadataTarget": "ZBPC_NOTEBOOK",
@@ -84,9 +84,9 @@
     },
     {
       "filename": "zbpc_notebook.wapa.component.js",
-      "gitBlob": "d1f32f0960c16dff4fcb4d2a101533fba3c246f6",
-      "sapSha256": "622e432a38b7a2555a1e02d7061568037cdbd2a80f9b824ca8deaf28bcfdd7ce",
-      "bytes": 292635,
+      "gitBlob": "01d06473d9f0cd08fbfbfc6f47b009b8ed5bb0e8",
+      "sapSha256": "d555520b974938dcebfba90503681bb0c15b1f44e08ced95d0b57921a9fdb654",
+      "bytes": 293915,
       "equal": true
     },
     {
@@ -105,15 +105,15 @@
     },
     {
       "filename": "zbpc_notebook.wapa.index.html",
-      "gitBlob": "b29575c5a2ac398dccd9271beee0cf960909dd4a",
-      "sapSha256": "501be2b8d411a92e95583b0e34795d394eb55eb2b3b497984161f97664203848",
+      "gitBlob": "d031dda29e7f58c155031e545998c0e9565dd31c",
+      "sapSha256": "e29d3c5287bf85b41be42e4cc6b3a1cc02ea1ea4e904f73fd65eda6e5223c653",
       "bytes": 6143,
       "equal": true
     },
     {
       "filename": "zbpc_notebook.wapa.manifest.json",
-      "gitBlob": "579163a83ff2b97b430919236c760bb2c9cfcec4",
-      "sapSha256": "f8e7020715f3e0e8898cc1847e6ce10a91810833bbbb47a3844fe0fedbc4434d",
+      "gitBlob": "e1609b09e8eab83ceacdbdc178147340ed5e2fd9",
+      "sapSha256": "f36f3f51b9ac20b7d378a076a3e53fd223899b470d22193f1a13e5da0c168ee7",
       "bytes": 3839,
       "equal": true
     },
@@ -313,8 +313,8 @@
     "BNIMPORTED|CLAS|ZCL_BN_TYPES",
     "BNIMPORTED|CLAS|ZCX_BN",
     "BNLOGI|> Mass activating 6 DDIC objects",
-    "BNLOGI|Log name: ABAPGIT_20261008_225701",
-    "BNLOGI|> Activating 9 objects "
+    "BNLOGI|Log name: ABAPGIT_20261008_232512",
+    "BNLOGI|> Activating 11 objects "
   ],
   "passed": true,
   "missing": []
