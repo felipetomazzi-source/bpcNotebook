@@ -1,0 +1,16 @@
+{
+  "checkedAt": "2026-10-08T23:22:34.344Z",
+  "system": "SAP DEV client 001",
+  "ui5Runtime": "1.120.40",
+  "control": "sap.ui.table.Table",
+  "columns": 21,
+  "pageSize": 50,
+  "nextPageOffset": 50,
+  "previousPageRestoresExactRow": true,
+  "emptyPreservesSchema": true,
+  "boundedPreviewRows": 100,
+  "sourceRows": 3550,
+  "columnReordering": true,
+  "localTestsPassed": 32,
+  "sapSerializedFilesMatched": 56
+}
