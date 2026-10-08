@@ -90,3 +90,5 @@ content area. Keep the component alive until `navigateBack`; destroy both its
 container and component after leaving so polling and dialogs are cleaned up.
 Standalone launch remains supported with its own header, theme picker and
 environment/model selection.
+
+Notebook navigation uses standard UI5 model group headers and a SearchField. Search filters notebook names, model/environment IDs and notebook IDs locally without loading notebook contents. Standalone groups identify the environment as well as the model; embedded navigation remains restricted to the hub-selected environment. Filtering does not discard an open notebook or unsaved edits.
