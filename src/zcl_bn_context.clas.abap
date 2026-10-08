@@ -28,6 +28,10 @@ CLASS zcl_bn_context DEFINITION PUBLIC FINAL CREATE PUBLIC.
     METHODS constructor IMPORTING inputs TYPE zcl_bn_types=>tt_inputs
       bindings TYPE zcl_bn_types=>tt_bindings dependencies TYPE zcl_bn_types=>tt_ids cell_id TYPE string
       environment TYPE string DEFAULT '' model TYPE string DEFAULT ''.
+    METHODS bpc_dimension IMPORTING name TYPE string model_name TYPE string DEFAULT ''
+      RETURNING VALUE(adapter) TYPE REF TO zcl_bn_bpc RAISING zcx_bn.
+    METHODS bpc_model IMPORTING name TYPE string DEFAULT ''
+      RETURNING VALUE(adapter) TYPE REF TO zcl_bn_bpc RAISING zcx_bn.
     METHODS input IMPORTING name TYPE string RETURNING VALUE(value) TYPE string RAISING zcx_bn.
     METHODS member IMPORTING name TYPE string RETURNING VALUE(value) TYPE uj_dim_member RAISING zcx_bn.
     METHODS selection IMPORTING name TYPE string RETURNING VALUE(value) TYPE zcl_bn_types=>tt_ids RAISING zcx_bn.
@@ -47,6 +51,18 @@ CLASS zcl_bn_context IMPLEMENTATION.
   METHOD constructor.
     me->environment = environment. me->model = model.
     mt_inputs = inputs. mt_bindings = bindings. mt_dependencies = dependencies. mv_cell_id = cell_id.
+  ENDMETHOD.
+  METHOD bpc_dimension.
+    adapter = NEW zcl_bn_bpc( environment = CONV #( environment )
+      model = COND #( WHEN model_name IS INITIAL THEN CONV string( model ) ELSE model_name )
+      dimension = name inputs = mt_inputs ).
+    IF name IS INITIAL.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_DIMENSION' detail = 'Choose a dimension name'.
+    ENDIF.
+  ENDMETHOD.
+  METHOD bpc_model.
+    adapter = NEW zcl_bn_bpc( environment = CONV #( environment )
+      model = COND #( WHEN name IS INITIAL THEN CONV string( model ) ELSE name ) inputs = mt_inputs ).
   ENDMETHOD.
   METHOD input.
     READ TABLE mt_inputs INTO DATA(parameter) WITH KEY name = name.

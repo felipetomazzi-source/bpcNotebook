@@ -83,6 +83,8 @@ sap.ui.define(
           self.tableName = e.getSource().getSelectedKey(); self.pageOffset = 0; self.preview();
         }});
         this.table = new m.Table({
+          autoPopinMode: true,
+          popinLayout: "GridSmall",
           columns: [
             new m.Column({ header: new m.Label({ text: "Cost centre" }) }),
             new m.Column({ header: new m.Label({ text: "Amount" }) }),
@@ -182,6 +184,7 @@ sap.ui.define(
                 self.renderNotebook(); self.mark();
               }); },
             }),
+            new m.Button({text:"BPC code", icon:"sap-icon://source-code", press:function () { self.codeAssistant(); }}),
             new m.Button({
               text: "Versions",
               icon: "sap-icon://history",
@@ -319,6 +322,9 @@ sap.ui.define(
         clearTimeout(this.poll);
         this.runId = null;
         this.currentRun = null;
+        this.previewToken = (this.previewToken || 0) + 1;
+        this.tableName = "";
+        this.datasetSelect.removeAllItems(); this.datasetSelect.setVisible(false);
         this.pageOffset = 0;
         this.runList.removeAllItems();
         this.outputSelect.removeAllItems();
@@ -370,18 +376,22 @@ sap.ui.define(
               : "Not executed",
             state: c.output ? (c.output.stale ? "Warning" : "Success") : "None",
           }).addStyleClass("cellStatus");
+          var editor = new m.TextArea({
+            width:"100%", rows:Math.min(15,Math.max(5,c.source.split("\n").length)),
+            liveChange:function(e) { c.source = e.getSource().getValue(); self.activeCell = c.id; self.mark(); }
+          }).setValue(c.source).addStyleClass("code");
+          editor.addEventDelegate({onfocusin:function () { self.activeCell = c.id; }});
           var box = new m.Panel({
             content: [
               new m.OverflowToolbar({
                 content: [
                   new m.Input({
-                    value: c.title,
                     width: "52%",
                     change: function (e) {
                       c.title = e.getSource().getValue();
                       self.mark();
                     },
-                  }).addStyleClass("cellTitle"),
+                  }).setValue(c.title).addStyleClass("cellTitle"),
                   state,
                   new m.ToolbarSpacer(),
                   new m.Button({
@@ -411,14 +421,7 @@ sap.ui.define(
               new m.Text({ text: "Cell " + c.id + " · source v" + c.sourceVersion }).addStyleClass(
                 "cellMeta",
               ),
-              new m.TextArea({
-                width: "100%",
-                rows: Math.min(15, Math.max(5, c.source.split("\n").length)),
-                liveChange: function (e) {
-                  c.source = e.getSource().getValue();
-                  self.mark();
-                },
-              }).setValue(c.source).addStyleClass("code"),
+              editor,
               new m.HBox({
                 alignItems: "Center",
                 wrap: "Wrap",
@@ -440,6 +443,7 @@ sap.ui.define(
                       self.mark();
                     },
                   }),
+                  new m.Button({text:"BPC code",icon:"sap-icon://source-code",press:function () { self.codeAssistant(c.id); }}),
                   new m.Button({
                     text: "Validate",
                     press: function () {
@@ -464,7 +468,7 @@ sap.ui.define(
             ],
           })
             .addStyleClass("cell")
-            .data("status", state);
+            .data("status", state).data("cellId",c.id).data("editor",editor);
           self.cells.addItem(box);
         });
       },
@@ -502,6 +506,142 @@ sap.ui.define(
         this.renderNotebook();
         this.mark();
       },
+      codeAssistant: function (cellId) {
+        var self = this, n = this.notebook;
+        if (!n || !n.cells.length) { MessageBox.warning("Open a notebook and add a cell first."); return; }
+        if (!n.environment || !n.model) { MessageBox.warning("Choose the notebook's BPC model first."); return; }
+        cellId = cellId || this.activeCell || n.cells[0].id;
+        var cell = n.cells.filter(function(c) { return c.id === cellId; })[0];
+        if (!cell) { cell = n.cells[0]; cellId = cell.id; }
+        this.activeCell = cellId;
+        var chosen = {model:n.model,dimension:"",property:"",member:"",field:""};
+        var modelText = new m.Text({text:n.environment + " / " + n.model}).addStyleClass("sapUiTinyMarginEnd");
+        var dimensionText = new m.Text({text:"Choose a dimension"}).addStyleClass("sapUiTinyMarginEnd");
+        var propertyText = new m.Text({text:"Choose a stored property"}).addStyleClass("sapUiTinyMarginEnd");
+        var memberText = new m.Text({text:"Choose a member"}).addStyleClass("sapUiTinyMarginEnd");
+        var fieldText = new m.Text({text:"Choose a model field"}).addStyleClass("sapUiTinyMarginEnd");
+        var action = new m.Select({width:"100%",selectedKey:"members",change:update,items:[
+          new sap.ui.core.Item({key:"members",text:"Read dimension members and stored properties"}),
+          new sap.ui.core.Item({key:"properties",text:"Discover stored property fields"}),
+          new sap.ui.core.Item({key:"hierarchies",text:"List hierarchy names (no expansion)"}),
+          new sap.ui.core.Item({key:"property",text:"Read one member's stored property"}),
+          new sap.ui.core.Item({key:"model",text:"Read model data using frozen selections"}),
+          new sap.ui.core.Item({key:"filter",text:"Read model with an additional base-member filter"}),
+          new sap.ui.core.Item({key:"field",text:"Read a model field"})
+        ]});
+        var dimensionButton, propertyButton, memberButton, fieldButton;
+        var preview = new m.TextArea({width:"100%",rows:14,editable:false}).addStyleClass("code");
+        var insert = new m.Button({text:"Insert into cell",type:"Emphasized",enabled:false,press:function () {
+          self.insertCode(cellId,preview.getValue()); dialog.close();
+        }});
+        var dialog = new m.Dialog({title:"BPC code · " + cell.title,contentWidth:"760px",content:[new m.VBox({items:[
+          new m.MessageStrip({text:"Read-only SAP adapters. Model reads keep frozen selections and require base IDs. " +
+            "Stored properties do not include virtual or Chorus enrichment.",showIcon:true,type:"Information"}),
+          new m.Label({text:"Operation",labelFor:action}), action,
+          new m.HBox({alignItems:"Center",wrap:"Wrap",items:[modelText,
+          new m.Button({text:"Choose model",press:function () {
+            self.chooseMetadata({kind:"models",environment:n.environment},false,[chosen.model],function(ids) {
+              chosen = {model:ids[0],dimension:"",property:"",member:"",field:""};
+              modelText.setText(n.environment + " / " + chosen.model); dimensionText.setText("Choose a dimension");
+              propertyText.setText("Choose a stored property"); memberText.setText("Choose a member");
+              fieldText.setText("Choose a model field"); update();
+            });
+          }})]}).addStyleClass("sapUiTinyMarginTop"),
+          new m.HBox({alignItems:"Center",wrap:"Wrap",items:[dimensionText,
+          dimensionButton = new m.Button({text:"Choose dimension",press:function () {
+            self.chooseMetadata(query("dimensions"),false,[],function(ids) {
+              chosen.dimension = ids[0]; chosen.property = ""; chosen.member = "";
+              dimensionText.setText(chosen.dimension); propertyText.setText("Choose a stored property");
+              memberText.setText("Choose a member"); update();
+            });
+          }})]}).addStyleClass("sapUiTinyMarginTop"),
+          new m.HBox({alignItems:"Center",wrap:"Wrap",items:[propertyText,
+          propertyButton = new m.Button({text:"Discover / choose stored property",press:function () {
+            if (!dimensionReady()) { return; }
+            self.chooseMetadata(query("properties"),false,[],function(ids) {
+              chosen.property = ids[0]; propertyText.setText(chosen.property); update();
+            });
+          }})]}).addStyleClass("sapUiTinyMarginTop"),
+          new m.HBox({alignItems:"Center",wrap:"Wrap",items:[memberText,
+          memberButton = new m.Button({text:"Search dimension members",press:function () {
+            if (!dimensionReady()) { return; }
+            var request = query("members"); request.baseOnly = action.getSelectedKey() === "filter";
+            self.chooseMetadata(request,false,[],function(ids,hierarchy,items,nodes) {
+              chosen.member = ids[0]; chosen.memberIsNode = !!nodes[ids[0]];
+              memberText.setText(chosen.member + (chosen.memberIsNode ? " (node)" : "")); update();
+            });
+          }})]}).addStyleClass("sapUiTinyMarginTop"),
+          new m.HBox({alignItems:"Center",wrap:"Wrap",items:[fieldText,
+          fieldButton = new m.Button({text:"Discover / choose model field",press:function () {
+            self.chooseMetadata(query("fields"),false,[],function(ids) { chosen.field = ids[0]; fieldText.setText(chosen.field); update(); });
+          }})]}).addStyleClass("sapUiTinyMarginTop"),
+          new m.Label({text:"Code to append to the active cell",labelFor:preview}).addStyleClass("sapUiSmallMarginTop"), preview
+        ]}).addStyleClass("sapUiSmallMargin")],beginButton:insert,endButton:new m.Button({text:"Cancel",press:function () { dialog.close(); }}),
+          afterClose:function () { dialog.destroy(); }});
+        function query(kind) { return {kind:kind,environment:n.environment,model:chosen.model,dimension:chosen.dimension}; }
+        function dimensionReady() {
+          if (!chosen.dimension) { MessageBox.warning("Choose a dimension first."); return false; } return true;
+        }
+        function update() {
+          var key = action.getSelectedKey(), ready = true;
+          var needsDimension = ["members","properties","hierarchies","property","filter"].indexOf(key) >= 0;
+          dimensionText.setVisible(needsDimension); dimensionButton.setVisible(needsDimension);
+          propertyText.setVisible(key === "property"); propertyButton.setVisible(key === "property");
+          memberText.setVisible(key === "property" || key === "filter"); memberButton.setVisible(key === "property" || key === "filter");
+          fieldText.setVisible(key === "field"); fieldButton.setVisible(key === "field");
+          if (["members","properties","hierarchies","property","filter"].indexOf(key) >= 0 && !chosen.dimension) { ready = false; }
+          if (key === "property" && (!chosen.property || !chosen.member)) { ready = false; }
+          if (key === "filter" && (!chosen.member || chosen.memberIsNode) || key === "field" && !chosen.field) { ready = false; }
+          insert.setEnabled(ready); preview.setValue(ready ? self.bpcSnippet(cell,chosen,key) : "Choose metadata above to build valid ABAP.");
+        }
+        dialog.open(); update();
+      },
+      bpcSnippet: function (cell, chosen, action) {
+        var suffix = 1;
+        while (cell.source.indexOf("bpc_adapter_" + suffix) >= 0) { suffix++; }
+        function literal(value) { return "'" + String(value).replace(/'/g,"''") + "'"; }
+        var adapter = "bpc_adapter_" + suffix, data = "bpc_data_" + suffix, rows = "<bpc_rows_" + suffix + ">";
+        var dimension = ["members","properties","hierarchies","property"].indexOf(action) >= 0;
+        var lines = ["DATA(" + adapter + ") = io->" + (dimension ? "bpc_dimension(" : "bpc_model("),
+          dimension ? "  name = " + literal(chosen.dimension) + " model_name = " + literal(chosen.model) + " )."
+            : "  name = " + literal(chosen.model) + " )."];
+        if (action === "property") {
+          lines.push("DATA(bpc_value_" + suffix + ") = " + adapter + "->property(",
+            "  member = " + literal(chosen.member) + " name = " + literal(chosen.property) + " ).",
+            "io->message( bpc_value_" + suffix + " ).");
+        } else if (action === "hierarchies") {
+          lines.push("DATA(bpc_hierarchies_" + suffix + ") = " + adapter + "->hierarchies( ).",
+            "LOOP AT bpc_hierarchies_" + suffix + " INTO DATA(bpc_hierarchy_" + suffix + ").",
+            "  io->message( bpc_hierarchy_" + suffix + " ).", "ENDLOOP.");
+        } else if (action === "properties") {
+          lines.push("DATA(bpc_properties_" + suffix + ") = " + adapter + "->properties( ).",
+            "io->emit_table( name = 'PROPERTIES_" + suffix + "' rows = bpc_properties_" + suffix + " ).");
+        } else {
+          if (action === "filter") {
+            lines.push("DATA(" + data + ") = " + adapter + "->read_data(",
+              "  filters = VALUE #( ( dimension = " + literal(chosen.dimension),
+              "    members = VALUE #( ( CONV string( " + literal(chosen.member) + " ) ) ) ) ) ).");
+          } else { lines.push("DATA(" + data + ") = " + adapter + "->" + (dimension ? "member_data" : "read_data") + "( )."); }
+          lines.push("FIELD-SYMBOLS " + rows + " TYPE STANDARD TABLE.","ASSIGN " + data + "->* TO " + rows + ".",
+            "io->emit_table( name = '" + (dimension ? "MEMBERS_" : "MODEL_") + suffix + "' rows = " + rows + " ).");
+          if (action === "field") {
+            lines.push("FIELD-SYMBOLS <bpc_row_" + suffix + "> TYPE any.","FIELD-SYMBOLS <bpc_field_" + suffix + "> TYPE any.",
+              "READ TABLE " + rows + " ASSIGNING <bpc_row_" + suffix + "> INDEX 1.","IF sy-subrc = 0.",
+              "  ASSIGN COMPONENT " + literal(chosen.field) + " OF STRUCTURE <bpc_row_" + suffix + "> TO <bpc_field_" + suffix + ">.",
+              "  IF sy-subrc = 0. io->message( CONV string( <bpc_field_" + suffix + "> ) ). ENDIF.","ENDIF.");
+          }
+        }
+        return lines.join("\n");
+      },
+      insertCode: function (cellId, snippet) {
+        var cell = this.notebook.cells.filter(function(c) { return c.id === cellId; })[0];
+        if (!cell) { MessageBox.warning("The cell is no longer available."); return; }
+        cell.source += (cell.source && !/\n$/.test(cell.source) ? "\n" : "") + snippet + "\n";
+        this.cells.getItems().forEach(function(box) {
+          if (box.data("cellId") === cellId) { box.data("editor").setValue(cell.source); box.data("editor").focus(); }
+        });
+        this.activeCell = cellId; this.mark(); MessageToast.show("BPC code inserted. Validate the cell before running.");
+      },
       chooseContext: function (done) {
         var self = this;
         this.chooseMetadata({kind:"environments"}, false, [], function (ids) {
@@ -512,7 +652,7 @@ sap.ui.define(
         });
       },
       chooseMetadata: function (query, multiple, initial, done) {
-        var self = this, selected = {}, generation = 0, offset = 0, searchTimer;
+        var self = this, selected = {}, selectedNodes = {}, generation = 0, offset = 0, searchTimer;
         (initial || []).forEach(function (id) { selected[id] = true; });
         var list = new m.List({includeItemInSelection:true, mode:multiple ? "MultiSelect" : "SingleSelectLeft",
           selectionChange:function (e) {
@@ -533,7 +673,8 @@ sap.ui.define(
           beginButton:new m.Button({text:"Apply selection", press:function () {
             var ids = Object.keys(selected);
             if (!multiple && ids.length !== 1) { MessageBox.warning("Select one item."); return; }
-            done(ids, query.hierarchy || "", list.getItems()); dialog.close();
+            if (query.baseOnly && ids.some(function (id) { return selectedNodes[id]; })) { MessageBox.warning("Select a base member. Model read filters do not expand hierarchy nodes."); return; }
+            done(ids, query.hierarchy || "", list.getItems(), selectedNodes); dialog.close();
           }}),
           endButton:new m.Button({text:"Cancel",press:function () { dialog.close(); }}),
           afterClose:function () { generation++; clearTimeout(searchTimer); dialog.destroy(); }});
@@ -553,9 +694,10 @@ sap.ui.define(
             }
             if (!append) { list.removeAllItems(); }
             result.items.forEach(function (member) {
+              selectedNodes[member.id] = member.isNode;
               var item = new m.StandardListItem({info:member.isNode ? "Node" : "", selected:!!selected[member.id]});
               item.setTitle(member.id); item.setDescription(member.description || member.id);
-              item.data("memberId",member.id); item.data("description",member.description); list.addItem(item);
+              item.data("memberId",member.id); item.data("isNode",member.isNode); item.data("description",member.description); list.addItem(item);
             });
             offset += result.items.length; more.setVisible(result.more); list.setBusy(false);
           }).catch(function (e) { if (token === generation) { list.setBusy(false); self.error(e); } });
@@ -731,7 +873,9 @@ sap.ui.define(
         if (!this.notebook) {
           return Promise.resolve();
         }
-        return Api.request("/runs?notebookId=" + encodeURIComponent(this.notebook.id)).then(function (runs) {
+        var notebookId = this.notebook.id;
+        return Api.request("/runs?notebookId=" + encodeURIComponent(notebookId)).then(function (runs) {
+          if (!self.notebook || self.notebook.id !== notebookId) { return; }
           self.runList.removeAllItems();
           runs.forEach(function (r) {
             self.runList.addItem(
@@ -740,6 +884,8 @@ sap.ui.define(
           });
           if (self.runId) {
             self.runList.setSelectedKey(self.runId);
+          } else if (runs.length) {
+            self.runList.setSelectedKey(runs[0].id); self.inspect(runs[0].id);
           }
         });
       },
@@ -749,7 +895,7 @@ sap.ui.define(
           return;
         }
         if (this.runId !== id) {
-          this.pageOffset = 0;
+          this.pageOffset = 0; this.tableName = "";
         }
         this.runId = id;
         clearTimeout(this.poll);
@@ -776,7 +922,7 @@ sap.ui.define(
             );
             self.runMessages.removeAllItems();
             r.messages.forEach(function (v) {
-              self.runMessages.addItem(new m.Text({ text: v.cellId + ": " + v.text }));
+              self.runMessages.addItem(new m.Text().setText(v.cellId + ": " + v.text));
             });
             if (r.error) {
               self.runMessages.addItem(
@@ -802,6 +948,7 @@ sap.ui.define(
                   ? r.results[0].cellId
                   : "",
             );
+            if (self.outputSelect.getSelectedKey() !== selected) { self.tableName = ""; }
             if (r.results.length) {
               self.preview();
             } else {
@@ -899,6 +1046,8 @@ sap.ui.define(
         if (!id || !this.runId) {
           return;
         }
+        var requestRun = this.runId, token = (this.previewToken || 0) + 1;
+        this.previewToken = token;
         Api.request(
           "/output?runId=" +
             encodeURIComponent(this.runId) +
@@ -909,11 +1058,13 @@ sap.ui.define(
             "&limit=2&table=" + encodeURIComponent(this.tableName || ""),
         )
           .then(function (page) {
+            if (self.previewToken !== token || self.runId !== requestRun) { return; }
             self.total = page.total;
             self.table.removeAllItems();
             self.table.destroyColumns();
-            (page.schema || []).forEach(function(column) {
-              self.table.addColumn(new m.Column({header: new m.Label({text: column.name})}));
+            (page.schema || []).forEach(function(column,index) {
+              self.table.addColumn(new m.Column({header: new m.Label({text: column.name,wrapping:true}),
+                importance:index < 2 || column.name.toUpperCase() === "SIGNEDDATA" ? "High" : "Low"}));
             });
             self.datasetSelect.removeAllItems();
             self.datasetSelect.setVisible(!!(page.tables && page.tables.length));
@@ -926,11 +1077,11 @@ sap.ui.define(
               self.table.addItem(new m.ColumnListItem({cells: (page.schema || []).map(function(column,index) {
                 // Keep exact decimal text and member IDs; avoid JavaScript numeric rounding.
                 var value = row.values ? row.values[index] : row[column.name];
-                return new m.Text({text: value == null ? "" : String(value)});
+                return new m.Text().setText(value == null ? "" : String(value));
               })}));
             });
             self.pageLabel.setText(
-              page.offset +
+              page.total === 0 ? "0 rows · output revision " + page.revision : page.offset +
                 1 +
                 "–" +
                 Math.min(page.offset + page.limit, page.total) +
@@ -940,7 +1091,7 @@ sap.ui.define(
                 page.revision + (page.truncated ? " · preview of " + page.sourceTotal + " source rows" : ""),
             );
           })
-          .catch(self.error.bind(self));
+          .catch(function(e) { if (self.previewToken === token && self.runId === requestRun) { self.error(e); } });
       },
       history: function () {
         var self = this;

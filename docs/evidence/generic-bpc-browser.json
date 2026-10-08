@@ -1,0 +1,23 @@
+{
+  "passed": true,
+  "theme": "sap_horizon_dark",
+  "ui5Version": "1.120.40",
+  "checks": [
+    "latest saved run opens automatically",
+    "21-field synthetic named output including standard responsive pop-ins",
+    "leading-zero account ID 001081800 preserved",
+    "EMPTY dataset retains schema and reports zero rows",
+    "dataset choice resets when switching notebooks",
+    "model and dimension search",
+    "stored-property and member selection",
+    "model-field discovery",
+    "generated snippet insertion and save",
+    "inserted snippet compiles in SAP",
+    "no browser console errors"
+  ],
+  "screenshots": [
+    "bpc-code-helper.png",
+    "bpc-property-helper.png",
+    "named-table-browser.png"
+  ]
+}

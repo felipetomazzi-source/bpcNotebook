@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-08T09:26:09.249Z",
+  "at": "2026-10-08T09:56:51.291Z",
   "method": "abapGit object deserializers and serializers through ADT classrun",
   "objectPackage": "ZBPC_NOTEBOOK",
   "packageMetadataTarget": "ZBPC_NOTEBOOK",
@@ -84,9 +84,9 @@
     },
     {
       "filename": "zbpc_notebook.wapa.component.js",
-      "gitBlob": "598129bf9db4c346c02140ddac983f9bd650043b",
-      "sapSha256": "584bfc1be96f3d938d9f9f1e453969113154701d0b79b4a5a870f22a36fb0196",
-      "bytes": 253977,
+      "gitBlob": "d1f32f0960c16dff4fcb4d2a101533fba3c246f6",
+      "sapSha256": "622e432a38b7a2555a1e02d7061568037cdbd2a80f9b824ca8deaf28bcfdd7ce",
+      "bytes": 292635,
       "equal": true
     },
     {
@@ -140,16 +140,16 @@
     },
     {
       "filename": "zcl_bn_bpc.clas.abap",
-      "gitBlob": "ef12ee87405740d56e766f21c66ae9140f2e06eb",
-      "sapSha256": "0b90a139ec31719528b25544dcdcdf042d619e9d75c4e9408da8156e1b161f7f",
-      "bytes": 15106,
+      "gitBlob": "c61d4c7f1a3f3eb41be21761a81db0dc44046470",
+      "sapSha256": "e1a524f8453ca5624d2df0ae4294335e2036defc4540bfbafe4a5b977cee9594",
+      "bytes": 30772,
       "equal": true
     },
     {
       "filename": "zcl_bn_bpc.clas.testclasses.abap",
-      "gitBlob": "caaafe43f815d4f67dbf3553e440574f384d51ab",
-      "sapSha256": "d1969f703f9ea5ceca8de78a2252c34241e788a554e4c9264bb97831d3bdaf79",
-      "bytes": 4492,
+      "gitBlob": "c5af12a0fad5662677952445fdc7afa9ef15035c",
+      "sapSha256": "94915450a1503793dd171fd93a986f83e5c7efc09e6f77c9a4fe2e863ed648a1",
+      "bytes": 6210,
       "equal": true
     },
     {
@@ -182,9 +182,9 @@
     },
     {
       "filename": "zcl_bn_context.clas.abap",
-      "gitBlob": "80d558bae5a806014678de91efe7f20a2cde2222",
-      "sapSha256": "785e6bc7f810764db7c960d74f9740c965c370fa3f2bd70127a431a21de916b1",
-      "bytes": 8174,
+      "gitBlob": "5a1bf22bf301e34f80e6c697d90fd4414c61ba29",
+      "sapSha256": "3fd4fab8cea38087979cd3e9e798e6d52f67b5964d2a2e5074d61b0ab2332c6e",
+      "bytes": 9042,
       "equal": true
     },
     {
@@ -313,7 +313,7 @@
     "BNIMPORTED|CLAS|ZCL_BN_TYPES",
     "BNIMPORTED|CLAS|ZCX_BN",
     "BNLOGI|> Mass activating 6 DDIC objects",
-    "BNLOGI|Log name: ABAPGIT_20261008_222618",
+    "BNLOGI|Log name: ABAPGIT_20261008_225701",
     "BNLOGI|> Activating 9 objects "
   ],
   "passed": true,
