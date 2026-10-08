@@ -1,0 +1,13 @@
+{
+  "originalRepository": "chorus_bpc",
+  "originalCommit": "2796a7f",
+  "sourcePath": "src/zbpc_demrevid/zcl_bpc_demrevid_calc_003.clas.abap",
+  "originalGitBlob": "da023bb6be66f13e42beab3d0d2ad61bc33ef38e",
+  "originalSourceSha256": "8cf4daaa84c5ea0f908214c95b441b4f25815884e4276dbb235a8c7aa02564b8",
+  "isolation": "Test-only local class identity; original business method bodies retained. No original BAdI execution or business reads/writes.",
+  "coverage": [
+    "12 original-versus-port FFLAS cases",
+    "Original-versus-port replacement change-set"
+  ],
+  "businessEquivalent": false
+}
