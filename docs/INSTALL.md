@@ -32,18 +32,9 @@ Capture a successful integration result, source/document rows and terminal SM37 
 
 ## BPCIO tile
 
-The current BPCIO checkout embeds newer BPC Git as a component; BPC Git still documents a standalone client-preserving URL. This application follows the requested separate-app launch pattern. Add a tile whose handler opens:
+Embed `bpc.notebook` from `/sap/bc/ui5_ui5/sap/zbpc_notebook/` using `sap.ui.component` and `ComponentContainer`. Pass settings `{ embedded: true, environment: selectedEnvironment }`. The hub keeps its header and Back button, loads UI5 1.120 or newer once, and supplies its theme. Notebook hides its standalone header and theme selector. See the [embedding contract and complete example](../README.md#embed-in-the-bpcio-hub).
 
-```js
-onOpenNotebook: function () {
-  var client = jQuery.sap.getUriParameters().get("sap-client");
-  var url = "/sap/bc/ui5_ui5/sap/zbpc_notebook/index.html";
-  if (client) { url += "?sap-client=" + encodeURIComponent(client); }
-  window.open(url, "_blank", "noopener");
-}
-```
-
-If the hub has no explicit client parameter, resolve its authenticated client through the backend session and append it. Do not guess a client. Notebook carries the selected client on every API call. Adjacent BPCIO/BPC Git repositories are unchanged.
+Call `setEnvironment(environment)` for environment changes and `requestNavigateBack()` from the hub Back button. Wait for `navigateBack` before destroying the container/component; Cancel or a failed save leaves the notebook open. Preserve the authenticated SAP client in the hub URL. Repository/backend remain independent.
 
 ## Limits and production work
 

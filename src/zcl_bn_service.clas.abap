@@ -33,6 +33,7 @@ CLASS zcl_bn_service DEFINITION PUBLIC FINAL CREATE PUBLIC.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_notebook_header,
              id TYPE string, title TYPE string, revision TYPE i, author TYPE string, saved_at TYPE string,
+             environment TYPE string, model TYPE string,
            END OF ty_notebook_header,
            tt_notebook_headers TYPE STANDARD TABLE OF ty_notebook_header WITH DEFAULT KEY,
            BEGIN OF ty_run_header,

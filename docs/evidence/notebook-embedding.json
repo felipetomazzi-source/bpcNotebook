@@ -1,0 +1,20 @@
+{
+  "checkedAt": "2026-10-08T22:41:53.998Z",
+  "system": "Connected SAP DEV client 001",
+  "namespace": "bpc.notebook",
+  "componentUrl": "/sap/bc/ui5_ui5/sap/zbpc_notebook/",
+  "ui5Runtime": "1.120.40",
+  "theme": "sap_horizon_dark",
+  "sharedCore": true,
+  "bootstrapCount": 1,
+  "hubHeaderAndBackVisible": true,
+  "standaloneHeaderHiddenWhenEmbedded": true,
+  "manifestCssLoaded": true,
+  "authorizedEnvironment": "CH_PLANNING",
+  "cancelPreservesUnsavedWork": true,
+  "discardFiresNavigateBack": true,
+  "standaloneHeaderVisible": true,
+  "localTestsPassed": 32,
+  "sapSerializedFilesMatched": 56,
+  "scope": "Component acceptance in a browser host fixture; hub tile integration is owned by bpcIO."
+}
