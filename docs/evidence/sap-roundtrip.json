@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-08T23:05:18.411Z",
+  "at": "2026-10-08T23:13:13.881Z",
   "method": "abapGit object deserializers and serializers through ADT classrun",
   "objectPackage": "ZBPC_NOTEBOOK",
   "packageMetadataTarget": "ZBPC_NOTEBOOK",
@@ -91,9 +91,9 @@
     },
     {
       "filename": "zbpc_notebook.wapa.component.js",
-      "gitBlob": "229ab0a47ebee3b9b59e6d941aa8c5a7ed6c8336",
-      "sapSha256": "0918eea6f78cf21055779a74106497b3c0f6d201aba90ca9322ed5a5e4b8e3d3",
-      "bytes": 391732,
+      "gitBlob": "f3fc9c401e3202b3e887f3ede6a60095c4b88a40",
+      "sapSha256": "8847af2e70e56b7f3a862ea19256262173e810b6d7fcce220d549ca262354a4f",
+      "bytes": 421430,
       "equal": true
     },
     {
@@ -154,9 +154,9 @@
     },
     {
       "filename": "zcl_bn_bpc.clas.abap",
-      "gitBlob": "24869ed329ce206011c0bcdda266d4231d9f00a5",
-      "sapSha256": "87c758409483dcd1605bc0c5a1bb2967f1e89ee6982f852469e14513fbf3b102",
-      "bytes": 40347,
+      "gitBlob": "6800368a64d6cb89ac0f550b04cfac006772b16a",
+      "sapSha256": "f76186db7f556add23a613c1c661ca6fc1dd5c45300fbc5ae06f33f231277dfa",
+      "bytes": 40709,
       "equal": true
     },
     {
@@ -425,7 +425,7 @@
     "BNIMPORTED|CLAS|ZCX_BN",
     "BNIMPORTED|CLAS|ZCX_BN_ENGINE",
     "BNLOGI|> Mass activating 6 DDIC objects",
-    "BNLOGI|Log name: ABAPGIT_20261009_120532",
+    "BNLOGI|Log name: ABAPGIT_20261009_121327",
     "BNLOGI|> Activating 10 objects "
   ],
   "passed": true,

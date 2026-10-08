@@ -92,3 +92,5 @@ Standalone launch remains supported with its own header, theme picker and
 environment/model selection.
 
 Notebook navigation uses standard UI5 model group headers and a SearchField. Search filters notebook names, model/environment IDs and notebook IDs locally without loading notebook contents. Standalone groups identify the environment as well as the model; embedded navigation remains restricted to the hub-selected environment. Filtering does not discard an open notebook or unsaved edits.
+
+Dimension member selection uses a standard UI5 Tree in a resizable two-panel dialog: hierarchy choice, ID/description display, search, selected-member removal and Clear all. The chosen SAP hierarchy supplies parent relationships; unauthorized parent IDs are omitted. Search preserves selected IDs and backend save/run validation still resolves nodes. All authorized metadata pages must load before Apply is enabled; more than 50,000 members fails explicitly. Other metadata pickers remain simple lists.

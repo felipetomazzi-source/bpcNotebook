@@ -2,7 +2,7 @@ CLASS zcl_bn_bpc DEFINITION PUBLIC CREATE PUBLIC.
   PUBLIC SECTION.
     TYPES: BEGIN OF ty_item,
              id TYPE string, description TYPE string, dim_type TYPE string,
-             is_node TYPE abap_bool,
+             is_node TYPE abap_bool, parent TYPE string,
            END OF ty_item,
            tt_items TYPE STANDARD TABLE OF ty_item WITH DEFAULT KEY,
            BEGIN OF ty_metadata,
@@ -486,12 +486,19 @@ CLASS zcl_bn_bpc IMPLEMENTATION.
             ASSIGN COMPONENT hierarchy_name OF STRUCTURE <row> TO <value>.
             IF sy-subrc = 0 AND <value> IS NOT INITIAL. APPEND CONV string( <value> ) TO parents. ENDIF.
           ENDLOOP.
+          IF hierarchy IS NOT INITIAL.
+            ASSIGN COMPONENT hierarchy OF STRUCTURE <row> TO <value>.
+            IF sy-subrc = 0. item-parent = <value>. ENDIF.
+          ENDIF.
           APPEND item TO all. APPEND CONV uj_dim_member( item-id ) TO ids.
         ENDLOOP.
         DATA(authorized) = permitted( dimension = dimension members = ids ).
         LOOP AT all INTO item.
           IF line_exists( authorized[ table_line = item-id ] ).
             item-is_node = xsdbool( item-is_node = abap_true OR line_exists( parents[ table_line = item-id ] ) ).
+            IF item-parent IS NOT INITIAL AND NOT line_exists( authorized[ table_line = item-parent ] ).
+              CLEAR item-parent.
+            ENDIF.
             APPEND item TO result-items.
           ENDIF.
         ENDLOOP.
