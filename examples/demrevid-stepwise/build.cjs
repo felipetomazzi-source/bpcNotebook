@@ -72,6 +72,11 @@ for (let index = 0; index < stageRows.length; index++) {
    }
  }
  let prelude = `${constants}\n${enums}\nDATA(env) = io.\nDATA(preview_rows) = CONV i( io->input( 'PREVIEW_ROWS' ) ).\nDATA(category) = io->member( 'CATEGORY' ).\nDATA(parameters) = io->script_parameters( ).\nREAD TABLE parameters ASSIGNING FIELD-SYMBOL(<flag>) WITH KEY hashkey = 'FFLASMATGROUPS'.\nIF sy-subrc = 0.\nCASE <flag>-hashvalue. WHEN 'true'. <flag>-hashvalue = '1'. WHEN 'false'. <flag>-hashvalue = '0'. ENDCASE.\nENDIF.\nDATA(param) = NEW zcl_bpc_param( parameters ).\nDATA(skip_fflas_ratio_mat_group_id) = param->get_dimmem_range( 'FFLASMATGROUPSID' ).\nIF io->input( 'FFLASMATGROUPS' ) = 'false'. CLEAR skip_fflas_ratio_mat_group_id. ENDIF.\nDATA(product_type_dim) = NEW zcl_bn_dimension( io = io name = 'PRODUCT_TYPE' ).\nDATA(mat_group_id_dim) = NEW zcl_bn_dimension( io = io name = 'MAT_GROUP_ID' ).\nDATA(matconn_dim) = NEW zcl_bn_dimension( io = io name = 'MATCONN' ).\n`;
+ prelude = prelude.replace("IF io->input( 'FFLASMATGROUPS' ) = 'false'. CLEAR skip_fflas_ratio_mat_group_id. ENDIF.", `DATA(nb_skip_flags) = param->get_dimmem_range( 'FFLASMATGROUPS' ).
+LOOP AT skip_fflas_ratio_mat_group_id INTO DATA(nb_skip_id).
+ READ TABLE nb_skip_flags INTO DATA(nb_skip_flag) INDEX sy-tabix.
+ IF sy-subrc <> 0 OR nb_skip_flag-low = 0. DELETE skip_fflas_ratio_mat_group_id. ENDIF.
+ENDLOOP.`);
  if (stage === 'INITIALISE') {
    prelude += 'DATA it_param TYPE ujk_t_script_logic_hashtable. it_param = parameters.\nDATA(current_view) = io->current_view( ).\nDATA time TYPE ujw_t_dimmem_range.\n';
    calculation = calculation.replace('param = new #( it_param ).','param = new #( it_param ).').replace(/\bdata\(skip_fflas_ratio_mat_group\)/i,'data(skip_fflas_ratio_mat_group)');

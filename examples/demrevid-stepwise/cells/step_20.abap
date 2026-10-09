@@ -81,7 +81,11 @@ CASE <flag>-hashvalue. WHEN 'true'. <flag>-hashvalue = '1'. WHEN 'false'. <flag>
 ENDIF.
 DATA(param) = NEW zcl_bpc_param( parameters ).
 DATA(skip_fflas_ratio_mat_group_id) = param->get_dimmem_range( 'FFLASMATGROUPSID' ).
-IF io->input( 'FFLASMATGROUPS' ) = 'false'. CLEAR skip_fflas_ratio_mat_group_id. ENDIF.
+DATA(nb_skip_flags) = param->get_dimmem_range( 'FFLASMATGROUPS' ).
+LOOP AT skip_fflas_ratio_mat_group_id INTO DATA(nb_skip_id).
+ READ TABLE nb_skip_flags INTO DATA(nb_skip_flag) INDEX sy-tabix.
+ IF sy-subrc <> 0 OR nb_skip_flag-low = 0. DELETE skip_fflas_ratio_mat_group_id. ENDIF.
+ENDLOOP.
 DATA(product_type_dim) = NEW zcl_bn_dimension( io = io name = 'PRODUCT_TYPE' ).
 DATA(mat_group_id_dim) = NEW zcl_bn_dimension( io = io name = 'MAT_GROUP_ID' ).
 DATA(matconn_dim) = NEW zcl_bn_dimension( io = io name = 'MATCONN' ).
