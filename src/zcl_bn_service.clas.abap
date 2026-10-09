@@ -550,8 +550,14 @@ CLASS zcl_bn_service IMPLEMENTATION.
         scope = scope logic_parameters = parameters logic_call = abap_true ).
       DATA cell_started TYPE timestampl.
       GET TIME STAMP FIELD cell_started.
-      PERFORM execute IN PROGRAM (pool) USING context.
-      context->check_budget( ).
+      TRY.
+        zcl_bn_bpc=>begin_cell_cache( ).
+        PERFORM execute IN PROGRAM (pool) USING context.
+        context->check_budget( ).
+        zcl_bn_bpc=>end_cell_cache( ).
+      CLEANUP.
+        zcl_bn_bpc=>end_cell_cache( ).
+      ENDTRY.
       IF context->result_rows IS BOUND AND allocation = abap_true.
         IF result_data IS BOUND OR context->result_kind <> 'delta'.
           RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'RESULT_CONTRACT' detail = 'Publish exactly one delta result for allocation'.
@@ -672,8 +678,14 @@ CLASS zcl_bn_service IMPLEMENTATION.
             fixture_required = run-fixture_mode ).
           DATA cell_started TYPE timestampl.
           GET TIME STAMP FIELD cell_started.
-          PERFORM execute IN PROGRAM (pool) USING context.
-          context->check_budget( ).
+          TRY.
+            zcl_bn_bpc=>begin_cell_cache( ).
+            PERFORM execute IN PROGRAM (pool) USING context.
+            context->check_budget( ).
+            zcl_bn_bpc=>end_cell_cache( ).
+          CLEANUP.
+            zcl_bn_bpc=>end_cell_cache( ).
+          ENDTRY.
           IF context->fixture_mode = abap_true.
             IF run-fixture_mode <> abap_true AND run-results IS NOT INITIAL.
               RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MODE'

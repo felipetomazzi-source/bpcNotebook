@@ -9,6 +9,9 @@ CLASS zcl_bn_bpc DEFINITION PUBLIC CREATE PUBLIC.
              items TYPE tt_items, hierarchies TYPE zcl_bn_types=>tt_ids,
              more TYPE abap_bool,
            END OF ty_metadata.
+    " Execution service brackets one cell; ordinary metadata requests remain uncached.
+    CLASS-METHODS begin_cell_cache.
+    CLASS-METHODS end_cell_cache.
     CLASS-METHODS metadata IMPORTING kind TYPE string environment TYPE string model TYPE string
       dimension TYPE string hierarchy TYPE string search TYPE string offset TYPE i DEFAULT 0
       RETURNING VALUE(result) TYPE ty_metadata RAISING zcx_bn.
@@ -65,6 +68,22 @@ CLASS zcl_bn_bpc DEFINITION PUBLIC CREATE PUBLIC.
     METHODS virtual_property IMPORTING member TYPE string name TYPE string
       RETURNING VALUE(result) TYPE string RAISING zcx_bn.
   PRIVATE SECTION.
+    TYPES: BEGIN OF ty_cached_context,
+             client TYPE mandt, user_name TYPE syuname, language TYPE sylangu,
+             environment TYPE string, model TYPE string, security TYPE abap_bool, items TYPE tt_items,
+           END OF ty_cached_context,
+           tt_cached_context TYPE HASHED TABLE OF ty_cached_context
+             WITH UNIQUE KEY client user_name language environment model security,
+           BEGIN OF ty_cached_members,
+             client TYPE mandt, user_name TYPE syuname, language TYPE sylangu,
+             environment TYPE string, model TYPE string, security TYPE abap_bool,
+             dimension TYPE string, hierarchy TYPE string, metadata TYPE ty_metadata,
+           END OF ty_cached_members,
+           tt_cached_members TYPE HASHED TABLE OF ty_cached_members
+             WITH UNIQUE KEY client user_name language environment model security dimension hierarchy.
+    CLASS-DATA mv_cell_cache TYPE abap_bool.
+    CLASS-DATA mt_context_cache TYPE tt_cached_context.
+    CLASS-DATA mt_member_cache TYPE tt_cached_members.
     DATA mo_diagnostics TYPE REF TO zcl_bn_context.
     DATA mv_read_scope TYPE string.
     DATA mt_inputs TYPE zcl_bn_types=>tt_inputs.
@@ -83,6 +102,13 @@ CLASS zcl_bn_bpc DEFINITION PUBLIC CREATE PUBLIC.
       member TYPE string is_node TYPE abap_bool RETURNING VALUE(result) TYPE zcl_bn_types=>tt_ids RAISING zcx_bn.
 ENDCLASS.
 CLASS zcl_bn_bpc IMPLEMENTATION.
+  METHOD begin_cell_cache.
+    end_cell_cache( ).
+    mv_cell_cache = abap_true.
+  ENDMETHOD.
+  METHOD end_cell_cache.
+    CLEAR: mv_cell_cache, mt_context_cache, mt_member_cache.
+  ENDMETHOD.
   METHOD constructor.
     mo_diagnostics = diagnostics. mv_read_scope = read_scope.
     IF environment IS INITIAL OR model IS INITIAL.
@@ -123,6 +149,7 @@ CLASS zcl_bn_bpc IMPLEMENTATION.
     ENDLOOP.
   ENDMETHOD.
   METHOD validate_result.
+    end_cell_cache( ).
     DATA(adapter) = NEW zcl_bn_bpc( environment = environment model = model ).
     DATA(dims) = adapter->dimensions( ).
     DATA(schema) = describe_table( table = REF #( rows ) source = 'result' ).
@@ -206,15 +233,18 @@ CLASS zcl_bn_bpc IMPLEMENTATION.
           APPEND CONV #( <id> ) TO all_ids.
         ENDLOOP.
         DATA(authorized) = permitted( dimension = mv_dimension members = all_ids ).
+        TYPES tt_id_set TYPE HASHED TABLE OF string WITH UNIQUE KEY table_line.
+        DATA allowed_ids TYPE tt_id_set.
+        LOOP AT authorized INTO DATA(allowed_id). INSERT CONV string( allowed_id ) INTO TABLE allowed_ids. ENDLOOP.
         LOOP AT ids INTO id.
-          IF NOT line_exists( authorized[ table_line = id ] ).
+          IF NOT line_exists( allowed_ids[ table_line = id ] ).
             RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_AUTH' detail = 'Member unavailable or unauthorized' status = 403.
           ENDIF.
         ENDLOOP.
         LOOP AT <rows> ASSIGNING <row>.
           DATA(index) = sy-tabix.
           ASSIGN COMPONENT 'ID' OF STRUCTURE <row> TO <id>.
-          IF NOT line_exists( authorized[ table_line = <id> ] ). DELETE <rows> INDEX index. ENDIF.
+          IF NOT line_exists( allowed_ids[ table_line = CONV string( <id> ) ] ). DELETE <rows> INDEX index. ENDIF.
         ENDLOOP.
       CATCH zcx_bn INTO DATA(error). RAISE EXCEPTION error.
       CATCH cx_root INTO DATA(native).
@@ -506,6 +536,24 @@ CLASS zcl_bn_bpc IMPLEMENTATION.
 
   METHOD context.
     TRY.
+    IF mv_cell_cache = abap_true AND environment IS NOT INITIAL AND model IS NOT INITIAL.
+      READ TABLE mt_context_cache INTO DATA(cached) WITH TABLE KEY client = sy-mandt user_name = sy-uname
+        language = sy-langu environment = environment model = model security = abap_true.
+      IF sy-subrc = 0.
+        " Re-establish this model; never reuse a context whose security was disabled by custom code.
+        cl_uj_context=>set_cur_context( i_appset_id = CONV #( environment ) i_appl_id = CONV #( model )
+          is_user = VALUE #( user_id = sy-uname langu = sy-langu ) ).
+        DATA(secure) = cl_uj_context=>get_cur_context( ).
+        IF secure IS INITIAL OR secure->df_security_check <> abap_true.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_AUTH' detail = 'BPC security is disabled' status = 403.
+        ENDIF.
+        secure->check_app_access( EXPORTING i_appl_id = CONV #( model ) IMPORTING ef_success = DATA(still_allowed) ).
+        IF still_allowed <> abap_true.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_AUTH' detail = 'Model access denied' status = 403.
+        ENDIF.
+        result = cached-items. RETURN.
+      ENDIF.
+    ENDIF.
         DATA(manager) = cl_uja_bpc_admin_factory=>get_appset_manager( if_disable_security = abap_false ).
         manager->get_appsets( EXPORTING i_user_id = CONV uj_user_id( sy-uname )
           IMPORTING et_appsets = DATA(environments) ).
@@ -542,6 +590,10 @@ CLASS zcl_bn_bpc IMPLEMENTATION.
         LOOP AT app-dimensions INTO DATA(dim).
           APPEND VALUE #( id = dim-dimension description = dim-description dim_type = dim-dim_type ) TO result.
         ENDLOOP.
+        IF mv_cell_cache = abap_true.
+          INSERT VALUE #( client = sy-mandt user_name = sy-uname language = sy-langu environment = environment
+            model = model security = abap_true items = result ) INTO TABLE mt_context_cache.
+        ENDIF.
       CATCH zcx_bn INTO DATA(error). RAISE EXCEPTION error.
       CATCH cx_root INTO DATA(native).
         RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_METADATA' detail = native->get_text( ).
@@ -561,6 +613,11 @@ CLASS zcl_bn_bpc IMPLEMENTATION.
     IF dimension IS INITIAL OR NOT line_exists( dimensions[ id = dimension ] ).
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_DIMENSION' detail = 'Dimension does not belong to the selected model'.
     ENDIF.
+    IF mv_cell_cache = abap_true.
+      READ TABLE mt_member_cache INTO DATA(cached) WITH TABLE KEY client = sy-mandt user_name = sy-uname
+        language = sy-langu environment = environment model = model security = abap_true dimension = dimension hierarchy = hierarchy.
+      IF sy-subrc = 0. result = cached-metadata. RETURN. ENDIF.
+    ENDIF.
     TRY.
         DATA(dim) = NEW cl_uja_dim( i_appset_id = CONV #( environment ) i_dimension = CONV #( dimension ) ).
         DATA hi TYPE uja_t_hier.
@@ -577,7 +634,8 @@ CLASS zcl_bn_bpc IMPLEMENTATION.
         ASSIGN data->* TO <rows>.
         DATA ids TYPE uje_t_mem.
         DATA all TYPE tt_items.
-        DATA parents TYPE zcl_bn_types=>tt_ids.
+        TYPES tt_id_set TYPE HASHED TABLE OF string WITH UNIQUE KEY table_line.
+        DATA parents TYPE tt_id_set.
         LOOP AT <rows> ASSIGNING <row>.
           DATA item TYPE ty_item.
           CLEAR item.
@@ -592,7 +650,7 @@ CLASS zcl_bn_bpc IMPLEMENTATION.
           IF sy-subrc = 0. item-is_node = xsdbool( <value> = 'Y' ). ENDIF.
           LOOP AT hn INTO DATA(hierarchy_name).
             ASSIGN COMPONENT hierarchy_name OF STRUCTURE <row> TO <value>.
-            IF sy-subrc = 0 AND <value> IS NOT INITIAL. APPEND CONV string( <value> ) TO parents. ENDIF.
+            IF sy-subrc = 0 AND <value> IS NOT INITIAL. INSERT CONV string( <value> ) INTO TABLE parents. ENDIF.
           ENDLOOP.
           IF hierarchy IS NOT INITIAL.
             ASSIGN COMPONENT hierarchy OF STRUCTURE <row> TO <value>.
@@ -601,10 +659,12 @@ CLASS zcl_bn_bpc IMPLEMENTATION.
           APPEND item TO all. APPEND CONV uj_dim_member( item-id ) TO ids.
         ENDLOOP.
         DATA(authorized) = permitted( dimension = dimension members = ids ).
+        DATA allowed_ids TYPE tt_id_set.
+        LOOP AT authorized INTO DATA(allowed_id). INSERT CONV string( allowed_id ) INTO TABLE allowed_ids. ENDLOOP.
         LOOP AT all INTO item.
-          IF line_exists( authorized[ table_line = item-id ] ).
+          IF line_exists( allowed_ids[ table_line = item-id ] ).
             item-is_node = xsdbool( item-is_node = abap_true OR line_exists( parents[ table_line = item-id ] ) ).
-            IF item-parent IS NOT INITIAL AND NOT line_exists( authorized[ table_line = item-parent ] ).
+            IF item-parent IS NOT INITIAL AND NOT line_exists( allowed_ids[ table_line = item-parent ] ).
               CLEAR item-parent.
             ENDIF.
             APPEND item TO result-items.
@@ -612,6 +672,10 @@ CLASS zcl_bn_bpc IMPLEMENTATION.
         ENDLOOP.
         SORT result-items BY id.
         DELETE ADJACENT DUPLICATES FROM result-items COMPARING id.
+        IF mv_cell_cache = abap_true.
+          INSERT VALUE #( client = sy-mandt user_name = sy-uname language = sy-langu environment = environment
+            model = model security = abap_true dimension = dimension hierarchy = hierarchy metadata = result ) INTO TABLE mt_member_cache.
+        ENDIF.
       CATCH zcx_bn INTO DATA(error). RAISE EXCEPTION error.
       CATCH cx_root INTO DATA(native).
         RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_METADATA' detail = native->get_text( ).

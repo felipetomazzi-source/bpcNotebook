@@ -53,3 +53,11 @@ Definitions optionally provide plain text `notebook.explanation` (8,000 characte
 ## Verification status
 
 `docs/evidence/dataset-codec-roundtrip.json` records the isolated SAP abapGit import/serialization comparison and five native codec tests. The integrated deployment subsequently passed all seven tests (`docs/evidence/native-dataset-tests.json`) and full background-worker all/one/through tests (`docs/evidence/native-working-datasets.json`), including 12,003 native rows, private copies, empty schemas, bounded previews and stale/missing predecessor rejection. `docs/evidence/bpc-deployment.json` records exact online abapGit serialization of all 61 deployed repository files. Allocation equivalence remains a separate calculation-agent check.
+
+## Per-cell metadata and read-authorization cache
+
+During the execution service's cell body, secure model metadata and authorized dimension/hierarchy member lists are reused for repeated artifact/fixture checks. Keys include SAP client, current user, language, environment, model, security-on mode, dimension and hierarchy. Caches are cleared before and after every cell, including exceptional exits; ordinary metadata HTTP requests are uncached. Model context/security and model access are checked on cache hits. Membership lookups use deduplicated hashed sets rather than repeated linear scans; SAP authorization APIs and their native member lists remain unchanged.
+
+Read member authorization and metadata form a coherent view within one cell. They refresh at the next cell boundary, rather than providing instantaneous mid-cell revocation detection. Final allocation validation clears the cache and performs fresh member write checks. No cache survives a run/cell boundary or is stored in the browser/database.
+
+The compiler normalizes CRLF only in its private compilation text. Saved source, source versions and checksums remain unchanged. JSON serialization repairs raw control characters inside string values while preserving normal serialized bytes and existing hash conventions.

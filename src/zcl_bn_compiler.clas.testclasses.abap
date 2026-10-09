@@ -4,8 +4,37 @@ CLASS ltcl_compiler DEFINITION FINAL FOR TESTING
     METHODS wrapper_and_output FOR TESTING RAISING zcx_bn.
     METHODS syntax_line_mapping FOR TESTING.
     METHODS typed_json_inputs FOR TESTING.
+    METHODS crlf_compilation FOR TESTING.
+    METHODS json_controls FOR TESTING.
 ENDCLASS.
 CLASS ltcl_compiler IMPLEMENTATION.
+  METHOD crlf_compilation.
+    DATA(source) = |DATA total TYPE i.{ cl_abap_char_utilities=>cr_lf }| &&
+      |{ cl_abap_char_utilities=>cr_lf }total = 1.{ cl_abap_char_utilities=>cr_lf }|.
+    DATA(original) = source.
+    DATA pool TYPE progname.
+    DATA diagnostics TYPE zcl_bn_types=>tt_diagnostics.
+    zcl_bn_compiler=>compile( EXPORTING source = source IMPORTING pool = pool diagnostics = diagnostics ).
+    cl_abap_unit_assert=>assert_not_initial( pool ).
+    cl_abap_unit_assert=>assert_initial( diagnostics ).
+    cl_abap_unit_assert=>assert_equals( act = source exp = original ).
+  ENDMETHOD.
+  METHOD json_controls.
+    TYPES: BEGIN OF ty_text, word TYPE string, message TYPE string, END OF ty_text.
+    DATA(input) = VALUE ty_text( word = cl_abap_char_utilities=>cr_lf
+      message = |É · "quoted" \\ slash| ).
+    DO 32 TIMES.
+      DATA hex TYPE x LENGTH 2.
+      hex = sy-index - 1.
+      input-message = input-message && cl_abap_conv_in_ce=>uccp( hex ).
+    ENDDO.
+    DATA(json) = zcl_bn_types=>json( input ).
+    FIND REGEX '[\x00-\x1F]' IN json.
+    cl_abap_unit_assert=>assert_equals( act = sy-subrc exp = 4 ).
+    DATA output TYPE ty_text.
+    /ui2/cl_json=>deserialize( EXPORTING json = json CHANGING data = output ).
+    cl_abap_unit_assert=>assert_equals( act = output exp = input ).
+  ENDMETHOD.
   METHOD wrapper_and_output.
     DATA source TYPE string.
     source = |DATA rows TYPE zcl_bn_context=>tt_rows.\n| &&
