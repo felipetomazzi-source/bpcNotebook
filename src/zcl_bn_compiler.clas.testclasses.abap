@@ -30,7 +30,8 @@ CLASS ltcl_compiler IMPLEMENTATION.
     ENDDO.
     DATA(json) = zcl_bn_types=>json( input ).
     FIND REGEX '[[:cntrl:]]' IN json.
-    cl_abap_unit_assert=>assert_equals( act = sy-subrc exp = 4 ).
+    DATA(control_search) = sy-subrc.
+    cl_abap_unit_assert=>assert_equals( act = control_search exp = 4 ).
     DATA output TYPE ty_text.
     /ui2/cl_json=>deserialize( EXPORTING json = json CHANGING data = output ).
     cl_abap_unit_assert=>assert_equals( act = output exp = input ).

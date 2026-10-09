@@ -3,7 +3,7 @@
   "dependencies": [{ "url": "https://github.com/abaplint/deps", "folder": "/deps", "files": "/src/**/*.*" }],
   "syntax": { "version": "v750", "errorNamespace": "^(Z|LCL|LTCL|TY_|TT_)" },
   "rules": {
-    "parser_error": { "exclude": ["^(?!.*zcl_bn_(dataset|context|service|types|bpc|compiler)\\.).*$"] },
-    "check_syntax": { "exclude": ["^(?!.*zcl_bn_(dataset|context|service|types|bpc|compiler)\\.).*$"] }
+    "parser_error": { "exclude": ["^(?!.*zcl_bn_(dataset|context|service|types|bpc|compiler|store)\\.).*$"] },
+    "check_syntax": { "exclude": ["^(?!.*zcl_bn_(dataset|context|service|types|bpc|compiler|store)\\.).*$"] }
   }
 }
