@@ -117,7 +117,7 @@ ENDLOOP.`);
  let exports = '';
  for (const name of outputs[stage]) {
    if (!referenced.includes(name)) throw Error('Undeclared output ' + stage + '/' + name);
-   exports += `IF ${name} IS BOUND.\nio->check_rows( lines( ${name}->model_data ) ).\nio->publish_dataset( name = '${name.toUpperCase()}' rows = ${name}->model_data ).\nio->emit_table( name = '${name.toUpperCase()}' rows = ${name}->model_data ).\nENDIF.\n`;
+   exports += `IF ${name} IS BOUND.\nio->check_rows( lines( ${name}->model_data ) ).\nio->publish_dataset( name = '${name.toUpperCase()}' rows = ${name}->model_data ).\nENDIF.\n`;
    produced.set(name,id);
  }
  const explanation = rules[stage].rule + '\n\nCheck: ' + rules[stage].check;

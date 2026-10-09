@@ -188,12 +188,10 @@ ENDDO.
 IF new_data IS BOUND.
 io->check_rows( lines( new_data->model_data ) ).
 io->publish_dataset( name = 'NEW_DATA' rows = new_data->model_data ).
-io->emit_table( name = 'NEW_DATA' rows = new_data->model_data ).
 ENDIF.
 IF fflas_month_ratio IS BOUND.
 io->check_rows( lines( fflas_month_ratio->model_data ) ).
 io->publish_dataset( name = 'FFLAS_MONTH_RATIO' rows = fflas_month_ratio->model_data ).
-io->emit_table( name = 'FFLAS_MONTH_RATIO' rows = fflas_month_ratio->model_data ).
 ENDIF.
 IF new_data IS BOUND.
 " Complete control totals: retain key figures/audit trails so unlike measures are not mixed.
