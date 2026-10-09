@@ -58,3 +58,16 @@ The compiler only accepts its documented grammar and emits calls to the existing
 Verification: parser/type/error/source-preservation tests, live dimension/property completion, native SAP compilation of three scripts, and a background run producing 66000/39600/26400 from scalar arithmetic/conditions/loops. Authorized CATEGORY member/property and DEMREVID model reads completed; that frozen TIME selection returned an empty fact table, so nonempty transactional fact arithmetic was not asserted. Unicode text survived save/read and appeared intact in execution messages. The actual abapGit import/serialization compared all 42 repository files, including the new BSP Script.js page and mapping. Evidence is in `docs/evidence/notebook-script.json`, `script-completion.png`, and `sap-roundtrip.json`.
 
 Repeat the SAP verification with `node tools/check-notebook-script.cjs --notebook=<existing notebook with CATEGORY/TIME selections>` after configuring BPC_ADT_TOOL_ROOT. The tool creates a dedicated verification notebook and uses read-only BPC adapters.
+## Pretty print
+
+Use **Pretty print** beneath a cell to indent nested `for`/`if`/`else`/`end`
+blocks. The compiler checks the script before formatting. Quoted text, comments,
+trailing spaces and final blank lines are preserved; generated business logic is
+unchanged. Formatting is an explicit draft edit. Save a new version to retain it.
+
+ABAP cells use the native SAP ADT pretty printer on the application server.
+Collapsed statements are separated outside literals, comments and string
+templates before native formatting. No external library or CDN is used. SAP
+authorizations and the user's existing pretty-printer settings apply; the action
+does not change those settings. Failed requests or newer edits keep the source.
+ABAP formatting requires SAP; Script formatting also works in the local demo.

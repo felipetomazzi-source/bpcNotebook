@@ -582,6 +582,31 @@ sap.ui.define(
           .catch(function (error) { if (self.navigationToken === token) { self.error(error); } })
           .finally(function () { if (self.navigationToken === token) { self.workspace.setBusy(false); } });
       },
+      prettyPrintCell: function (notebook,cell,draft,editor,scriptStatus,button) {
+        var self = this, source = editor.getCurrentValue();
+        button.setEnabled(false);
+        return Promise.resolve().then(function () {
+          return draft.language === "script" ? Script.prettyPrint(source) : Api.prettyPrint(source);
+        }).then(function (formatted) {
+          if (self.notebook !== notebook || !notebook.cells.includes(cell) || editor.bIsDestroyed || editor.getCurrentValue() !== source) {
+            MessageToast.show("Code changed while formatting. Click Pretty print again."); return;
+          }
+          if (formatted === source) { MessageToast.show("Code is already formatted."); return; }
+          var compiled = draft.language === "script" ? Script.compile(formatted) : formatted;
+          if (compiled.length > 60000) { throw new Error("Formatted source exceeds the 60000-character cell limit."); }
+          draft.text = formatted; draft.error = null; cell.source = compiled;
+          if (draft.language === "script") { scriptStatus.setText("Script ready · generates ABAP on save"); scriptStatus.setState("Success"); }
+          var ace = editor.getInternalEditorInstance && editor.getInternalEditorInstance();
+          if (ace && ace.session) {
+            var cursor = ace.getCursorPosition(), last = ace.session.getLength()-1;
+            ace.session.replace({start:{row:0,column:0},end:{row:last,column:ace.session.getLine(last).length}},formatted);
+            ace.moveCursorToPosition(cursor); ace.clearSelection();
+          } else { editor.setValue(formatted); }
+          self.activeCell = cell.id; self.mark(); editor.focus();
+          MessageToast.show("Cell formatted. Save version to keep the change.");
+        }).catch(function (error) { self.error(error); })
+          .finally(function () { if (!button.bIsDestroyed) { button.setEnabled(true); } });
+      },
       mark: function () {
         this.dirty = true;
         this.meta.setText("Unsaved changes · save before running · affected outputs are stale");
@@ -759,6 +784,8 @@ sap.ui.define(
                   }),
                   new m.Button({text:draft.language === "script" ? "Script help" : "BPC code",icon:"sap-icon://source-code",
                     press:function () { if (draft.language === "script") { self.scriptHelp(c.id); } else { self.codeAssistant(c.id); } }}),
+                  new m.Button({text:"Pretty print",icon:"sap-icon://indent",tooltip:"Format this cell; save to create a new version",
+                    press:function (e) { self.prettyPrintCell(n,c,draft,editor,scriptStatus,e.getSource()); }}),
                   new m.Button({text:"Generated ABAP",visible:draft.language === "script",press:function () {
                     try { self.showGenerated(Script.compile(draft.text)); } catch (error) { self.error(error); }
                   }}),
