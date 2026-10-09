@@ -14,7 +14,7 @@ async function table(run,name){const result=await get('/output?runId='+run.id+'&
  for(const [scenario,suppress] of cases){
   definition.inputs.find(i=>i.name==='FIXTURE_CASE').value=scenario;
   definition.inputs.find(i=>i.name==='FFLASMATGROUPS').value=String(suppress);
-  if(notebook.revision){const latest=await get('/notebook?id='+notebook.id);notebook=await api('/notebooks',{...definition,id:notebook.id,revision:latest.revision});}
+  if(notebook.revision){const latest=await get('/notebook?id='+notebook.id);notebook=await api('/notebook',{...definition,id:notebook.id,expectedRevision:latest.revision},'PUT');}
   for(const cell of definition.cells){
    const checked=await api('/validate',{notebookId:notebook.id,cellId:cell.id});
    assert(!checked.diagnostics.some(d=>['error','E'].includes(d.severity)),JSON.stringify({cell:cell.id,diagnostics:checked.diagnostics}));
