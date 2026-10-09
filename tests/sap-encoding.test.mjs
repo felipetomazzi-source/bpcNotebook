@@ -24,11 +24,12 @@ test('packaging leaves native sources and SAP metadata byte-identical and is ide
 });
 
 test('repository bytes match the recorded real SAP serialization',()=>{
- const evidence=JSON.parse(readUtf8('docs/evidence/sap-roundtrip.json'));
+ const evidence=JSON.parse(readUtf8('docs/evidence/bpc-deployment.json'));
  assert.equal(evidence.passed,true);
- assert.equal(evidence.files.length,56);
+ assert.equal(evidence.files.length,readdirSync("src").length + 1);
+ assert.deepEqual(evidence.missing,[]);
  for(const file of evidence.files){
-  const path=file.filename==='.abapgit.xml'?file.filename:'src/'+file.filename;
+  const path=file.filename;
   const bytes=readFileSync(path);
   assert.equal(createHash('sha256').update(gitBytes(bytes)).digest('hex'),file.sapSha256,path);
   const bom=bytes.subarray(0,3).equals(Buffer.from([0xef,0xbb,0xbf]));

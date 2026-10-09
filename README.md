@@ -2,6 +2,8 @@
 
 For calculation conversion agents, start with the [definitive feature and implementation guide](docs/AGENT-REFERENCE.md). It consolidates current APIs, Script syntax, reference scopes, dependency limits and the BPC result contract.
 
+For complete native tables between ABAP stages and accountant-facing stage pages, see [working datasets and execution boundaries](docs/working-datasets.md).
+
 
 A standalone SAPUI5 notebook for ABAP calculations with versioned source, typed inputs, explicit dependencies, frozen runs and persisted output previews.
 

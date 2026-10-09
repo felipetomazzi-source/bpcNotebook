@@ -1,9 +1,9 @@
 {
-  "at": "2026-10-09T00:18:26.164Z",
+  "at": "2026-10-09T05:15:36.611Z",
   "repoId": "000000000008",
   "package": "ZBPC_NOTEBOOK",
   "transport": "NPLK900126",
-  "commit": "027ecba5da90f5477ef403779df32da0845eb30c",
+  "commit": "37919faefa05f48e20362c4874bdccc15be942cd",
   "method": "Full online abapGit repository serialization (refresh + get_files_local) after network pull, compared byte-for-byte with committed Git blobs",
   "files": [
     {
@@ -14,8 +14,8 @@
     },
     {
       "filename": "src/zcl_bn_bpc.clas.abap",
-      "bytes": 45188,
-      "sapSha256": "6c081546c4039dbf3bbd9bbb1b99b736dfbfa1e81615f8c0d9959e29b6ba4524",
+      "bytes": 46992,
+      "sapSha256": "7125d1b47346b54cb62351972bfb26a071472b9f41d56ad3a62166b5ae187687",
       "equal": true
     },
     {
@@ -50,8 +50,8 @@
     },
     {
       "filename": "src/zcl_bn_context.clas.abap",
-      "bytes": 34982,
-      "sapSha256": "b0ce0c1ac72acc9f5d159f3b751e92a63fb630e2f2ca830abd6d9d7944b14027",
+      "bytes": 48023,
+      "sapSha256": "1e31862a7c520d73c97e743165bc2b20d84ce41734a448961b76f25d085c34a4",
       "equal": true
     },
     {
@@ -61,15 +61,33 @@
       "equal": true
     },
     {
+      "filename": "src/zcl_bn_dataset.clas.abap",
+      "bytes": 10415,
+      "sapSha256": "a56df8af4a61fa0cb355abd489f23b480e592d3b3fc361603083a867dd0f5151",
+      "equal": true
+    },
+    {
+      "filename": "src/zcl_bn_dataset.clas.testclasses.abap",
+      "bytes": 6312,
+      "sapSha256": "5d5f40fc953d0139c08dd75199d531331a3cc33bfb8de2e11157ff48e5e259c5",
+      "equal": true
+    },
+    {
+      "filename": "src/zcl_bn_dataset.clas.xml",
+      "bytes": 527,
+      "sapSha256": "b3a06fdc3bd4e597641c203ae7dc540ae9f61d60d2490117671d5fdf3b0c2c7a",
+      "equal": true
+    },
+    {
       "filename": "src/zcl_bn_dem_alloc.clas.abap",
-      "bytes": 125065,
-      "sapSha256": "56a08121685812103e030fddf5cde176fe6ff5f6857fb1071ebec04ee3436e0f",
+      "bytes": 126554,
+      "sapSha256": "5866310a0fed8fc400c7ffbc1a1a424dad08fedb31ff29e2b5a37f39e7b5ee73",
       "equal": true
     },
     {
       "filename": "src/zcl_bn_dem_alloc.clas.testclasses.abap",
-      "bytes": 128352,
-      "sapSha256": "33dbac41ed1822f4367dc0b98f0ad2be4289b507ae57fcb4e8ce4a3d94815251",
+      "bytes": 128366,
+      "sapSha256": "dfd1156b64a3c88afdf25501b9acad531d69775c21124ffe22df830672a5e30c",
       "equal": true
     },
     {
@@ -88,6 +106,18 @@
       "filename": "src/zcl_bn_dem_model.clas.xml",
       "bytes": 489,
       "sapSha256": "7b5e3abdb59c4b01eca9b25ac93ed0ac63005e0d2e3e3247a4007d87b3a7bfec",
+      "equal": true
+    },
+    {
+      "filename": "src/zcl_bn_dem_validation.clas.abap",
+      "bytes": 3865,
+      "sapSha256": "d824ea130d088af66062c99c99ac8a9cc3cee78bc96e5b4d6824d0284ddd5938",
+      "equal": true
+    },
+    {
+      "filename": "src/zcl_bn_dem_validation.clas.xml",
+      "bytes": 510,
+      "sapSha256": "90acc46d721b9063e07e0b5282e225a39f86414a92e7c72b5400edabe0e893fa",
       "equal": true
     },
     {
@@ -146,8 +176,8 @@
     },
     {
       "filename": "src/zcl_bn_service.clas.abap",
-      "bytes": 56447,
-      "sapSha256": "63b3f5c0c751f53d89541149d6d04c203fd46f973a932f58368d94aa18d3dd90",
+      "bytes": 61364,
+      "sapSha256": "112e369fc8d5b9fad2c1c2df472bf02e505672f16864a67849034f7c0fb2fa27",
       "equal": true
     },
     {
@@ -176,8 +206,8 @@
     },
     {
       "filename": "src/zcl_bn_transform.clas.abap",
-      "bytes": 55230,
-      "sapSha256": "0d60f36529dadb3e264b118c41d0558c8cb90a32a320aa2bbef5750cb5bfe5ea",
+      "bytes": 56211,
+      "sapSha256": "7184210c272768924fa67cb778e3227ac6c366309b9e144f3f7474bcd060713c",
       "equal": true
     },
     {
@@ -188,8 +218,8 @@
     },
     {
       "filename": "src/zcl_bn_types.clas.abap",
-      "bytes": 6204,
-      "sapSha256": "8209b5e7035fdcec0e0180549d10047d4f1e7411ed33dc324443e6a7e6d3a1a0",
+      "bytes": 6463,
+      "sapSha256": "3b98b038c36c5bfad7a49d6e134d1d1fd6ff542ae40041c6138d373ea196b715",
       "equal": true
     },
     {
@@ -290,8 +320,8 @@
     },
     {
       "filename": "src/zbpc_notebook.wapa.component.js",
-      "bytes": 423734,
-      "sapSha256": "622e508175fc9950e9cb7b8e3b053f19b491185865f65639923761c3dcc3b88d",
+      "bytes": 433719,
+      "sapSha256": "141f0c66dac2e14f7f3dedbc5f384a8c4ae1c7051b0d077ef7b82a054ebef3e4",
       "equal": true
     },
     {
