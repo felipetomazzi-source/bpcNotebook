@@ -22,7 +22,8 @@ test('rendering rebuilds Setup and stages once, and clearing needs no notebook v
   constructor(options={}) { this.options=options;this.items=[];this.values={}; }
   setText(v){this.text=v;return this;} setValue(v){this.value=v;return this;} setState(){return this;}
   setVisible(v){this.visible=v;return this;} setSelectedKey(v){this.key=v;return this;}
-  addStyleClass(){return this;} addEventDelegate(){return this;}
+  addStyleClass(){return this;} addEventDelegate(d){(this.delegates ||= []).push(d);return this;}
+  setProperty(k,v){this[k]=v;return this;}
   addItem(v){this.items.push(v);return this;} getItems(){return this.items;} destroyItems(){this.items=[];}
   data(k,v){if(arguments.length===2){this.values[k]=v;return this;}return this.values[k];}
  }
@@ -41,5 +42,16 @@ test('rendering rebuilds Setup and stages once, and clearing needs no notebook v
  state.selectStage('setup');assert.equal(state.inputs.visible,false);assert.equal(state.cells.getItems()[0].visible,true);
  assert.equal(state.cells.getItems()[1].visible,false);
  state.renderNotebook();assert.equal(state.stageTabs.getItems().length,3);assert.equal(state.cells.getItems()[0].visible,true);
+ const editor=state.cells.getItems()[0].data('editor'), original=n.cells[0].source;
+ let marks=0;state.mark=()=>{marks++;state.dirty=true;};
+ const change=value=>editor.options.liveChange({getParameter:()=>value,getSource:()=>editor});
+ editor.delegates.forEach(d=>d.onBeforeRendering?.());
+ change('');change(original.replace(/\r\n/g,'\n'));
+ editor.delegates.forEach(d=>d.onAfterRendering?.());
+ assert.equal(marks,0);assert.equal(state.dirty,false);assert.equal(n.cells[0].source,original);
+ change(original+'\n* User edit');assert.equal(marks,1);assert.equal(n.cells[0].source,original+'\n* User edit');
+ assert.equal(editor.value,n.cells[0].source);
+ editor.delegates.forEach(d=>d.onBeforeRendering?.());change('');change(editor.value);
+ editor.delegates.forEach(d=>d.onAfterRendering?.());assert.equal(marks,1);assert.equal(n.cells[0].source,original+'\n* User edit');
  state.clearNotebook();assert.equal(state.stageTabs.getItems().length,0);assert.equal(state.setupHelp.getItems().length,0);assert.equal(state.cells.getItems().length,0);
 });
