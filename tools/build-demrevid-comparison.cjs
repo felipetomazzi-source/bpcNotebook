@@ -9,7 +9,7 @@ const marker='" BEGIN ORIGINAL COMPARISON SNAPSHOT';
 if(current.includes(marker))throw Error('Comparison already generated; update deliberately, do not append twice');
 let original=baseline.replace(/zcl_bpc_demrevid_calc_003/gi,'lcl_original_demrevid')
   .replace(/class lcl_original_demrevid definition public/i,'class lcl_original_demrevid definition');
-original=original.replace(/create public/i,'create public friends ltc_original_compare');
+original=original.replace(/create public/i,'create public friends ltc_original_compare').replace('matconn_dim = new #( env ).','matconn_dim = new #( environment = env ).');
 const compare=`
 class ltc_original_compare definition deferred.
 class zcl_bn_dem_alloc definition local friends ltc_original_compare.

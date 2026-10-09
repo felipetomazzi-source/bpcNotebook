@@ -492,7 +492,6 @@ class zcl_bn_dem_alloc implementation.
       ENDCASE.
     ENDIF.
     engine->calculate( it_param = parameters current_view = io->current_view( ) ).
-    IF stop_after IS NOT INITIAL. RETURN. ENDIF.
     result-replacement = engine->new_data->model_data.
     engine->new_data->compare_delta( engine->output_data ).
     result-delta = engine->new_data->model_data.
