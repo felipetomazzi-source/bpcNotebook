@@ -53,7 +53,14 @@ CLASS zcl_bn_context DEFINITION PUBLIC FINAL CREATE PUBLIC.
     METHODS checkpoint IMPORTING name TYPE string state TYPE string
       inputs TYPE zcl_bn_types=>tt_ids OPTIONAL outputs TYPE zcl_bn_types=>tt_ids OPTIONAL RAISING zcx_bn.
     METHODS check_budget RAISING zcx_bn.
+    METHODS check_data_snapshot RAISING zcx_bn.
     METHODS check_rows IMPORTING count TYPE i RAISING zcx_bn.
+    DATA artifacts TYPE zcl_bn_dataset=>tt_headers READ-ONLY.
+    DATA dataset_reads TYPE zcl_bn_dataset=>tt_access READ-ONLY.
+    METHODS publish_dataset IMPORTING name TYPE string rows TYPE ANY TABLE RAISING zcx_bn.
+    METHODS read_dataset IMPORTING dependency TYPE string name TYPE string
+      RETURNING VALUE(rows) TYPE REF TO data RAISING zcx_bn.
+    METHODS dataset_packets RETURNING VALUE(packets) TYPE zcl_bn_dataset=>tt_packets.
     DATA tables TYPE tt_tables READ-ONLY.
     METHODS emit_table IMPORTING name TYPE string rows TYPE ANY TABLE
       total_count TYPE i DEFAULT -1 elapsed_us TYPE i DEFAULT 0 RAISING zcx_bn.
@@ -64,7 +71,9 @@ CLASS zcl_bn_context DEFINITION PUBLIC FINAL CREATE PUBLIC.
     METHODS constructor IMPORTING inputs TYPE zcl_bn_types=>tt_inputs
       bindings TYPE zcl_bn_types=>tt_bindings dependencies TYPE zcl_bn_types=>tt_ids cell_id TYPE string
       environment TYPE string DEFAULT '' model TYPE string DEFAULT ''
-      run_id TYPE string DEFAULT ''
+      run_id TYPE string DEFAULT '' notebook_id TYPE string DEFAULT ''
+      live_datasets TYPE zcl_bn_dataset=>tt_live OPTIONAL
+      fixture_required TYPE abap_bool DEFAULT abap_false
       live_outputs TYPE tt_live_outputs OPTIONAL scope TYPE ujk_t_cv OPTIONAL
       logic_parameters TYPE ujk_t_script_logic_hashtable OPTIONAL logic_call TYPE abap_bool DEFAULT abap_false.
     METHODS bpc_dimension IMPORTING name TYPE string model_name TYPE string DEFAULT ''
@@ -92,6 +101,14 @@ CLASS zcl_bn_context DEFINITION PUBLIC FINAL CREATE PUBLIC.
     METHODS emit IMPORTING rows TYPE tt_rows RAISING zcx_bn.
     METHODS message IMPORTING text TYPE string.
   PRIVATE SECTION.
+    DATA mt_packets TYPE zcl_bn_dataset=>tt_packets.
+    DATA mt_live_datasets TYPE zcl_bn_dataset=>tt_live.
+    DATA mv_notebook_id TYPE string.
+    DATA mv_fixture_required TYPE abap_bool.
+    DATA mv_dataset_rows TYPE i.
+    DATA mv_dataset_bytes TYPE i.
+    METHODS reserve_dataset IMPORTING row_count TYPE i byte_count TYPE i RAISING zcx_bn.
+    METHODS dataset_budget RETURNING VALUE(maximum) TYPE i RAISING zcx_bn.
     DATA mt_fixtures TYPE tt_fixtures.
     DATA mv_run_id TYPE string.
     DATA mv_started TYPE timestampl.
@@ -110,7 +127,9 @@ CLASS zcl_bn_context DEFINITION PUBLIC FINAL CREATE PUBLIC.
 ENDCLASS.
 CLASS zcl_bn_context IMPLEMENTATION.
   METHOD constructor.
-    mv_run_id = run_id. GET TIME STAMP FIELD mv_started.
+    mv_run_id = run_id. mv_notebook_id = notebook_id. mt_live_datasets = live_datasets.
+    mv_fixture_required = fixture_required.
+    GET TIME STAMP FIELD mv_started.
     READ TABLE inputs INTO DATA(budget) WITH KEY name = 'RUN_SECONDS'.
     IF sy-subrc = 0. mv_seconds = budget-value. ENDIF.
     me->environment = environment. me->model = model.
@@ -324,6 +343,145 @@ CLASS zcl_bn_context IMPLEMENTATION.
     DATA dataset TYPE ty_dataset.
     /ui2/cl_json=>deserialize( EXPORTING json = json pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = dataset ).
     rows = dataset-rows.
+  ENDMETHOD.
+  METHOD check_data_snapshot.
+    IF mv_fixture_required = abap_true AND fixture_mode <> abap_true.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MODE' detail = 'Enable the retained fixtures before any model read in this validation stage'.
+    ENDIF.
+    LOOP AT mt_bindings INTO DATA(binding) WHERE run_id <> mv_run_id.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATA_SNAPSHOT'
+        detail = 'A cell reusing prior-run datasets cannot read fresh model facts; run through the read stages instead'.
+    ENDLOOP.
+  ENDMETHOD.
+  METHOD dataset_budget.
+    maximum = 67108864.
+    READ TABLE mt_inputs INTO DATA(limit) WITH KEY name = 'DATASET_BYTES'.
+    IF sy-subrc = 0.
+      DATA(value) = CONV decfloat34( limit-value ).
+      IF limit-type <> 'number' OR value < 1 OR value > 268435456 OR value <> trunc( value ).
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'RESOURCE_BUDGET' detail = 'DATASET_BYTES must be an integer from 1 to 268435456'.
+      ENDIF.
+      maximum = CONV i( value ).
+    ENDIF.
+  ENDMETHOD.
+  METHOD reserve_dataset.
+    check_budget( ).
+    DATA(maximum) = dataset_budget( ).
+    check_rows( mv_dataset_rows + row_count ).
+    IF byte_count < 0 OR row_count < 0 OR mv_dataset_bytes + byte_count > maximum.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_BUDGET' detail = 'Full working datasets exceed DATASET_BYTES; nothing was truncated'.
+    ENDIF.
+    mv_dataset_rows = mv_dataset_rows + row_count. mv_dataset_bytes = mv_dataset_bytes + byte_count.
+  ENDMETHOD.
+  METHOD dataset_packets.
+    packets = mt_packets.
+  ENDMETHOD.
+  METHOD publish_dataset.
+    IF line_exists( artifacts[ name = name ] ) OR lines( artifacts ) >= 100.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_NAME' detail = 'Publish each dataset once per cell; maximum 100 datasets'.
+    ENDIF.
+    check_budget( ). check_rows( mv_dataset_rows + lines( rows ) ).
+    DATA(packet) = zcl_bn_dataset=>freeze( name = name rows = rows max_bytes = dataset_budget( ) - mv_dataset_bytes ).
+    reserve_dataset( row_count = packet-row_count byte_count = nmax( val1 = packet-byte_count val2 = packet-memory_bytes ) ).
+    IF environment IS NOT INITIAL.
+      zcl_bn_bpc=>validate_working( environment = CONV #( environment ) model = CONV #( model ) rows = rows ).
+    ENDIF.
+    " The binary packet, not the caller's mutable reference, is the publication.
+    DATA preview_max TYPE i VALUE 200.
+    READ TABLE mt_inputs INTO DATA(preview) WITH KEY name = 'PREVIEW_ROWS'.
+    IF sy-subrc = 0. preview_max = preview-value. ENDIF.
+    IF preview_max < 1 OR preview_max > 5000.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'RESOURCE_BUDGET' detail = 'PREVIEW_ROWS must be from 1 to 5000'.
+    ENDIF.
+    DATA(preview_type) = CAST cl_abap_tabledescr( cl_abap_typedescr=>describe_by_data( rows ) ).
+    DATA(preview_standard) = cl_abap_tabledescr=>create( p_line_type = preview_type->get_table_line_type( ) ).
+    DATA preview_rows TYPE REF TO data.
+    CREATE DATA preview_rows TYPE HANDLE preview_standard.
+    FIELD-SYMBOLS <preview> TYPE STANDARD TABLE.
+    ASSIGN preview_rows->* TO <preview>.
+    LOOP AT rows ASSIGNING FIELD-SYMBOL(<row>).
+      IF lines( <preview> ) >= preview_max. EXIT. ENDIF.
+      APPEND <row> TO <preview>.
+    ENDLOOP.
+    emit_table( name = |DATASET/{ name }| rows = <preview> total_count = packet-row_count ).
+    APPEND packet TO mt_packets. APPEND CORRESPONDING #( packet ) TO artifacts.
+  ENDMETHOD.
+  METHOD read_dataset.
+    check_budget( ).
+    IF NOT line_exists( mt_dependencies[ table_line = dependency ] ).
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DEPENDENCY' detail = 'Declare the producing cell as a dependency'.
+    ENDIF.
+    READ TABLE mt_bindings INTO DATA(binding) WITH KEY cell_id = dependency.
+    IF sy-subrc <> 0.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DEPENDENCY' detail = 'Producing cell has no completed bound dataset'.
+    ENDIF.
+    DATA packet TYPE zcl_bn_dataset=>ty_packet.
+    READ TABLE mt_live_datasets INTO DATA(live) WITH KEY cell_id = dependency.
+    IF sy-subrc = 0.
+      READ TABLE live-packets INTO packet WITH KEY name = name.
+      IF sy-subrc <> 0.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_MISSING' detail = 'Producer did not publish the named dataset'.
+      ENDIF.
+    ELSE.
+      TYPES: BEGIN OF ty_bound,
+               notebook_id TYPE string, run_id TYPE string, cell_id TYPE string, revision TYPE i,
+               fingerprint TYPE string, fixture_mode TYPE abap_bool, retention_until TYPE timestampl,
+               artifacts TYPE zcl_bn_dataset=>tt_headers,
+             END OF ty_bound.
+      DATA bound TYPE ty_bound.
+      IF mv_notebook_id IS INITIAL.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_BINDING' detail = 'Persisted dataset access requires a notebook execution context'.
+      ENDIF.
+      DATA(json) = zcl_bn_store=>read( kind = 'D' id = |{ binding-run_id }:{ dependency }| revision = binding-revision ).
+      /ui2/cl_json=>deserialize( EXPORTING json = json pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = bound ).
+      IF bound-notebook_id <> mv_notebook_id OR bound-run_id <> binding-run_id OR bound-cell_id <> dependency OR
+         bound-revision <> binding-revision.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_BINDING' detail = 'Producer does not match the frozen notebook dependency'.
+      ENDIF.
+      IF bound-fixture_mode = abap_true AND ( mv_fixture_required <> abap_true OR binding-run_id <> mv_run_id ).
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MODE' detail = 'Fixture artifacts can be consumed only inside their original validation run'.
+      ENDIF.
+      DATA stamp TYPE timestampl. GET TIME STAMP FIELD stamp.
+      IF bound-retention_until < stamp.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_EXPIRED' detail = 'Working dataset retention expired; execute its producer again'.
+      ENDIF.
+      READ TABLE bound-artifacts INTO DATA(header) WITH KEY name = name.
+      IF sy-subrc <> 0.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_MISSING' detail = 'Named dataset is not a published producer output'.
+      ENDIF.
+      DATA(key) = zcl_bn_dataset=>storage_id( run_id = binding-run_id cell_id = dependency name = name ).
+      DATA(saved_json) = zcl_bn_store=>read( kind = 'W' id = key revision = 1 ).
+      DATA saved TYPE zcl_bn_dataset=>ty_saved.
+      /ui2/cl_json=>deserialize( EXPORTING json = saved_json pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = saved ).
+      IF saved-notebook_id <> mv_notebook_id OR saved-run_id <> binding-run_id OR saved-cell_id <> dependency OR
+         saved-revision <> binding-revision OR saved-fingerprint <> bound-fingerprint OR
+         CORRESPONDING zcl_bn_dataset=>ty_header( saved-packet ) <> header.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_INTEGRITY' detail = 'Native artifact does not match the frozen producer'.
+      ENDIF.
+      DATA(producer_json) = zcl_bn_store=>read( kind = 'R' id = binding-run_id ).
+      DATA producer TYPE zcl_bn_types=>ty_run.
+      /ui2/cl_json=>deserialize( EXPORTING json = producer_json pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = producer ).
+      READ TABLE producer-snapshot-cells INTO DATA(producing_cell) WITH KEY id = dependency.
+      IF sy-subrc <> 0 OR producer-notebook_id <> mv_notebook_id OR NOT line_exists( producer-results[ cell_id = dependency ] ) OR
+         producing_cell-source_version <> saved-source_version OR producing_cell-checksum <> saved-source_checksum.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'SOURCE_INTEGRITY' detail = 'Artifact is not a completed frozen producer result'.
+      ENDIF.
+      SELECT SINGLE source, checksum FROM zbn_src INTO (@DATA(source), @DATA(source_checksum))
+        WHERE notebook_id = @mv_notebook_id AND cell_id = @dependency AND version = @saved-source_version.
+      IF sy-subrc <> 0 OR source_checksum <> saved-source_checksum OR zcl_bn_types=>hash( source ) <> source_checksum.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'SOURCE_INTEGRITY' detail = 'Published native artifact source binding is missing'.
+      ENDIF.
+      packet = saved-packet.
+    ENDIF.
+    reserve_dataset( row_count = packet-row_count byte_count = nmax( val1 = packet-byte_count val2 = packet-memory_bytes ) ).
+    rows = zcl_bn_dataset=>thaw( packet ).
+    FIELD-SYMBOLS <rows> TYPE STANDARD TABLE. ASSIGN rows->* TO <rows>.
+    IF environment IS NOT INITIAL.
+      zcl_bn_bpc=>validate_working( environment = CONV #( environment ) model = CONV #( model ) rows = <rows> ).
+    ENDIF.
+    APPEND VALUE #( dependency = dependency name = name run_id = binding-run_id revision = binding-revision
+      row_count = packet-row_count byte_count = packet-byte_count checksum = packet-checksum ) TO dataset_reads.
+    check_budget( ).
   ENDMETHOD.
   METHOD emit.
     IF lines( rows ) > 10000.

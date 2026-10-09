@@ -41,6 +41,7 @@ CLASS zcl_bn_bpc DEFINITION PUBLIC CREATE PUBLIC.
     METHODS constructor IMPORTING environment TYPE string model TYPE string dimension TYPE string DEFAULT ''
       inputs TYPE zcl_bn_types=>tt_inputs OPTIONAL scope TYPE ujk_t_cv OPTIONAL
       diagnostics TYPE REF TO zcl_bn_context OPTIONAL read_scope TYPE string DEFAULT 'calculation' RAISING zcx_bn.
+    CLASS-METHODS validate_working IMPORTING environment TYPE string model TYPE string rows TYPE ANY TABLE RAISING zcx_bn.
     CLASS-METHODS validate_fixture IMPORTING environment TYPE string model TYPE string rows TYPE ANY TABLE RAISING zcx_bn.
     METHODS member_data IMPORTING ids TYPE zcl_bn_types=>tt_ids OPTIONAL
       RETURNING VALUE(result) TYPE REF TO data RAISING zcx_bn.
@@ -335,6 +336,35 @@ CLASS zcl_bn_bpc IMPLEMENTATION.
       ENDLOOP.
     ENDLOOP.
   ENDMETHOD.
+  METHOD validate_working.
+    " Recheck current member authorization for every model-dimension column present.
+    DATA(dimensions) = context( environment = environment model = model ).
+    DATA(structure) = CAST cl_abap_structdescr( CAST cl_abap_tabledescr(
+      cl_abap_typedescr=>describe_by_data( rows ) )->get_table_line_type( ) ).
+    DATA(components) = structure->get_components( ).
+    TYPES tt_unique TYPE HASHED TABLE OF string WITH UNIQUE KEY table_line.
+    LOOP AT dimensions INTO DATA(dimension).
+      IF NOT line_exists( components[ name = dimension-id ] ). CONTINUE. ENDIF.
+      DATA ids TYPE tt_unique.
+      CLEAR ids.
+      LOOP AT rows ASSIGNING FIELD-SYMBOL(<row>).
+        ASSIGN COMPONENT dimension-id OF STRUCTURE <row> TO FIELD-SYMBOL(<member>).
+        " Blank intermediate members remain blank; final write validation is stricter.
+        IF <member> IS NOT INITIAL. INSERT CONV string( <member> ) INTO TABLE ids. ENDIF.
+      ENDLOOP.
+      IF ids IS INITIAL. CONTINUE. ENDIF.
+      DATA(available) = list_members( environment = environment model = model dimension = dimension-id hierarchy = '' ).
+      DATA allowed TYPE tt_unique.
+      CLEAR allowed.
+      LOOP AT available-items INTO DATA(item). INSERT item-id INTO TABLE allowed. ENDLOOP.
+      LOOP AT ids INTO DATA(id).
+        IF NOT line_exists( allowed[ table_line = id ] ).
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_AUTH'
+            detail = |Working dataset member unavailable or unauthorized in { dimension-id }| status = 403.
+        ENDIF.
+      ENDLOOP.
+    ENDLOOP.
+  ENDMETHOD.
   METHOD validate_fixture.
     DATA(adapter) = NEW zcl_bn_bpc( environment = environment model = model ).
     DATA(dimensions) = adapter->dimensions( ).
@@ -378,6 +408,7 @@ CLASS zcl_bn_bpc IMPLEMENTATION.
     validate_filters( environment = environment model = model filters = filters ).
   ENDMETHOD.
   METHOD read_data.
+    IF mo_diagnostics IS BOUND. mo_diagnostics->check_data_snapshot( ). ENDIF.
     DATA(diagnostic) = VALUE zcl_bn_context=>ty_read( environment = mv_environment model = mv_model
       scope = mv_read_scope source = 'live SAP' security = 'SAP_AUTH_ON; QUERY_BADI_OFF'
       state = 'failed' row_count = -1 max_rows = max_rows ).
