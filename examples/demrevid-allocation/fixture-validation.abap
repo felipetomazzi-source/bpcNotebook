@@ -46,8 +46,16 @@ CASE scenario.
   LOOP AT fixtures ASSIGNING <fixture> WHERE demrevid_kfs = 'DEMREVID006' OR demrevid_kfs = 'DEMREVID007'.
    <fixture>-signeddata = - <fixture>-signeddata.
   ENDLOOP.
+ WHEN 'hsns'.
+  LOOP AT fixtures ASSIGNING <fixture> WHERE demrevid_kfs <> 'DEMREVID021' AND demrevid_kfs <> 'DEMREVID022'.
+   <fixture>-account = '001054200'.
+  ENDLOOP.
+  row = base. row-account = '001054200'. row-audittrail = 'DEMREVID_HSNS_PREM_REV'. row-demrevid_kfs = 'DEMREVID045'.
+  row-fflas = 'FFLASID'. row-lfc_win_supplier = 'LFCWIN003'. row-signeddata = 60. APPEND row TO fixtures.
+  row-fflas = 'FFLASPQ'. row-lfc_win_supplier = 'LFC_WIN_SUPPLIER_NA'. row-signeddata = 40. APPEND row TO fixtures.
+  row-product_type = 'PRODUCT_TYPE_004'. row-signeddata = 10. APPEND row TO fixtures.
  WHEN 'standard'.
- WHEN OTHERS. RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_CASE' detail = 'Use standard, carry, fallback, rounding or negative'.
+ WHEN OTHERS. RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_CASE' detail = 'Use standard, carry, fallback, rounding, negative or hsns'.
 ENDCASE.
 DATA fixture_ref TYPE REF TO data. GET REFERENCE OF fixtures INTO fixture_ref.
 io->enable_fixtures( VALUE #( ( environment = io->environment model = io->model rows = fixture_ref ) ) ).
