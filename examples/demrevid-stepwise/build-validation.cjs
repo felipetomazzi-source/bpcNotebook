@@ -7,7 +7,7 @@ const oldDefinition = JSON.parse(fs.readFileSync(path.join(root,'examples/demrev
 definition.title = 'DEMREVID003 - stepwise original comparison';
 definition.explanation = 'Validation only. Complete authorized synthetic native fixtures feed the visible step cells and the original baseline. This does not prove equivalence on customer data and never posts financial results.';
 definition.inputs.push(oldDefinition.inputs.find(i=>i.name==='FIXTURE_CASE'));
-let fixtureSource = fs.readFileSync(path.join(root,'examples/demrevid-allocation/fixture-validation.abap'),'utf8');
+let fixtureSource = fs.readFileSync(path.join(root,'examples/demrevid-allocation/fixture-validation.abap'),'utf8').replace(/\r\n/g,'\n');
 fixtureSource = fixtureSource.replace(/zcl_bn_dem_validation=>execute\( io \)\./i,"io->publish_dataset( name = 'FIXTURE_INPUT' rows = fixtures ).\nio->emit_table( name = 'FIXTURE_INPUT' rows = fixtures ).");
 const fixtureCell = {id:'fixtures',title:'00 · Prepare controlled test data',explanation:'Use authorized member IDs and synthetic amounts. Verify the scenario and suppression flag. Both implementations receive identical complete native tables.',source:fixtureSource,dependencies:[]};
 const hook = "DATA(complete_fixture) = io->read_dataset( dependency = 'fixtures' name = 'FIXTURE_INPUT' ).\nio->enable_fixtures( VALUE #( ( environment = io->environment model = io->model rows = complete_fixture ) ) ).\n";

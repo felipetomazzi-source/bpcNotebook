@@ -3,11 +3,22 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '../..');
-const original = fs.readFileSync(path.join(root, 'src/zcl_bn_dem_alloc.clas.abap'), 'utf8');
+const original = fs.readFileSync(path.join(root, 'src/zcl_bn_dem_alloc.clas.abap'), 'utf8').replace(/\r\n/g,'\n');
 const methods = new Map([...original.matchAll(/^  method ([\w~]+)\.([\s\S]*?)^  endmethod\./gim)].map(m => [m[1].toLowerCase(), m[2].replace(/^\s*TRY\./i, '').replace(/\s*CATCH zcx_bn INTO DATA\(notebook_error\)\.[\s\S]*ENDTRY\.\s*$/i, '').trim()]));
 function body(name) { if (!methods.has(name)) throw Error('Missing method ' + name); return methods.get(name); }
 const constants = [...original.matchAll(/^    constants .*?\.\s*$/gim)].map(m => m[0].trim()).join('\n');
-const enums = original.match(/    types: begin of enum rev_split_method,[\s\S]*?end of enum rev_split_type\./i)[0];
+// SAP permits class-local enum declarations, but not local enums inside Notebook's FORM.
+// Preserve the original ordinal method/type codes without calling the allocation class.
+const enums = `TYPES rev_split_method TYPE i.
+TYPES rev_split_type TYPE i.
+CONSTANTS rsp_billing_material TYPE i VALUE 1.
+CONSTANTS rsp_billing_gl TYPE i VALUE 2.
+CONSTANTS cal_gl TYPE i VALUE 3.
+CONSTANTS cal_reg_split TYPE i VALUE 4.
+CONSTANTS not_found TYPE i VALUE 5.
+CONSTANTS rsp_billing_supplier TYPE i VALUE 6.
+CONSTANTS location TYPE i VALUE 0.
+CONSTANTS supplier TYPE i VALUE 1.`;
 const attributes = original.match(/    data:\s*\r?\n[\s\S]*?skip_fflas_ratio_mat_group_id type ujw_t_dimmem_range\./i)[0];
 const models = [...attributes.matchAll(/(\w+)\s+type ref to zcl_bn_dem_model/g)].map(m => m[1]);
 models.push('complete_source_data');

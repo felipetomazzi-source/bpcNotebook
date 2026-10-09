@@ -57,20 +57,16 @@ constants kf_fflas_ratios_material type uj_dim_member value 'DEMREVID047' ##NO_T
 constants kf_fflas_ratio_skipped type uj_dim_member value 'DEMREVID052' ##NO_TEXT.
 constants fflas_na type uj_dim_member value 'FFLAS_NA' ##NO_TEXT.
 constants audit_dnrid_calc type uj_dim_member value 'DEMREVID_CALC' ##NO_TEXT.
-    types: begin of enum rev_split_method,
-             _                    value is initial,
-             rsp_billing_material value 1,
-             rsp_billing_gl       value 2,
-             cal_gl               value 3,
-             cal_reg_split        value 4,
-             not_found            value 5,
-             rsp_billing_supplier value 6,
-           end of enum rev_split_method,
-
-           begin of enum rev_split_type,
-             location,
-             supplier,
-           end of enum rev_split_type.
+TYPES rev_split_method TYPE i.
+TYPES rev_split_type TYPE i.
+CONSTANTS rsp_billing_material TYPE i VALUE 1.
+CONSTANTS rsp_billing_gl TYPE i VALUE 2.
+CONSTANTS cal_gl TYPE i VALUE 3.
+CONSTANTS cal_reg_split TYPE i VALUE 4.
+CONSTANTS not_found TYPE i VALUE 5.
+CONSTANTS rsp_billing_supplier TYPE i VALUE 6.
+CONSTANTS location TYPE i VALUE 0.
+CONSTANTS supplier TYPE i VALUE 1.
 DATA(env) = io.
 DATA(preview_rows) = CONV i( io->input( 'PREVIEW_ROWS' ) ).
 DATA(category) = io->member( 'CATEGORY' ).

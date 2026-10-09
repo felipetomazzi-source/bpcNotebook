@@ -1,7 +1,8 @@
 // Run after the platform working-dataset APIs are deployed through abapGit.
 // Uses complete native comparisons on SAP; JS examines only verification counts.
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
-const api=require('../../tools/bpc-api.cjs');
+const rawApi=require('../../tools/bpc-api.cjs');
+async function api(endpoint,data,method){try{return await rawApi(endpoint,data,method);}catch(error){throw Error(endpoint+': '+error.message);}}
 const options=Object.fromEntries(process.argv.filter(x=>/^--[^=]+=/.test(x)).map(x=>{const i=x.indexOf('=');return[x.slice(2,i),x.slice(i+1)];}));
 const get=p=>api(p,null,'GET');
 const definition=JSON.parse(fs.readFileSync(path.join(__dirname,'validation.draft.json'),'utf8'));
