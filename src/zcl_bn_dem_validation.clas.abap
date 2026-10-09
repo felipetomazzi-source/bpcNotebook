@@ -43,6 +43,14 @@ CLASS zcl_bn_dem_validation IMPLEMENTATION.
   DATA(original) = zcl_bpc_demrevid_calc_003=>validate_with_reader(
    reader = reader it_param = parameters current_view = original_context->current_view( ) ).
   DATA(notebook) = zcl_bn_dem_alloc=>validate_fixtures( notebook_context ).
+  io->emit_table( name = 'NOTEBOOK/FINAL_REPLACEMENT' rows = notebook-replacement ).
+  io->emit_table( name = 'NOTEBOOK/FINAL_DELTA' rows = notebook-delta ).
+  TYPES: BEGIN OF ty_coverage, key_figure TYPE uj_dim_member, rows TYPE i, END OF ty_coverage.
+  DATA coverage TYPE SORTED TABLE OF ty_coverage WITH UNIQUE KEY key_figure.
+  LOOP AT notebook-replacement INTO DATA(result_row).
+   COLLECT VALUE ty_coverage( key_figure = result_row-demrevid_kfs rows = 1 ) INTO coverage.
+  ENDLOOP.
+  io->emit_table( name = 'COVERAGE' rows = coverage ).
   DATA(replacement) = io->compare_results( name = 'REPLACEMENT' original = original-replacement notebook = notebook-replacement ).
   DATA(delta) = io->compare_results( name = 'DELTA' original = original-delta notebook = notebook-delta ).
   io->include_fixture_outputs( context = original_context prefix = 'ORIGINAL' ).
