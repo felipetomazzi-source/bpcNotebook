@@ -288,7 +288,7 @@ sap.ui.define(
             }),
           ],
         }).addStyleClass("notebookToolbar");
-        this.stageTabs = new m.IconTabBar({expandable:false, applyContentPadding:false, select:function(e) { self.selectStage(e.getParameter("key")); }});
+        this.stageTabs = new m.IconTabBar({expandable:false, applyContentPadding:false, select:function(e) { self.selectStage(e.getParameter("selectedKey") || e.getParameter("key")); }});
         this.setupHelp = new m.VBox();
         var main = this.workspace = new m.VBox({
           width: "100%",
@@ -422,11 +422,8 @@ sap.ui.define(
       },
       clearNotebook: function () {
         this.resetReview(); this.notebook = null; this.scriptNotebook = null; this.scriptDrafts = {}; this.dirty = false;
-        this.cells.destroyItems(); this.stageTabs.destroyItems();
-        this.stageTabs.addItem(new m.IconTabFilter({key:"setup",text:"Setup",icon:"sap-icon://settings"}));
-        this.setupHelp.destroyItems();
-        this.setupHelp.addItem(new m.Text({text:n.explanation || "Select the calculation parameters, then run all stages or choose a stage.",wrapping:true}));
-        this.setupHelp.addItem(new m.Button({text:"Edit explanation",press:function() { self.editExplanation(n,8000); }}));
+        this.cells.destroyItems(); this.stageTabs.destroyItems(); this.setupHelp.destroyItems();
+        this.datasetInfo.setText(""); this.selectedStage = "__setup"; this.stageNotebook = null;
         this.inputs.destroyItems(); this.title.setText("Select a notebook or create one"); this.meta.setText("");
       },
       deleteNotebook: function (notebook) {
@@ -512,12 +509,17 @@ sap.ui.define(
         var self = this,
           n = this.notebook;
         if (this.scriptNotebook !== n.id) { this.scriptDrafts = {}; this.scriptNotebook = n.id;
-          if (this.stageNotebook !== n.id) { this.selectedStage = "setup"; this.stageNotebook = n.id; } }
+          if (this.stageNotebook !== n.id) { this.selectedStage = "__setup"; this.stageNotebook = n.id; } }
         this.dirty = false;
         this.title.setText(n.title);
         this.meta.setText(
           "Revision " + n.revision + " · " + n.cells.length + " cells · " + n.author + " · " + displayTime(n.savedAt),
         );
+        this.stageTabs.destroyItems();
+        this.stageTabs.addItem(new m.IconTabFilter({key:"__setup",text:"Setup",icon:"sap-icon://settings"}));
+        this.setupHelp.destroyItems();
+        this.setupHelp.addItem(new m.Text({text:n.explanation || "Select the calculation parameters, then run all stages or choose a stage.",wrapping:true,renderWhitespace:true}));
+        this.setupHelp.addItem(new m.Button({text:"Edit explanation",press:function() { self.editExplanation(n,8000); }}));
         this.inputs.destroyItems();
         if (n.environment) {
           this.inputs.addItem(new m.VBox({items:[new m.Label({text:"BPC context"}),
@@ -544,7 +546,7 @@ sap.ui.define(
         });
         this.cells.destroyItems();
         n.cells.forEach(function (c, index) {
-          self.stageTabs.addItem(new m.IconTabFilter({key:c.id,text:(index+1) + " · " + c.title}));
+          self.stageTabs.addItem(new m.IconTabFilter({key:c.id,text:(index+1) + " · " + c.title.replace(/^\d+\s*[·.\-]\s*/, "")}));
           var state = new m.ObjectStatus({
             text: c.output
               ? c.output.stale
@@ -613,7 +615,7 @@ sap.ui.define(
               new m.Text({ text: "Cell " + c.id + " · source v" + c.sourceVersion }).addStyleClass(
                 "cellMeta",
               ),
-              new m.Text({text:c.explanation || "No stage explanation has been added.",wrapping:true}),
+              new m.Text({text:c.explanation || "No stage explanation has been added.",wrapping:true,renderWhitespace:true}),
               new m.Text({text:"Prerequisites: " + (c.dependencies.length ? c.dependencies.join(", ") : "None"),wrapping:true}),
               new m.OverflowToolbar({content:[
                 new m.Button({text:"Run cell",icon:"sap-icon://media-play",press:function() { self.execute("one",c.id); }}),
@@ -663,14 +665,14 @@ sap.ui.define(
             .data("status", state).data("cellId",c.id).data("editor",editor);
           self.cells.addItem(box);
         });
-        this.selectStage(this.selectedStage || "setup");
+        this.selectStage(this.selectedStage || "__setup");
       },
       selectStage: function(key) {
-        if (key !== "setup" && !this.notebook.cells.some(function(c) { return c.id === key; })) { key="setup"; }
+        if (key !== "__setup" && !this.notebook.cells.some(function(c) { return c.id === key; })) { key="__setup"; }
         this.selectedStage=key; this.stageTabs.setSelectedKey(key);
-        this.inputs.setVisible(key === "setup"); this.setupHelp.setVisible(key === "setup");
+        this.inputs.setVisible(key === "__setup"); this.setupHelp.setVisible(key === "__setup");
         this.cells.getItems().forEach(function(panel) { panel.setVisible(panel.data("cellId") === key); });
-        if (key !== "setup") {
+        if (key !== "__setup") {
           this.activeCell=key;
           if (this.outputSelect.getItems().some(function(item) { return item.getKey() === key; })) {
             this.outputSelect.setSelectedKey(key); this.pageOffset=0; this.tableName=""; this.preview();
