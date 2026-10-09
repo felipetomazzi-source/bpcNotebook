@@ -182,11 +182,11 @@ ENDDO.
 IF rsp_split_ratios IS BOUND.
 io->check_rows( lines( rsp_split_ratios->model_data ) ).
 io->publish_dataset( name = 'RSP_SPLIT_RATIOS' rows = rsp_split_ratios->model_data ).
-io->emit_table( name = 'RSP_SPLIT_RATIOS' rows = rsp_split_ratios->model_data max_rows = preview_rows ).
+io->emit_table( name = 'RSP_SPLIT_RATIOS' rows = rsp_split_ratios->model_data ).
 ENDIF.
 IF new_data IS BOUND.
 io->check_rows( lines( new_data->model_data ) ).
 io->publish_dataset( name = 'NEW_DATA' rows = new_data->model_data ).
-io->emit_table( name = 'NEW_DATA' rows = new_data->model_data max_rows = preview_rows ).
+io->emit_table( name = 'NEW_DATA' rows = new_data->model_data ).
 ENDIF.
 io->check_budget( ).

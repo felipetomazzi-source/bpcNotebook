@@ -99,6 +99,6 @@ ENDDO.
 IF sap_revenues_consol IS BOUND.
 io->check_rows( lines( sap_revenues_consol->model_data ) ).
 io->publish_dataset( name = 'SAP_REVENUES_CONSOL' rows = sap_revenues_consol->model_data ).
-io->emit_table( name = 'SAP_REVENUES_CONSOL' rows = sap_revenues_consol->model_data max_rows = preview_rows ).
+io->emit_table( name = 'SAP_REVENUES_CONSOL' rows = sap_revenues_consol->model_data ).
 ENDIF.
 io->check_budget( ).

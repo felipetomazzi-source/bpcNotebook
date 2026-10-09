@@ -254,11 +254,11 @@ ENDDO.
 IF sap_revenues IS BOUND.
 io->check_rows( lines( sap_revenues->model_data ) ).
 io->publish_dataset( name = 'SAP_REVENUES' rows = sap_revenues->model_data ).
-io->emit_table( name = 'SAP_REVENUES' rows = sap_revenues->model_data max_rows = preview_rows ).
+io->emit_table( name = 'SAP_REVENUES' rows = sap_revenues->model_data ).
 ENDIF.
 IF new_data IS BOUND.
 io->check_rows( lines( new_data->model_data ) ).
 io->publish_dataset( name = 'NEW_DATA' rows = new_data->model_data ).
-io->emit_table( name = 'NEW_DATA' rows = new_data->model_data max_rows = preview_rows ).
+io->emit_table( name = 'NEW_DATA' rows = new_data->model_data ).
 ENDIF.
 io->check_budget( ).

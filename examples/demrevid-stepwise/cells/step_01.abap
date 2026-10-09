@@ -218,76 +218,76 @@ ENDDO.
 IF input_data IS BOUND.
 io->check_rows( lines( input_data->model_data ) ).
 io->publish_dataset( name = 'INPUT_DATA' rows = input_data->model_data ).
-io->emit_table( name = 'INPUT_DATA' rows = input_data->model_data max_rows = preview_rows ).
+io->emit_table( name = 'INPUT_DATA' rows = input_data->model_data ).
 ENDIF.
 IF output_data IS BOUND.
 io->check_rows( lines( output_data->model_data ) ).
 io->publish_dataset( name = 'OUTPUT_DATA' rows = output_data->model_data ).
-io->emit_table( name = 'OUTPUT_DATA' rows = output_data->model_data max_rows = preview_rows ).
+io->emit_table( name = 'OUTPUT_DATA' rows = output_data->model_data ).
 ENDIF.
 IF new_data IS BOUND.
 io->check_rows( lines( new_data->model_data ) ).
 io->publish_dataset( name = 'NEW_DATA' rows = new_data->model_data ).
-io->emit_table( name = 'NEW_DATA' rows = new_data->model_data max_rows = preview_rows ).
+io->emit_table( name = 'NEW_DATA' rows = new_data->model_data ).
 ENDIF.
 IF sap_revenues IS BOUND.
 io->check_rows( lines( sap_revenues->model_data ) ).
 io->publish_dataset( name = 'SAP_REVENUES' rows = sap_revenues->model_data ).
-io->emit_table( name = 'SAP_REVENUES' rows = sap_revenues->model_data max_rows = preview_rows ).
+io->emit_table( name = 'SAP_REVENUES' rows = sap_revenues->model_data ).
 ENDIF.
 IF conn_reg_split IS BOUND.
 io->check_rows( lines( conn_reg_split->model_data ) ).
 io->publish_dataset( name = 'CONN_REG_SPLIT' rows = conn_reg_split->model_data ).
-io->emit_table( name = 'CONN_REG_SPLIT' rows = conn_reg_split->model_data max_rows = preview_rows ).
+io->emit_table( name = 'CONN_REG_SPLIT' rows = conn_reg_split->model_data ).
 ENDIF.
 IF l1_l2_mapping IS BOUND.
 io->check_rows( lines( l1_l2_mapping->model_data ) ).
 io->publish_dataset( name = 'L1_L2_MAPPING' rows = l1_l2_mapping->model_data ).
-io->emit_table( name = 'L1_L2_MAPPING' rows = l1_l2_mapping->model_data max_rows = preview_rows ).
+io->emit_table( name = 'L1_L2_MAPPING' rows = l1_l2_mapping->model_data ).
 ENDIF.
 IF mat_group_mapping IS BOUND.
 io->check_rows( lines( mat_group_mapping->model_data ) ).
 io->publish_dataset( name = 'MAT_GROUP_MAPPING' rows = mat_group_mapping->model_data ).
-io->emit_table( name = 'MAT_GROUP_MAPPING' rows = mat_group_mapping->model_data max_rows = preview_rows ).
+io->emit_table( name = 'MAT_GROUP_MAPPING' rows = mat_group_mapping->model_data ).
 ENDIF.
 IF rsp_location_material_ratio IS BOUND.
 io->check_rows( lines( rsp_location_material_ratio->model_data ) ).
 io->publish_dataset( name = 'RSP_LOCATION_MATERIAL_RATIO' rows = rsp_location_material_ratio->model_data ).
-io->emit_table( name = 'RSP_LOCATION_MATERIAL_RATIO' rows = rsp_location_material_ratio->model_data max_rows = preview_rows ).
+io->emit_table( name = 'RSP_LOCATION_MATERIAL_RATIO' rows = rsp_location_material_ratio->model_data ).
 ENDIF.
 IF rsp_location_gl_ratio IS BOUND.
 io->check_rows( lines( rsp_location_gl_ratio->model_data ) ).
 io->publish_dataset( name = 'RSP_LOCATION_GL_RATIO' rows = rsp_location_gl_ratio->model_data ).
-io->emit_table( name = 'RSP_LOCATION_GL_RATIO' rows = rsp_location_gl_ratio->model_data max_rows = preview_rows ).
+io->emit_table( name = 'RSP_LOCATION_GL_RATIO' rows = rsp_location_gl_ratio->model_data ).
 ENDIF.
 IF cal_location_gl_ratio IS BOUND.
 io->check_rows( lines( cal_location_gl_ratio->model_data ) ).
 io->publish_dataset( name = 'CAL_LOCATION_GL_RATIO' rows = cal_location_gl_ratio->model_data ).
-io->emit_table( name = 'CAL_LOCATION_GL_RATIO' rows = cal_location_gl_ratio->model_data max_rows = preview_rows ).
+io->emit_table( name = 'CAL_LOCATION_GL_RATIO' rows = cal_location_gl_ratio->model_data ).
 ENDIF.
 IF cal_location_conn_seg_ratio IS BOUND.
 io->check_rows( lines( cal_location_conn_seg_ratio->model_data ) ).
 io->publish_dataset( name = 'CAL_LOCATION_CONN_SEG_RATIO' rows = cal_location_conn_seg_ratio->model_data ).
-io->emit_table( name = 'CAL_LOCATION_CONN_SEG_RATIO' rows = cal_location_conn_seg_ratio->model_data max_rows = preview_rows ).
+io->emit_table( name = 'CAL_LOCATION_CONN_SEG_RATIO' rows = cal_location_conn_seg_ratio->model_data ).
 ENDIF.
 IF rsp_supplier_material_ratio IS BOUND.
 io->check_rows( lines( rsp_supplier_material_ratio->model_data ) ).
 io->publish_dataset( name = 'RSP_SUPPLIER_MATERIAL_RATIO' rows = rsp_supplier_material_ratio->model_data ).
-io->emit_table( name = 'RSP_SUPPLIER_MATERIAL_RATIO' rows = rsp_supplier_material_ratio->model_data max_rows = preview_rows ).
+io->emit_table( name = 'RSP_SUPPLIER_MATERIAL_RATIO' rows = rsp_supplier_material_ratio->model_data ).
 ENDIF.
 IF rsp_supplier_gl_ratio IS BOUND.
 io->check_rows( lines( rsp_supplier_gl_ratio->model_data ) ).
 io->publish_dataset( name = 'RSP_SUPPLIER_GL_RATIO' rows = rsp_supplier_gl_ratio->model_data ).
-io->emit_table( name = 'RSP_SUPPLIER_GL_RATIO' rows = rsp_supplier_gl_ratio->model_data max_rows = preview_rows ).
+io->emit_table( name = 'RSP_SUPPLIER_GL_RATIO' rows = rsp_supplier_gl_ratio->model_data ).
 ENDIF.
 IF cal_supplier_gl_ratio IS BOUND.
 io->check_rows( lines( cal_supplier_gl_ratio->model_data ) ).
 io->publish_dataset( name = 'CAL_SUPPLIER_GL_RATIO' rows = cal_supplier_gl_ratio->model_data ).
-io->emit_table( name = 'CAL_SUPPLIER_GL_RATIO' rows = cal_supplier_gl_ratio->model_data max_rows = preview_rows ).
+io->emit_table( name = 'CAL_SUPPLIER_GL_RATIO' rows = cal_supplier_gl_ratio->model_data ).
 ENDIF.
 IF cal_supplier_conn_seg_ratio IS BOUND.
 io->check_rows( lines( cal_supplier_conn_seg_ratio->model_data ) ).
 io->publish_dataset( name = 'CAL_SUPPLIER_CONN_SEG_RATIO' rows = cal_supplier_conn_seg_ratio->model_data ).
-io->emit_table( name = 'CAL_SUPPLIER_CONN_SEG_RATIO' rows = cal_supplier_conn_seg_ratio->model_data max_rows = preview_rows ).
+io->emit_table( name = 'CAL_SUPPLIER_CONN_SEG_RATIO' rows = cal_supplier_conn_seg_ratio->model_data ).
 ENDIF.
 io->check_budget( ).

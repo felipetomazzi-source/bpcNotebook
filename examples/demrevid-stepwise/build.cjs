@@ -56,7 +56,7 @@ for (let index = 0; index < stageRows.length; index++) {
    calculation = 'DATA stage_result TYPE REF TO zcl_bn_dem_model.\n' + calculation + '\nnew_data->append( stage_result ).';
  }
  if (stage === 'FFLAS_RATIOS_BY_MATERIAL') calculation = 'DATA fflas_ratios TYPE REF TO zcl_bn_dem_model.\n' + calculation + '\nnew_data->append( fflas_ratios ).';
- calculation = calculation.replace(/capture\( dataset = '([^']+)' model = (\w+) \)\./gi, (_, name, model) => `io->emit_table( name = '${name}' rows = ${model}->model_data max_rows = preview_rows ).`);
+ calculation = calculation.replace(/capture\( dataset = '([^']+)' model = (\w+) \)\./gi, (_, name, model) => `io->emit_table( name = '${name}' rows = ${model}->model_data ).`);
  const codeOnly = calculation.replace(/'[^']*'|"[^\r\n]*/g,'');
  const referenced = models.filter(name => new RegExp('\\b' + name + '\\b','i').test(codeOnly));
  const deps = new Set(index ? [cells[index-1].id] : []);
@@ -76,7 +76,7 @@ for (let index = 0; index < stageRows.length; index++) {
  let exports = '';
  for (const name of outputs[stage]) {
    if (!referenced.includes(name)) throw Error('Undeclared output ' + stage + '/' + name);
-   exports += `IF ${name} IS BOUND.\nio->check_rows( lines( ${name}->model_data ) ).\nio->publish_dataset( name = '${name.toUpperCase()}' rows = ${name}->model_data ).\nio->emit_table( name = '${name.toUpperCase()}' rows = ${name}->model_data max_rows = preview_rows ).\nENDIF.\n`;
+   exports += `IF ${name} IS BOUND.\nio->check_rows( lines( ${name}->model_data ) ).\nio->publish_dataset( name = '${name.toUpperCase()}' rows = ${name}->model_data ).\nio->emit_table( name = '${name.toUpperCase()}' rows = ${name}->model_data ).\nENDIF.\n`;
    produced.set(name,id);
  }
  const explanation = rules[stage].rule + '\n\nCheck: ' + rules[stage].check;

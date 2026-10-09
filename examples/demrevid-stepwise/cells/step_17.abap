@@ -108,7 +108,7 @@ fflas_ratios = new zcl_bn_dem_model( environment = env ).
             ( dimension = 'AUDITTRAIL' replace_with = audit_dnrid_calc )
             ( dimension = 'DEMREVID_KFS' replace_with = kf_fflas_ratios_material ) )
                  ).
-    io->emit_table( name = 'RATIO_BASE_BEFORE_EXCLUSIONS' rows = base_revenues->model_data max_rows = preview_rows ).
+    io->emit_table( name = 'RATIO_BASE_BEFORE_EXCLUSIONS' rows = base_revenues->model_data ).
     " 2. Exclude Material Groups flagged to skip the FFLAS ratio calculation (parameter FFLASMATGROUPSID).
     "    Before excluding them, keep one flag record per Time/Account/Matconn so DEMREV knows these
     "    materials were skipped and can post their fallback allocation separately (SSNG-3218).
@@ -131,8 +131,8 @@ fflas_ratios = new zcl_bn_dem_model( environment = env ).
 
       delete base_revenues->model_data where mat_group_id in skip_fflas_ratio_mat_group_id.
     endif.
-    io->emit_table( name = 'SKIPPED_MATERIAL_FLAGS' rows = skipped_materials->model_data max_rows = preview_rows ).
-    io->emit_table( name = 'RATIO_BASE_AFTER_EXCLUSIONS' rows = base_revenues->model_data max_rows = preview_rows ).
+    io->emit_table( name = 'SKIPPED_MATERIAL_FLAGS' rows = skipped_materials->model_data ).
+    io->emit_table( name = 'RATIO_BASE_AFTER_EXCLUSIONS' rows = base_revenues->model_data ).
     " No need of Mat. Group anymore.
     base_revenues->group( include_dimensions = abap_false group_by = value #( ( 'MAT_GROUP_ID' ) ) ).
 
@@ -143,7 +143,7 @@ fflas_ratios = new zcl_bn_dem_model( environment = env ).
                (        'CATEGORY' ) (       'TIME' ) ( 'ACCOUNT' ) ( 'MATCONN' ) ( 'FFLAS' ) ( 'MAT_GROUP_ID' ) ) )->replaces( value #(
             ( dimension = 'AUDITTRAIL' replace_with = audit_dnrid_calc )
             ( dimension = 'DEMREVID_KFS' replace_with = kf_fflas_ratios_material ) ) ).
-    io->emit_table( name = 'FFLAS_REVENUE_NUMERATORS' rows = fflas_rev->model_data max_rows = preview_rows ).
+    io->emit_table( name = 'FFLAS_REVENUE_NUMERATORS' rows = fflas_rev->model_data ).
     " 4. For each base revenue record with a non-zero amount, compute the ratio of every matching
     "    FFLAS revenue record to the base amount, and keep a running remainder (non_fflas_rev).
     loop at base_revenues->model_data into data(_base_rev)
@@ -168,7 +168,7 @@ fflas_ratios = new zcl_bn_dem_model( environment = env ).
       endif.
     endloop.
 
-    io->emit_table( name = 'RATIOS_BEFORE_ROUNDING' rows = fflas_ratios->model_data max_rows = preview_rows ).
+    io->emit_table( name = 'RATIOS_BEFORE_ROUNDING' rows = fflas_ratios->model_data ).
     " 6. Rounding correction: due to floating-point precision in get_ratio / division,
     "    the sum of ratios for a given Time/Account/Matconn may not be exactly 1.
     "    For each combination where the total differs from 1, the discrepancy is added
@@ -194,12 +194,12 @@ fflas_ratios = new zcl_bn_dem_model( environment = env ).
     " 7. Add the skipped-material flags (step 2) after the rounding correction, so they are not
     "    mixed into the ratio balancing above.
     fflas_ratios->append( skipped_materials ).
-    io->emit_table( name = 'RATIOS_AND_FLAGS' rows = fflas_ratios->model_data max_rows = preview_rows ).
+    io->emit_table( name = 'RATIOS_AND_FLAGS' rows = fflas_ratios->model_data ).
 new_data->append( fflas_ratios ).
 ENDDO.
 IF new_data IS BOUND.
 io->check_rows( lines( new_data->model_data ) ).
 io->publish_dataset( name = 'NEW_DATA' rows = new_data->model_data ).
-io->emit_table( name = 'NEW_DATA' rows = new_data->model_data max_rows = preview_rows ).
+io->emit_table( name = 'NEW_DATA' rows = new_data->model_data ).
 ENDIF.
 io->check_budget( ).
