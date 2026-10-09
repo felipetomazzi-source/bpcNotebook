@@ -24,9 +24,12 @@ BPC environment. LIST checks model access as well as document ownership.
 Production restrictions remain in force. PREVIEW and IMPORT require edit access.
 
 The provider performs **no COMMIT, ROLLBACK, execution, transport recording or
-handler rebinding**. Its caller must roll back the entire LUW on any import or
-subsequent synchronization failure. BPC Git must commit only after its own sync
-records and every intended import succeed. PREVIEW writes no documents; it does
+handler rebinding**. The atomic unit is one complete notebook bundle together
+with its BPC Git synchronization records. Its caller must roll back that entire
+LUW on any import or subsequent synchronization failure, and commit only after
+all files in that notebook and its synchronization records succeed. Multi-selection
+restore may commit each notebook independently and report success or failure per
+notebook; it does not promise rollback of notebooks already committed. PREVIEW writes no documents; it does
 metadata and native syntax checks. IMPORT repeats these checks; preview is never
 an authorization token. Native `SYNTAX-CHECK` avoids generated subpool exhaustion
 when preview and import are called in the same internal session.
