@@ -44,6 +44,9 @@ CLASS zcl_bn_context DEFINITION PUBLIC FINAL CREATE PUBLIC.
     METHODS compare_results IMPORTING name TYPE string original TYPE ANY TABLE notebook TYPE ANY TABLE
       preview_rows TYPE i DEFAULT 100 RETURNING VALUE(summary) TYPE ty_comparison RAISING zcx_bn.
     METHODS enable_fixtures IMPORTING fixtures TYPE tt_fixtures RAISING zcx_bn.
+    METHODS fixture_copy IMPORTING cell_id TYPE string
+      RETURNING VALUE(result) TYPE REF TO zcl_bn_context RAISING zcx_bn.
+    METHODS include_fixture_outputs IMPORTING context TYPE REF TO zcl_bn_context prefix TYPE string RAISING zcx_bn.
     METHODS fixture_read IMPORTING environment TYPE string model TYPE string filters TYPE zcl_bn_bpc=>tt_filters
       max_rows TYPE i RETURNING VALUE(result) TYPE REF TO data RAISING zcx_bn.
     METHODS record_read IMPORTING diagnostic TYPE ty_read RAISING zcx_bn.
@@ -552,6 +555,53 @@ CLASS zcl_bn_context IMPLEMENTATION.
     ENDLOOP.
     mt_fixtures = copies. fixture_mode = abap_true.
     message( 'FIXTURE MODE: in-memory inputs only; no live model reads or allocation result publication' ).
+  ENDMETHOD.
+  METHOD fixture_copy.
+    IF fixture_mode <> abap_true OR mv_logic_call = abap_true OR cell_id IS INITIAL.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MODE' detail = 'Copy requires an enabled fixture context and cell name'.
+    ENDIF.
+    result = NEW zcl_bn_context( inputs = mt_inputs bindings = VALUE #( ) dependencies = VALUE #( )
+      cell_id = cell_id environment = CONV #( environment ) model = CONV #( model ) run_id = mv_run_id
+      scope = mt_scope logic_parameters = mt_logic_parameters ).
+    result->mv_started = mv_started.
+    result->enable_fixtures( mt_fixtures ).
+  ENDMETHOD.
+  METHOD include_fixture_outputs.
+    IF fixture_mode <> abap_true OR context IS NOT BOUND OR prefix IS INITIAL OR
+       context->fixture_mode <> abap_true OR context->environment <> environment OR context->model <> model.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MODE' detail = 'Matching fixture contexts and a diagnostic prefix required'.
+    ENDIF.
+    IF zcl_bn_types=>json( context->mt_inputs ) <> zcl_bn_types=>json( mt_inputs ) OR
+       lines( tables ) + lines( context->tables ) > 200 OR lines( reads ) + lines( context->reads ) > 50.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'RESOURCE_BUDGET' detail = 'Fixture output snapshot mismatch or diagnostic budget exceeded'.
+    ENDIF.
+    DATA preview_values TYPE i.
+    LOOP AT tables INTO DATA(existing_table).
+      preview_values = preview_values + existing_table-row_count * lines( existing_table-schema ).
+    ENDLOOP.
+    LOOP AT context->tables INTO DATA(table).
+      preview_values = preview_values + table-row_count * lines( table-schema ).
+      IF preview_values > 1000000.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'RESOURCE_BUDGET' detail = 'Combined fixture previews exceed the display budget'.
+      ENDIF.
+      table-name = prefix && '/' && table-name.
+      IF line_exists( tables[ name = table-name ] ).
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'TABLE_NAME' detail = 'Fixture diagnostic names must be unique'.
+      ENDIF.
+    ENDLOOP.
+    LOOP AT context->tables INTO table.
+      table-name = prefix && '/' && table-name. APPEND table TO tables.
+    ENDLOOP.
+    LOOP AT context->reads INTO DATA(read).
+      read-id = prefix && '/' && read-id. APPEND read TO reads.
+    ENDLOOP.
+    LOOP AT context->messages INTO DATA(message).
+      message-cell_id = mv_cell_id. message-text = prefix && ': ' && message-text. APPEND message TO messages.
+    ENDLOOP.
+    LOOP AT context->checkpoints INTO DATA(step).
+      step-name = prefix && '/' && step-name. APPEND step TO checkpoints.
+    ENDLOOP.
+    check_budget( ).
   ENDMETHOD.
   METHOD fixture_read.
     IF fixture_mode <> abap_true.
