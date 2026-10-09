@@ -133,7 +133,7 @@ data(rsp_billing_with_split)  =
 
     " Visible mapping precedence, expanded here rather than called in an engine.
 data(mat_remapping_e1) = input_data->copy( value #(
-        ( dimension = 'DEMREVID_KFS' low = mat_remapping_e1 ) ) )->sort( value #(
+        ( dimension = 'DEMREVID_KFS' low = mat_remapping ) ) )->sort( value #(
             ( 'TIME' ) ( 'ACCOUNT' ) ( 'MATCONN' ) ) )->model_data.
 
     data(reg_fflas_service_e1) = input_data->copy( value #(

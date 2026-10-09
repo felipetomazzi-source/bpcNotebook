@@ -36,7 +36,10 @@ function enrichment(target, suffix) {
  for (const m of source.matchAll(/(?:data|field-symbol)\((<?[\w]+>?)\)/gi)) {
    const name = m[1]; renames.set(name.toLowerCase(), name.startsWith('<') ? '<' + name.slice(1,-1).slice(0,23) + '_' + suffix + '>' : name.slice(0,24) + '_' + suffix);
  }
- return '" Visible mapping precedence, expanded here rather than called in an engine.\n' + replaceNames(source, renames);
+ // The original initializer resolves MAT_REMAPPING to the key-figure constant;
+ // its local table of the same name becomes visible only after declaration.
+ const expanded = replaceNames(source, renames).replace(new RegExp('low = mat_remapping_' + suffix, 'g'), 'low = mat_remapping');
+ return '" Visible mapping precedence, expanded here rather than called in an engine.\n' + expanded;
 }
 for (let index = 0; index < stageRows.length; index++) {
  const [, stage, , method] = stageRows[index];

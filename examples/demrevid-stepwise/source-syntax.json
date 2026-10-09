@@ -1,0 +1,90 @@
+{
+  "kind": "read-only substituted artifact syntax check",
+  "artifactApiVerified": false,
+  "cells": [
+    {
+      "id": "step_01",
+      "diagnostics": []
+    },
+    {
+      "id": "step_02",
+      "diagnostics": []
+    },
+    {
+      "id": "step_03",
+      "diagnostics": []
+    },
+    {
+      "id": "step_04",
+      "diagnostics": []
+    },
+    {
+      "id": "step_05",
+      "diagnostics": []
+    },
+    {
+      "id": "step_06",
+      "diagnostics": []
+    },
+    {
+      "id": "step_07",
+      "diagnostics": []
+    },
+    {
+      "id": "step_08",
+      "diagnostics": []
+    },
+    {
+      "id": "step_09",
+      "diagnostics": []
+    },
+    {
+      "id": "step_10",
+      "diagnostics": []
+    },
+    {
+      "id": "step_11",
+      "diagnostics": []
+    },
+    {
+      "id": "step_12",
+      "diagnostics": []
+    },
+    {
+      "id": "step_13",
+      "diagnostics": []
+    },
+    {
+      "id": "step_14",
+      "diagnostics": []
+    },
+    {
+      "id": "step_15",
+      "diagnostics": []
+    },
+    {
+      "id": "step_16",
+      "diagnostics": []
+    },
+    {
+      "id": "step_17",
+      "diagnostics": []
+    },
+    {
+      "id": "step_18",
+      "diagnostics": []
+    },
+    {
+      "id": "step_19",
+      "diagnostics": []
+    },
+    {
+      "id": "step_20",
+      "diagnostics": []
+    },
+    {
+      "id": "reconcile",
+      "diagnostics": []
+    }
+  ]
+}
