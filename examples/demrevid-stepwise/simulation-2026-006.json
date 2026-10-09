@@ -1,0 +1,406 @@
+{
+  "at": "2026-10-09T10:33:30.816Z",
+  "notebookId": "E82AEA36D1571FD1B0F434ABC4D096B7",
+  "revision": 5,
+  "runId": "E82AEA36D1571FD1B0F993A567E71B9F",
+  "state": "succeeded",
+  "error": {
+    "code": "",
+    "message": ""
+  },
+  "messages": [
+    {
+      "cellId": "reconcile",
+      "severity": "Information",
+      "text": "Preview only: complete replacement and delta retained; no financial posting."
+    }
+  ],
+  "results": [
+    {
+      "cellId": "step_01",
+      "runId": "E82AEA36D1571FD1B0F993A567E71B9F",
+      "revision": 1,
+      "rowCount": 92215,
+      "durationMs": 11546,
+      "checksum": "B4428D406FA67D6EE01AD46D8040DD68DEABED9B9601E25781973B44129113DC",
+      "createdAt": "2026-10-09T10:31:52,7344740Z"
+    },
+    {
+      "cellId": "step_02",
+      "runId": "E82AEA36D1571FD1B0F993A567E71B9F",
+      "revision": 1,
+      "rowCount": 2960,
+      "durationMs": 3425,
+      "checksum": "507F5E67D78DC30DB3B1CCFA62335FDEFE0F7E38F11D90341FE8C4F2633576EB",
+      "createdAt": "2026-10-09T10:31:56,8679640Z"
+    },
+    {
+      "cellId": "step_03",
+      "runId": "E82AEA36D1571FD1B0F993A567E71B9F",
+      "revision": 1,
+      "rowCount": 983,
+      "durationMs": 800,
+      "checksum": "E98CE6027F35E33C13048F0DD6F60F6BB9B21B648073E46B6841E6431DFC3231",
+      "createdAt": "2026-10-09T10:31:57,9865430Z"
+    },
+    {
+      "cellId": "step_04",
+      "runId": "E82AEA36D1571FD1B0F993A567E71B9F",
+      "revision": 1,
+      "rowCount": 2463,
+      "durationMs": 4235,
+      "checksum": "33B1A03732C8F8030C26D7382F99B9602425F093DAFE5B6FADB9611589D31675",
+      "createdAt": "2026-10-09T10:32:02,4460020Z"
+    },
+    {
+      "cellId": "step_05",
+      "runId": "E82AEA36D1571FD1B0F993A567E71B9F",
+      "revision": 1,
+      "rowCount": 6793,
+      "durationMs": 3420,
+      "checksum": "555A23E2174EB3F6FB60F64CA19D4AA65480D38D403DECC219B0A2E1D7EF4A2C",
+      "createdAt": "2026-10-09T10:32:06,2876730Z"
+    },
+    {
+      "cellId": "step_06",
+      "runId": "E82AEA36D1571FD1B0F993A567E71B9F",
+      "revision": 1,
+      "rowCount": 5649,
+      "durationMs": 4488,
+      "checksum": "22EA0C61989D05C63F75ECC0FB14321C628476AC9D04C45AA182F2C49AE8DB8B",
+      "createdAt": "2026-10-09T10:32:11,4785220Z"
+    },
+    {
+      "cellId": "step_07",
+      "runId": "E82AEA36D1571FD1B0F993A567E71B9F",
+      "revision": 1,
+      "rowCount": 6842,
+      "durationMs": 2598,
+      "checksum": "A96D839E1E7229AD271B7EAEE17A0AC90D828D7705245729720D8E9BF30B72DF",
+      "createdAt": "2026-10-09T10:32:14,8137200Z"
+    },
+    {
+      "cellId": "step_08",
+      "runId": "E82AEA36D1571FD1B0F993A567E71B9F",
+      "revision": 1,
+      "rowCount": 8096,
+      "durationMs": 2753,
+      "checksum": "129EE98CE1C8B6BF923836B6F77505C789F7BF64CF53B4268B612F8586599B7C",
+      "createdAt": "2026-10-09T10:32:18,3616430Z"
+    },
+    {
+      "cellId": "step_09",
+      "runId": "E82AEA36D1571FD1B0F993A567E71B9F",
+      "revision": 1,
+      "rowCount": 9855,
+      "durationMs": 3444,
+      "checksum": "ED16C9F4682DD509AFC0F9EEFE6D67CB10A061B3FBF9033CA10CEBD3F812D7C5",
+      "createdAt": "2026-10-09T10:32:22,7253430Z"
+    },
+    {
+      "cellId": "step_10",
+      "runId": "E82AEA36D1571FD1B0F993A567E71B9F",
+      "revision": 1,
+      "rowCount": 11717,
+      "durationMs": 2277,
+      "checksum": "D0A58070D0A1EAF7E9A2685B6DC7F18A93B6276B11D96E54265E6924A463C310",
+      "createdAt": "2026-10-09T10:32:26,0220300Z"
+    },
+    {
+      "cellId": "step_11",
+      "runId": "E82AEA36D1571FD1B0F993A567E71B9F",
+      "revision": 1,
+      "rowCount": 12093,
+      "durationMs": 2323,
+      "checksum": "08BFC9530F80F1C2868CA1E38A96EA1D128E4920B65B7679318145F858298CF2",
+      "createdAt": "2026-10-09T10:32:29,2532590Z"
+    },
+    {
+      "cellId": "step_12",
+      "runId": "E82AEA36D1571FD1B0F993A567E71B9F",
+      "revision": 1,
+      "rowCount": 13076,
+      "durationMs": 6220,
+      "checksum": "5904CF6FB8FDDF0D037435DBCB39B3FA1369311BC2CAE144F3110105ED46D17D",
+      "createdAt": "2026-10-09T10:32:36,4216300Z"
+    },
+    {
+      "cellId": "step_13",
+      "runId": "E82AEA36D1571FD1B0F993A567E71B9F",
+      "revision": 1,
+      "rowCount": 18174,
+      "durationMs": 4653,
+      "checksum": "68B8491DFE7DA14D456D2F3325015F2E32B8EA84903F27AE6ED5BF2B37A57B87",
+      "createdAt": "2026-10-09T10:32:42,0271120Z"
+    },
+    {
+      "cellId": "step_14",
+      "runId": "E82AEA36D1571FD1B0F993A567E71B9F",
+      "revision": 1,
+      "rowCount": 15851,
+      "durationMs": 3441,
+      "checksum": "8D450A3BDC3B1A1D060FD356BB94880419719587A69BDF5ACC3E512FFFF0A153",
+      "createdAt": "2026-10-09T10:32:46,3927370Z"
+    },
+    {
+      "cellId": "step_15",
+      "runId": "E82AEA36D1571FD1B0F993A567E71B9F",
+      "revision": 1,
+      "rowCount": 16713,
+      "durationMs": 3918,
+      "checksum": "624E5B3103D0E98ABF3E7AF0FFD6E8A4A532BE356280B10375AE66353381A124",
+      "createdAt": "2026-10-09T10:32:51,2465640Z"
+    },
+    {
+      "cellId": "step_16",
+      "runId": "E82AEA36D1571FD1B0F993A567E71B9F",
+      "revision": 1,
+      "rowCount": 17080,
+      "durationMs": 6055,
+      "checksum": "D23D5ACF590B6B8129DE79970E70DDF87DA6B588484DC6089D7DF017E657D634",
+      "createdAt": "2026-10-09T10:32:58,2964350Z"
+    },
+    {
+      "cellId": "step_17",
+      "runId": "E82AEA36D1571FD1B0F993A567E71B9F",
+      "revision": 1,
+      "rowCount": 18353,
+      "durationMs": 3396,
+      "checksum": "B3F93DA7DFDB489888777FF930C003F09780958204CE8C3FCEC658C53845FD76",
+      "createdAt": "2026-10-09T10:33:02,6263320Z"
+    },
+    {
+      "cellId": "step_18",
+      "runId": "E82AEA36D1571FD1B0F993A567E71B9F",
+      "revision": 1,
+      "rowCount": 20701,
+      "durationMs": 4924,
+      "checksum": "8B895CDEE82ABD1E8A4C0F7A6FDD0A453A5C1D61FE9F2610D93B5FB7B49E81AF",
+      "createdAt": "2026-10-09T10:33:09,3245780Z"
+    },
+    {
+      "cellId": "step_19",
+      "runId": "E82AEA36D1571FD1B0F993A567E71B9F",
+      "revision": 1,
+      "rowCount": 20203,
+      "durationMs": 4620,
+      "checksum": "18B834046317C2BA79963A8012BF7109F0DCE46117E75D0213C343EA268AAE34",
+      "createdAt": "2026-10-09T10:33:15,2184840Z"
+    },
+    {
+      "cellId": "step_20",
+      "runId": "E82AEA36D1571FD1B0F993A567E71B9F",
+      "revision": 1,
+      "rowCount": 21376,
+      "durationMs": 7720,
+      "checksum": "28515A433664EB5A1719F0E2D17874C41A27C94194F85A33FDDECE147284DFBD",
+      "createdAt": "2026-10-09T10:33:23,9547020Z"
+    },
+    {
+      "cellId": "reconcile",
+      "runId": "E82AEA36D1571FD1B0F993A567E71B9F",
+      "revision": 1,
+      "rowCount": 22995,
+      "durationMs": 3596,
+      "checksum": "D703DD502102191084DE22ED3E629A69931BCFC0CFAF6215FC4AF83DD1E36BC8",
+      "createdAt": "2026-10-09T10:33:28,5767150Z"
+    }
+  ],
+  "financialPosting": false,
+  "customerEquivalent": false,
+  "initialAttempt": {
+    "revision": 4,
+    "runId": "E82AEA36D1571FD1B0F98D88D06B5B97",
+    "state": "failed",
+    "code": "DATASET_BUDGET",
+    "defaultBudgetBytes": 67108864
+  },
+  "datasetBudgetBytes": 268435456,
+  "csv": {
+    "file": "DEMREVID (7).csv",
+    "rows": 64894,
+    "nonzero": 44110,
+    "zero": 20784
+  },
+  "tables": {
+    "step_01": [
+      {
+        "name": "READ_1/SUMMARY",
+        "rowCount": 1,
+        "totalCount": 1,
+        "truncated": false,
+        "elapsedUs": 0
+      },
+      {
+        "name": "READ_1/FILTERS_AND_PERIODS",
+        "rowCount": 9,
+        "totalCount": 9,
+        "truncated": false,
+        "elapsedUs": 0
+      },
+      {
+        "name": "DATASET/COMPLETE_SOURCE_DATA",
+        "rowCount": 100,
+        "totalCount": 44110,
+        "truncated": true,
+        "elapsedUs": 0
+      },
+      {
+        "name": "DATASET/INPUT_DATA",
+        "rowCount": 100,
+        "totalCount": 24790,
+        "truncated": true,
+        "elapsedUs": 0
+      },
+      {
+        "name": "DATASET/OUTPUT_DATA",
+        "rowCount": 100,
+        "totalCount": 19320,
+        "truncated": true,
+        "elapsedUs": 0
+      },
+      {
+        "name": "DATASET/NEW_DATA",
+        "rowCount": 0,
+        "totalCount": 0,
+        "truncated": false,
+        "elapsedUs": 0
+      },
+      {
+        "name": "DATASET/SAP_REVENUES",
+        "rowCount": 100,
+        "totalCount": 1480,
+        "truncated": true,
+        "elapsedUs": 0
+      },
+      {
+        "name": "DATASET/CONN_REG_SPLIT",
+        "rowCount": 100,
+        "totalCount": 155,
+        "truncated": true,
+        "elapsedUs": 0
+      },
+      {
+        "name": "DATASET/L1_L2_MAPPING",
+        "rowCount": 69,
+        "totalCount": 69,
+        "truncated": false,
+        "elapsedUs": 0
+      },
+      {
+        "name": "DATASET/MAT_GROUP_MAPPING",
+        "rowCount": 100,
+        "totalCount": 510,
+        "truncated": true,
+        "elapsedUs": 0
+      },
+      {
+        "name": "DATASET/RSP_LOCATION_MATERIAL_RATIO",
+        "rowCount": 100,
+        "totalCount": 1021,
+        "truncated": true,
+        "elapsedUs": 0
+      },
+      {
+        "name": "DATASET/RSP_LOCATION_GL_RATIO",
+        "rowCount": 100,
+        "totalCount": 136,
+        "truncated": true,
+        "elapsedUs": 0
+      },
+      {
+        "name": "DATASET/CAL_LOCATION_GL_RATIO",
+        "rowCount": 98,
+        "totalCount": 98,
+        "truncated": false,
+        "elapsedUs": 0
+      },
+      {
+        "name": "DATASET/CAL_LOCATION_CONN_SEG_RATIO",
+        "rowCount": 22,
+        "totalCount": 22,
+        "truncated": false,
+        "elapsedUs": 0
+      },
+      {
+        "name": "DATASET/RSP_SUPPLIER_MATERIAL_RATIO",
+        "rowCount": 100,
+        "totalCount": 304,
+        "truncated": true,
+        "elapsedUs": 0
+      },
+      {
+        "name": "DATASET/RSP_SUPPLIER_GL_RATIO",
+        "rowCount": 97,
+        "totalCount": 97,
+        "truncated": false,
+        "elapsedUs": 0
+      },
+      {
+        "name": "DATASET/CAL_SUPPLIER_GL_RATIO",
+        "rowCount": 82,
+        "totalCount": 82,
+        "truncated": false,
+        "elapsedUs": 0
+      },
+      {
+        "name": "DATASET/CAL_SUPPLIER_CONN_SEG_RATIO",
+        "rowCount": 21,
+        "totalCount": 21,
+        "truncated": false,
+        "elapsedUs": 0
+      },
+      {
+        "name": "CONTROL_TOTALS",
+        "rowCount": 1480,
+        "totalCount": 1480,
+        "truncated": false,
+        "elapsedUs": 0
+      }
+    ],
+    "reconcile": [
+      {
+        "name": "DATASET/FINAL_REPLACEMENT",
+        "rowCount": 100,
+        "totalCount": 20482,
+        "truncated": true,
+        "elapsedUs": 0
+      },
+      {
+        "name": "FINAL_REPLACEMENT",
+        "rowCount": 5000,
+        "totalCount": 20482,
+        "truncated": true,
+        "elapsedUs": 0
+      },
+      {
+        "name": "DATASET/FINAL_DELTA",
+        "rowCount": 100,
+        "totalCount": 2513,
+        "truncated": true,
+        "elapsedUs": 0
+      },
+      {
+        "name": "FINAL_DELTA",
+        "rowCount": 2513,
+        "totalCount": 2513,
+        "truncated": false,
+        "elapsedUs": 0
+      }
+    ]
+  },
+  "readSummary": [
+    {
+      "environment": "CH_PLANNING",
+      "model": "DEMREVID",
+      "scope": "reference",
+      "source": "live SAP",
+      "security": "SAP_AUTH_ON; QUERY_BADI_OFF",
+      "state": "succeeded",
+      "row_count": "44110",
+      "packages": "46",
+      "max_rows": "1000000",
+      "error_code": ""
+    }
+  ]
+}
