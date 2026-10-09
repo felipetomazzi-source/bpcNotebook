@@ -1,9 +1,9 @@
 {
-  "at": "2026-10-08T23:23:04.257Z",
+  "at": "2026-10-09T00:18:26.164Z",
   "repoId": "000000000008",
   "package": "ZBPC_NOTEBOOK",
   "transport": "NPLK900126",
-  "commit": "1df40abdafcdff313f078b4001234da6308c5cfc",
+  "commit": "027ecba5da90f5477ef403779df32da0845eb30c",
   "method": "Full online abapGit repository serialization (refresh + get_files_local) after network pull, compared byte-for-byte with committed Git blobs",
   "files": [
     {
@@ -14,8 +14,8 @@
     },
     {
       "filename": "src/zcl_bn_bpc.clas.abap",
-      "bytes": 40709,
-      "sapSha256": "f76186db7f556add23a613c1c661ca6fc1dd5c45300fbc5ae06f33f231277dfa",
+      "bytes": 45188,
+      "sapSha256": "6c081546c4039dbf3bbd9bbb1b99b736dfbfa1e81615f8c0d9959e29b6ba4524",
       "equal": true
     },
     {
@@ -50,8 +50,8 @@
     },
     {
       "filename": "src/zcl_bn_context.clas.abap",
-      "bytes": 19286,
-      "sapSha256": "5ffec35bdbb4ba484336606a0bb9a072ac31fb771a2331bb0c21db1caeb176dc",
+      "bytes": 34982,
+      "sapSha256": "b0ce0c1ac72acc9f5d159f3b751e92a63fb630e2f2ca830abd6d9d7944b14027",
       "equal": true
     },
     {
@@ -68,8 +68,8 @@
     },
     {
       "filename": "src/zcl_bn_dem_alloc.clas.testclasses.abap",
-      "bytes": 31025,
-      "sapSha256": "a563bfdf7f28fae26a744e299622785ab3cfc4f1e35e2d19c90c3eba54af1771",
+      "bytes": 128352,
+      "sapSha256": "33dbac41ed1822f4367dc0b98f0ad2be4289b507ae57fcb4e8ce4a3d94815251",
       "equal": true
     },
     {
@@ -146,8 +146,8 @@
     },
     {
       "filename": "src/zcl_bn_service.clas.abap",
-      "bytes": 54805,
-      "sapSha256": "d8a9772daf59dc69a19b38beba7ef4eeb9ac09111475d228aa9bd728c74b51b2",
+      "bytes": 56447,
+      "sapSha256": "63b3f5c0c751f53d89541149d6d04c203fd46f973a932f58368d94aa18d3dd90",
       "equal": true
     },
     {
@@ -188,8 +188,8 @@
     },
     {
       "filename": "src/zcl_bn_types.clas.abap",
-      "bytes": 6175,
-      "sapSha256": "106f7a60d90caff4207f6b3c7926368a85aada0dd32fcde3f6f12c203c1dfdf0",
+      "bytes": 6204,
+      "sapSha256": "8209b5e7035fdcec0e0180549d10047d4f1e7411ed33dc324443e6a7e6d3a1a0",
       "equal": true
     },
     {
