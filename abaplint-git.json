@@ -1,0 +1,9 @@
+{
+  "global": { "files": "/src/**/*.*" },
+  "dependencies": [{ "url": "https://github.com/abaplint/deps", "folder": "/deps", "files": "/src/**/*.*" }],
+  "syntax": { "version": { "release": "v750", "language": "Normal" }, "errorNamespace": "^(Z|LCL|LTCL|TY_|TT_)" },
+  "rules": {
+    "parser_error": { "exclude": ["^(?!.*zcl_bn_(git|service|compiler)\\.).*$"] },
+    "check_syntax": { "exclude": ["^(?!.*zcl_bn_(git|service|compiler)\\.).*$"] }
+  }
+}

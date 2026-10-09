@@ -41,3 +41,9 @@ See [the Script Logic contract](notebook-script-logic.md) for BAdI parameters, c
 ## Notebook deletion
 
 POST /delete-notebook takes notebookId and expectedRevision. It hides the notebook while retaining immutable history and outputs. Ownership, revision and active-run guards apply. Deleted notebooks reject new reads, saves, submissions and bound handler invocations. GET /versions and historical GET /run and GET /output remain available to the owner. Cell deletion uses PUT /notebook with the remaining valid dependency graph. See [notebook management](notebook-management.md).
+# Notebook Git provider (prepared, not deployed)
+
+The optional ABAP entry point `ZCL_BN_GIT=>DISPATCH` exposes contract v1
+CAPABILITIES/LIST/PREVIEW/IMPORT to BPC Git. See [the provider contract](notebook-versioning.md)
+for deterministic bundle files, ABAP-only imports, CAS, authorization and caller-owned
+transactions. These operations do not add Notebook HTTP routes or execute calculations.

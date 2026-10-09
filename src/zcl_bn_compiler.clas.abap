@@ -1,9 +1,31 @@
 CLASS zcl_bn_compiler DEFINITION PUBLIC FINAL CREATE PUBLIC.
   PUBLIC SECTION.
+    CLASS-METHODS validate IMPORTING source TYPE string
+      RETURNING VALUE(diagnostics) TYPE zcl_bn_types=>tt_diagnostics.
     CLASS-METHODS compile IMPORTING source TYPE string
       EXPORTING pool TYPE progname diagnostics TYPE zcl_bn_types=>tt_diagnostics.
 ENDCLASS.
 CLASS zcl_bn_compiler IMPLEMENTATION.
+  METHOD validate.
+    DATA code TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
+    DATA body TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
+    DATA message TYPE string.
+    DATA line TYPE i.
+    DATA word TYPE string.
+    DATA directory TYPE trdir.
+    directory-name = 'ZBN_GIT_CHECK'. directory-subc = 'S'.
+    directory-fixpt = abap_true. directory-uccheck = abap_true.
+    APPEND 'PROGRAM SUBPOOL.' TO code.
+    APPEND 'FORM execute USING io TYPE REF TO zcl_bn_context RAISING zcx_bn.' TO code.
+    SPLIT source AT cl_abap_char_utilities=>newline INTO TABLE body.
+    APPEND LINES OF body TO code.
+    APPEND 'ENDFORM.' TO code.
+    SYNTAX-CHECK FOR code MESSAGE message LINE line WORD word DIRECTORY ENTRY directory.
+    IF sy-subrc <> 0.
+      APPEND VALUE #( severity = 'error' line = nmax( val1 = 1 val2 = line - 2 )
+        generated_line = line word = word message = message ) TO diagnostics.
+    ENDIF.
+  ENDMETHOD.
   METHOD compile.
     DATA code TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
     DATA body TYPE STANDARD TABLE OF string WITH DEFAULT KEY.

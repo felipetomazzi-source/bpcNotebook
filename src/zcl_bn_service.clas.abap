@@ -18,6 +18,10 @@ CLASS zcl_bn_service DEFINITION PUBLIC FINAL CREATE PUBLIC.
     CLASS-METHODS authorize IMPORTING activity TYPE char2 RAISING zcx_bn.
     CLASS-METHODS get_notebook IMPORTING id TYPE string
       RETURNING VALUE(notebook) TYPE zcl_bn_types=>ty_notebook RAISING zcx_bn.
+    " Git import shares normal save validation and immutable source persistence.
+    CLASS-METHODS validate_definition CHANGING notebook TYPE zcl_bn_types=>ty_notebook RAISING zcx_bn.
+    CLASS-METHODS import_definition IMPORTING notebook TYPE zcl_bn_types=>ty_notebook expected TYPE i
+      RETURNING VALUE(result) TYPE zcl_bn_types=>ty_notebook RAISING zcx_bn.
     CLASS-METHODS get_run IMPORTING id TYPE string
       RETURNING VALUE(run) TYPE zcl_bn_types=>ty_run RAISING zcx_bn.
     CLASS-METHODS dispatch IMPORTING path TYPE string method TYPE string body TYPE string
@@ -106,6 +110,23 @@ CLASS zcl_bn_service IMPLEMENTATION.
     ENDIF.
     DATA(payload) = zcl_bn_store=>read( kind = 'N' id = id ).
     /ui2/cl_json=>deserialize( EXPORTING json = payload pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = notebook ).
+  ENDMETHOD.
+  METHOD validate_definition.
+    authorize( '02' ).
+    check_definition( notebook ).
+    zcl_bn_bpc=>resolve( CHANGING notebook = notebook ).
+    LOOP AT notebook-cells INTO DATA(cell).
+      DATA(diagnostics) = zcl_bn_compiler=>validate( cell-source ).
+      IF diagnostics IS NOT INITIAL.
+        DATA(detail) = diagnostics[ 1 ]-message.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'GIT_SYNTAX' detail = |Cell { cell-id }: { detail }|.
+      ENDIF.
+    ENDLOOP.
+  ENDMETHOD.
+  METHOD import_definition.
+    DATA(definition) = notebook.
+    result = save( VALUE #( id = definition-id expected_revision = expected title = definition-title
+      environment = definition-environment model = definition-model cells = definition-cells inputs = definition-inputs ) ).
   ENDMETHOD.
   METHOD get_run.
     DATA(payload) = zcl_bn_store=>read( kind = 'R' id = id ).

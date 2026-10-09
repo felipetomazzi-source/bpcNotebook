@@ -515,3 +515,10 @@ This guide is the current entry point. Older file counts, responsive-table parag
 - [Installation](INSTALL.md)
 - [README and hub example](../README.md)
 - Native/browser/round-trip evidence under docs/evidence.
+# Notebook Git integration on the test branch
+
+See [Notebook versioning](notebook-versioning.md) for the optional provider.
+Contract v1 imports complete ABAP definitions as new immutable revisions. Script
+export/diff is available, but Script import is explicitly blocked pending a SAP
+transpiler. Runtime values, outputs and handler bindings are not promoted through
+Git. The test branch has not been deployed or checked through SAP serialization.

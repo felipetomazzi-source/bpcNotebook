@@ -24,6 +24,7 @@ The local service **simulates two demo cell bodies**. The SAP DEV version is dep
 - [Notebook deletion and loading performance](docs/notebook-management.md)
 - [API contract](docs/API.md)
 - [Native result comparison, read diagnostics and controlled fixtures](docs/native-validation.md)
+- [Notebook Git provider and validated revision imports (test branch)](docs/notebook-versioning.md)
 - [Native activation/test evidence](docs/evidence/native-check.json)
 - [Encoding conventions and SAP round-trip evidence](docs/evidence/ENCODING.md)
 
