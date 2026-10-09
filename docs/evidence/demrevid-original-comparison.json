@@ -1,0 +1,112 @@
+{
+  "at": "2026-10-08T23:55:02.406Z",
+  "system": "NPL",
+  "client": "001",
+  "branch": "codex/demrevid-original-comparison",
+  "sourceCommit": "9c7d458",
+  "classes": [
+    {
+      "name": "LTC_DELTA_CONTRACT",
+      "alerts": [],
+      "methods": [
+        {
+          "name": "REPLACEMENT_CHANGES",
+          "alerts": []
+        }
+      ]
+    },
+    {
+      "name": "LTC_FFLAS_RATIO_TEST",
+      "alerts": [],
+      "methods": [
+        {
+          "name": "MATERIAL_GROUP_SKIP_LIST",
+          "alerts": []
+        },
+        {
+          "name": "NO_MATCHING_FFLAS_BREAKDOWN",
+          "alerts": []
+        },
+        {
+          "name": "RATIO_AND_REMAINDER_SUM_TO_1",
+          "alerts": []
+        },
+        {
+          "name": "ROUNDING_EXISTING_ROW",
+          "alerts": []
+        },
+        {
+          "name": "SINGLE_FFLAS_COVERS_ALL_REV",
+          "alerts": []
+        },
+        {
+          "name": "SKIPPED_MATERIAL_IS_FLAGGED",
+          "alerts": []
+        },
+        {
+          "name": "SUPPRESSION_DISABLED",
+          "alerts": []
+        },
+        {
+          "name": "ZERO_REVENUE_ROW_IS_IGNORED",
+          "alerts": []
+        }
+      ]
+    },
+    {
+      "name": "LTC_ORIGINAL_COMPARE",
+      "alerts": [],
+      "methods": [
+        {
+          "name": "DELTA_ORIGINAL_VS_PORT",
+          "alerts": []
+        },
+        {
+          "name": "FFLAS_ORIGINAL_VS_PORT",
+          "alerts": []
+        }
+      ]
+    },
+    {
+      "name": "LTC_PQ_FFLAS_RATIO_TEST",
+      "alerts": [],
+      "methods": [
+        {
+          "name": "ALL_ID_RATIO_IS_0",
+          "alerts": []
+        },
+        {
+          "name": "ALL_PQ_RATIO_IS_1",
+          "alerts": []
+        },
+        {
+          "name": "MIXED_PQ_AND_ID_RATIO",
+          "alerts": []
+        }
+      ]
+    },
+    {
+      "name": "LTC_PQ_ID_FFLAS_REVENUE_TEST",
+      "alerts": [],
+      "methods": [
+        {
+          "name": "FULL_ALLOC_NO_NON_FFLAS",
+          "alerts": []
+        },
+        {
+          "name": "LFC_TAGGED_AS_ID_ONLY",
+          "alerts": []
+        },
+        {
+          "name": "PARTIAL_ALLOC_NON_FFLAS",
+          "alerts": []
+        },
+        {
+          "name": "RONZ_UFB_TAGGED_AS_PQ",
+          "alerts": []
+        }
+      ]
+    }
+  ],
+  "businessEquivalent": false
+}

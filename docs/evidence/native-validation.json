@@ -1,0 +1,23 @@
+{
+  "checkedAt": "2026-10-09T00:17:06.372Z",
+  "passed": true,
+  "businessFactsWritten": false,
+  "fullAllocationEquivalenceEstablished": false,
+  "nativeChecks": [
+    "all dimensions and exact native SIGNEDDATA; added/missing/changed; bounded differences",
+    "comparison examines complete 6001-row native inputs beyond the preview limit",
+    "duplicate keys and mismatched schemas fail; empty results retain full difference schema",
+    "Actual / 2025.007 complete read count=0; frozen filters and security recorded",
+    "complete fixtures are privately frozen; identical inputs and returned copy isolation; no live query",
+    "fixture posting, live fallback, partial inputs, mixed reads and Script Logic injection rejected",
+    "native comparison accepts identical complete multidimensional fixture result tables"
+  ],
+  "backgroundChecks": [
+    "Background comparison persists full counts and bounded exact differences",
+    "Background fixture diagnostics persist source, authorization mode and complete count",
+    "Fixture runs reject historical retry and ordinary dependency reuse",
+    "Multi-cell fixture execution fails before publishing a completed fixture dataset"
+  ],
+  "temporaryNotebooksRemoved": true,
+  "roundTripFiles": 56
+}
