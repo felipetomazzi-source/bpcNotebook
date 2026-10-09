@@ -82,6 +82,34 @@ CLASS zcl_bn_types IMPLEMENTATION.
   METHOD json.
     result = /ui2/cl_json=>serialize( data = data
       pretty_name = /ui2/cl_json=>pretty_mode-camel_case ).
+    " Some installed /UI2 serializers leave raw CR/control characters inside strings.
+    " Preserve existing JSON/hash bytes unless a raw control requires repair.
+    FIND REGEX '[\x00-\x1F]' IN result.
+    IF sy-subrc = 0.
+      TYPES: BEGIN OF ty_control, character TYPE string, escaped TYPE string, END OF ty_control.
+      DATA controls TYPE HASHED TABLE OF ty_control WITH UNIQUE KEY character.
+      DO 32 TIMES.
+        DATA hex TYPE x LENGTH 2.
+        hex = sy-index - 1.
+        INSERT VALUE #( character = cl_abap_conv_in_ce=>uccp( hex ) escaped = '\u' && |{ hex }| ) INTO TABLE controls.
+      ENDDO.
+      DATA pieces TYPE STANDARD TABLE OF string WITH EMPTY KEY.
+      DATA in_string TYPE abap_bool.
+      DATA escaped TYPE abap_bool.
+      DO strlen( result ) TIMES.
+        DATA(offset) = sy-index - 1.
+        DATA(character) = substring( val = result off = offset len = 1 ).
+        IF character = '"' AND escaped = abap_false. in_string = xsdbool( in_string = abap_false ). ENDIF.
+        READ TABLE controls INTO DATA(control) WITH TABLE KEY character = character.
+        APPEND COND #( WHEN in_string = abap_true AND sy-subrc = 0 THEN control-escaped ELSE character ) TO pieces.
+        IF character = '\' AND in_string = abap_true AND escaped = abap_false.
+          escaped = abap_true.
+        ELSE.
+          escaped = abap_false.
+        ENDIF.
+      ENDDO.
+      result = concat_lines_of( table = pieces ).
+    ENDIF.
     " Preserve checksums for snapshots saved before reference/checkpoint fields existed.
     REPLACE ALL OCCURRENCES OF ',"purpose":"","lookbackFrom":"","lookbackSteps":0,"fiscalLinks":[]' IN result WITH ''.
     REPLACE ALL OCCURRENCES OF ',"checkpoints":[]' IN result WITH ''.
