@@ -1,0 +1,18 @@
+{
+  "at": "2026-10-09T05:44:48.748Z",
+  "notebookId": "E82AEA36D1571FD1B0F434ABC4D096B7",
+  "setup": true,
+  "calculationTabs": 21,
+  "stage": "step_02",
+  "explanation": true,
+  "checks": true,
+  "prerequisites": true,
+  "advancedABAPCollapsed": true,
+  "runCellFromUI": {
+    "runId": "E82AEA36D1571FD1B0F48AEBD92276FE",
+    "state": "succeeded",
+    "financialRows": 0
+  },
+  "screenshot": "stage-ui.jpg",
+  "customerEquivalent": false
+}
