@@ -4,7 +4,8 @@ const fs=require('node:fs');
 const path=require('node:path');
 process.argv.push('--codex-env');
 const client=require('../../tools/adt-config.cjs')();
-const definition=require('./definition.draft.json');
+const validation=process.argv.includes('--validation');
+const definition=require(validation?'./validation.draft.json':'./definition.draft.json');
 (async()=>{
  await client.login();
  const evidence={kind:'read-only substituted artifact syntax check',artifactApiVerified:false,cells:[]};
@@ -18,6 +19,6 @@ const definition=require('./definition.draft.json');
    evidence.cells.push({id:cell.id,diagnostics});
    console.log(JSON.stringify({id:cell.id,errors:diagnostics.filter(d=>d.severity==='E').slice(0,4),count:diagnostics.length}));
   }
-  fs.writeFileSync(path.join(__dirname,'source-syntax.json'),JSON.stringify(evidence,null,2)+'\n');
+  fs.writeFileSync(path.join(__dirname,validation?'validation-source-syntax.json':'source-syntax.json'),JSON.stringify(evidence,null,2)+'\n');
  } finally {await client.logout();}
 })().catch(e=>{console.error(e.message);process.exitCode=1});

@@ -10,13 +10,14 @@ const constants = [...original.matchAll(/^    constants .*?\.\s*$/gim)].map(m =>
 const enums = original.match(/    types: begin of enum rev_split_method,[\s\S]*?end of enum rev_split_type\./i)[0];
 const attributes = original.match(/    data:\s*\r?\n[\s\S]*?skip_fflas_ratio_mat_group_id type ujw_t_dimmem_range\./i)[0];
 const models = [...attributes.matchAll(/(\w+)\s+type ref to zcl_bn_dem_model/g)].map(m => m[1]);
+models.push('complete_source_data');
 const stageRows = [...body('get_steps').matchAll(/id = '([^']+)' label = '([^']+)' method_name = '([^']+)'/g)];
 const rules = require('./rules.json');
 const produced = new Map();
 const lineage = [];
 const cells = [];
 const outputs = {
- INITIALISE: ['input_data','output_data','new_data','sap_revenues','conn_reg_split','l1_l2_mapping','mat_group_mapping','rsp_location_material_ratio','rsp_location_gl_ratio','cal_location_gl_ratio','cal_location_conn_seg_ratio','rsp_supplier_material_ratio','rsp_supplier_gl_ratio','cal_supplier_gl_ratio','cal_supplier_conn_seg_ratio'],
+ INITIALISE: ['complete_source_data','input_data','output_data','new_data','sap_revenues','conn_reg_split','l1_l2_mapping','mat_group_mapping','rsp_location_material_ratio','rsp_location_gl_ratio','cal_location_gl_ratio','cal_location_conn_seg_ratio','rsp_supplier_material_ratio','rsp_supplier_gl_ratio','cal_supplier_gl_ratio','cal_supplier_conn_seg_ratio'],
  ENRICH_REVENUES: ['sap_revenues','new_data'], CONSOLIDATE: ['sap_revenues_consol'],
  LOCATION_ALLOC_METHOD:['new_data'], LOCATION_ALLOC_RATIOS:['rsp_split_ratios','new_data'],
  ALLOC_RSP_BILLED_DATA:['new_data'], REMAINING_RSP_BILLING:['new_data'], RSP_NOT_BILLED_LOCATION:['new_data'],
@@ -41,6 +42,27 @@ function enrichment(target, suffix) {
  const expanded = replaceNames(source, renames).replace(new RegExp('low = mat_remapping_' + suffix, 'g'), 'low = mat_remapping');
  return '" Visible mapping precedence, expanded here rather than called in an engine.\n' + expanded;
 }
+function retainedReads(source) {
+ const pattern = /new zcl_bn_dem_model\(/gi;
+ let match;
+ while ((match = pattern.exec(source))) {
+   let end = pattern.lastIndex, depth = 1;
+   for (; end < source.length && depth; end++) {
+     if (source[end] === "'") { end++; while (end < source.length) { if (source[end] === "'" && source[end+1] === "'") {end+=2;continue;} if (source[end] === "'") break; end++; } }
+     else if (source[end] === '"') { while (end < source.length && source[end] !== '\n') end++; }
+     else if (source[end] === '(') depth++;
+     else if (source[end] === ')') depth--;
+   }
+   if (depth) throw Error('Unclosed model constructor');
+   const args = source.slice(pattern.lastIndex,end-1);
+   const filter = args.match(/filters\s*=([\s\S]*)$/i);
+   if (!filter) continue;
+   const replacement = 'complete_source_data->copy( ' + filter[1].trim() + ' )';
+   source = source.slice(0,match.index) + replacement + source.slice(end);
+   pattern.lastIndex = match.index + replacement.length;
+ }
+ return source;
+}
 for (let index = 0; index < stageRows.length; index++) {
  const [, stage, , method] = stageRows[index];
  const id = 'step_' + String(index + 1).padStart(2, '0');
@@ -48,6 +70,17 @@ for (let index = 0; index < stageRows.length; index++) {
  if (stage === 'ENRICH_REVENUES') calculation = enrichment('sap_revenues','e1') + '\nnew_data->append( sap_revenues ).';
  else if (stage === 'CONSOLIDATE') calculation = "sap_revenues_consol = sap_revenues->copy( )->group( include_dimensions = abap_false group_by = VALUE #( ( 'DEMREVID_KFS' ) ) ).";
  else calculation = body(method);
+ if (stage === 'INITIALISE') {
+   calculation = `DATA(source_adapter) = io->reference_model( ).
+DATA(source_ref) = source_adapter->read_data( max_rows = CONV i( io->input( 'READ_LIMIT' ) ) ).
+FIELD-SYMBOLS <source_facts> TYPE STANDARD TABLE.
+ASSIGN source_ref->* TO <source_facts>.
+complete_source_data = NEW #( environment = io model_data = <source_facts> compressed = abap_false ).
+` + retainedReads(calculation);
+ }
+ if (stage === 'TRANSPOSE_CONNECTIONS') {
+   calculation = retainedReads(calculation);
+ }
  let count = 0;
  calculation = calculation.replace(/assign_new_fields_rev\( (\w+) \)\./gi, (_, target) => enrichment(target, 'e' + (++count)));
  calculation = calculation.replace(/_new_data-signeddata = conv i\( get_rev_split_method\( ratio_type = (location|supplier) _sap_revenue = _new_data \) \)\./gi, (_, kind) => {

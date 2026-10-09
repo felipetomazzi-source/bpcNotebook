@@ -107,9 +107,15 @@ DATA rsp_supplier_gl_ratio TYPE REF TO zcl_bn_dem_model.
 DATA cal_supplier_gl_ratio TYPE REF TO zcl_bn_dem_model.
 DATA cal_supplier_conn_seg_ratio TYPE REF TO zcl_bn_dem_model.
 DATA mat_group_mapping TYPE REF TO zcl_bn_dem_model.
+DATA complete_source_data TYPE REF TO zcl_bn_dem_model.
 
 io->check_budget( ).
 DO 1 TIMES.
+DATA(source_adapter) = io->reference_model( ).
+DATA(source_ref) = source_adapter->read_data( max_rows = CONV i( io->input( 'READ_LIMIT' ) ) ).
+FIELD-SYMBOLS <source_facts> TYPE STANDARD TABLE.
+ASSIGN source_ref->* TO <source_facts>.
+complete_source_data = NEW #( environment = io model_data = <source_facts> compressed = abap_false ).
 param = new #( it_param ).
 
     " Parse the BPC current view and resolve the Category and Time range for this run.
@@ -130,9 +136,7 @@ param = new #( it_param ).
 
     " Base DEMREVID data set (Time/Category filtered), used to derive the INPUT/OUTPUT/NEW views below.
     data(demrevid_data) =
-      new zcl_bn_dem_model(
-        environment = env
-        filters = value #(
+      complete_source_data->copy( value #(
           ( dimension = 'TIME'     in = time )
           ( dimension = 'TIME'     low = 'TIME_NA' )
           ( dimension = 'CATEGORY' low = category )
@@ -219,6 +223,11 @@ param = new #( it_param ).
       endif.
     endloop.
 ENDDO.
+IF complete_source_data IS BOUND.
+io->check_rows( lines( complete_source_data->model_data ) ).
+io->publish_dataset( name = 'COMPLETE_SOURCE_DATA' rows = complete_source_data->model_data ).
+io->emit_table( name = 'COMPLETE_SOURCE_DATA' rows = complete_source_data->model_data ).
+ENDIF.
 IF input_data IS BOUND.
 io->check_rows( lines( input_data->model_data ) ).
 io->publish_dataset( name = 'INPUT_DATA' rows = input_data->model_data ).

@@ -9,6 +9,7 @@
       "method": "initialise",
       "imports": [],
       "exports": [
+        "complete_source_data",
         "input_data",
         "output_data",
         "new_data",
@@ -548,6 +549,9 @@
         },
         {
           "name": "transposed_revenues"
+        },
+        {
+          "name": "complete_source_data"
         }
       ],
       "exports": [

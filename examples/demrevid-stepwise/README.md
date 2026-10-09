@@ -15,6 +15,8 @@ DATA(table_ref) = io->read_dataset( dependency = 'step_01' name = 'REVENUES' ).
 
 The API must preserve native SAP amounts, every dimension, original row order, schema and provenance. A preview never serves as a calculation input. Dependencies use the latest producer of each changed table; unchanged tables retain their original producer. Stage dependencies also include the previous step to enforce the ordered chain. Rerunning a step must invalidate affected downstream results.
 
+The first cell retains complete output/mapping/lookback facts. The connection stage filters those retained facts rather than reading new period amounts later. Filtering an empty retained table must remain empty, never trigger a live query fallback. Metadata helpers still use current authorized metadata; this is not a full historical SAP database snapshot.
+
 `cells[].explanation` and `notebook.explanation` provide plain-text guidance. Each cell must be reachable through the forthcoming tab navigation. Accountants select CATEGORY and output TIME, review separate reference periods and suppression flags, then run each tab and inspect the output. Advanced source remains inspectable/editable. Input selections and source edits require fresh dependent results.
 
 Before publishing the finished notebook:

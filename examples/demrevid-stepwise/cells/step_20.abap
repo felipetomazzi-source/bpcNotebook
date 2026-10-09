@@ -119,6 +119,11 @@ DATA(ref_transposed_revenues) = io->read_dataset( dependency = 'step_18' name = 
 FIELD-SYMBOLS <t_transposed_revenues> TYPE STANDARD TABLE.
 ASSIGN ref_transposed_revenues->* TO <t_transposed_revenues>.
 transposed_revenues = NEW #( environment = io model_data = <t_transposed_revenues> compressed = abap_false ).
+DATA complete_source_data TYPE REF TO zcl_bn_dem_model.
+DATA(ref_complete_source_data) = io->read_dataset( dependency = 'step_01' name = 'COMPLETE_SOURCE_DATA' ).
+FIELD-SYMBOLS <t_complete_source_data> TYPE STANDARD TABLE.
+ASSIGN ref_complete_source_data->* TO <t_complete_source_data>.
+complete_source_data = NEW #( environment = io model_data = <t_complete_source_data> compressed = abap_false ).
 
 io->check_budget( ).
 DO 1 TIMES.
@@ -275,9 +280,7 @@ data(mat_remapping_e1) = input_data->copy( value #(
     sort offset_periods by time descending.
     data(prior_period) = offset_periods[ 1 ]-time.
     " CAL connections for prior period.
-    data(prior_period_conn) = new zcl_bn_dem_model(
-        environment = env
-        filters = value #(
+    data(prior_period_conn) = complete_source_data->copy( value #(
             ( dimension = 'DEMREVID_KFS' low = kf_monthly_cal_conn )
             ( dimension = 'TIME' low = prior_period )
             ( dimension = 'CATEGORY' low = category )
@@ -485,9 +488,7 @@ data(mat_remapping_e2) = input_data->copy( value #(
     delete prior_period_conn->model_data where signeddata is initial.
     sort prior_period_conn->model_data by time fflas matremap mat_group_id lfc_win_supplier.
     " Get prior closing balance.
-    data(prior_closing_bal) = new zcl_bn_dem_model(
-        environment = env
-        filters = value #(
+    data(prior_closing_bal) = complete_source_data->copy( value #(
             ( dimension = 'DEMREVID_KFS' low = kf_conn_closing )
             ( dimension = 'TIME'         low = prior_period )
             ( dimension = 'CATEGORY'     low = category ) ) )->offset_time( offset_by = 1 )->replace(
@@ -530,9 +531,7 @@ data(mat_remapping_e2) = input_data->copy( value #(
         ( dimension       = 'DEMREVID_KFS' low = kf_add_conn_mat_group )
     ) )->sort( value #( ( 'TIME' ) ( 'FFLAS' ) ( 'MAT_GROUP_ID' ) ) ).
 
-    data(add_conn_prior_per) = new zcl_bn_dem_model(
-        environment = env
-        filters = value #(
+    data(add_conn_prior_per) = complete_source_data->copy( value #(
             ( dimension                                 = 'DEMREVID_KFS' low = kf_add_conn_mat_group )
             ( dimension                                 = 'TIME'         low = prior_period )
             ( dimension                                 = 'CATEGORY'     low = category )
