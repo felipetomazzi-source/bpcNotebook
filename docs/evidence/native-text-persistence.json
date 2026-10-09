@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-09T06:08:18.965Z",
+  "runId": "E82AEA36D1571FD1B0F4FA5015337769",
+  "method": "Actual REST save/read/validate/background execution and frozen snapshot",
+  "crlf": true,
+  "tab": true,
+  "unicode": true,
+  "quotes": true,
+  "backslash": true,
+  "literalUnicodeEscape": true,
+  "unsupportedControlRejected": true,
+  "globalSourceUploads": false,
+  "passed": true
+}

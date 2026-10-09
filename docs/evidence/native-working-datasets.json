@@ -1,77 +1,77 @@
 {
-  "at": "2026-10-09T05:14:58.044Z",
-  "notebookId": "E82AEA36D1571FD1B0F40BCC6100D690",
+  "at": "2026-10-09T06:08:19.669Z",
+  "notebookId": "E82AEA36D1571FD1B0F4FA717A7A9769",
   "financialPosting": false,
   "cases": [
     {
       "scope": "all",
-      "runId": "E82AEA36D1571FD1B0F40BCC61017690",
+      "runId": "E82AEA36D1571FD1B0F4FA717A7B3769",
       "results": [
         {
           "cellId": "seed",
-          "runId": "E82AEA36D1571FD1B0F40BCC61017690",
+          "runId": "E82AEA36D1571FD1B0F4FA717A7B3769",
           "revision": 1,
           "rowCount": 12003,
-          "durationMs": 133,
-          "checksum": "EF529C537B83395767470204B0EC6D8F36350A1AC09698AD64C1883502725B23",
-          "createdAt": "2026-10-09T05:14:59,3355040Z"
+          "durationMs": 40,
+          "checksum": "5F113AB184A2A031CBB6C792950B00AD316917931AABCBB15239D4F8C18FFB7C",
+          "createdAt": "2026-10-09T06:08:20,6948320Z"
         },
         {
           "cellId": "mutate",
-          "runId": "E82AEA36D1571FD1B0F40BCC61017690",
+          "runId": "E82AEA36D1571FD1B0F4FA717A7B3769",
           "revision": 1,
           "rowCount": 12003,
-          "durationMs": 47,
-          "checksum": "84CEEBE969F35EEEA974A63B94ECB49FFA6BCFFEC13FD14E00A87DACF17119C7",
-          "createdAt": "2026-10-09T05:14:59,4306710Z"
+          "durationMs": 49,
+          "checksum": "DDEBA2FFDB78B1B838A4BEC107706F64A8D1AE2162AD6ED048AB6EF7683C1EC3",
+          "createdAt": "2026-10-09T06:08:20,7976390Z"
         },
         {
           "cellId": "verify",
-          "runId": "E82AEA36D1571FD1B0F40BCC61017690",
+          "runId": "E82AEA36D1571FD1B0F4FA717A7B3769",
           "revision": 1,
           "rowCount": 12003,
-          "durationMs": 70,
-          "checksum": "2D791527EA1499BA72672F022539BC178CC7A7A1546704E36523D6929399A3EE",
-          "createdAt": "2026-10-09T05:14:59,5575770Z"
+          "durationMs": 65,
+          "checksum": "FC100B42EA81A2ABC584AE36A6E5D38383F39673015CE1CBD77B5C2FFA565B2E",
+          "createdAt": "2026-10-09T06:08:20,9224240Z"
         }
       ]
     },
     {
       "scope": "one",
-      "runId": "E82AEA36D1571FD1B0F40BFA33A19690",
+      "runId": "E82AEA36D1571FD1B0F4FA717A7C5769",
       "results": [
         {
           "cellId": "verify",
-          "runId": "E82AEA36D1571FD1B0F40BFA33A19690",
+          "runId": "E82AEA36D1571FD1B0F4FA717A7C5769",
           "revision": 1,
           "rowCount": 12003,
-          "durationMs": 63,
-          "checksum": "B269A172816B4ABA5778D0F18FABBB3BEA647B9CE1F5CFA37973D72F3D72B318",
-          "createdAt": "2026-10-09T05:15:00,5288030Z"
+          "durationMs": 61,
+          "checksum": "551A7832D7D474C8457A20F4BBC00C75AAF66248500C6734436079D0D6863F23",
+          "createdAt": "2026-10-09T06:08:21,7803980Z"
         }
       ]
     },
     {
       "scope": "through",
-      "runId": "E82AEA36D1571FD1B0F40C17620D5690",
+      "runId": "E82AEA36D1571FD1B0F4FA9A54F11769",
       "results": [
         {
           "cellId": "seed",
-          "runId": "E82AEA36D1571FD1B0F40C17620D5690",
+          "runId": "E82AEA36D1571FD1B0F4FA9A54F11769",
           "revision": 1,
           "rowCount": 12003,
-          "durationMs": 37,
-          "checksum": "CFBE1EC7C454384B3FA7FE4F61F4A533CEB97D81E8EDD4BD5F53B39276FDC9BD",
-          "createdAt": "2026-10-09T05:15:01,1773260Z"
+          "durationMs": 39,
+          "checksum": "9305C0AC3E9A57CA5BFD61793A639B12479A78515832333F33991D62898D81CB",
+          "createdAt": "2026-10-09T06:08:22,4634570Z"
         },
         {
           "cellId": "mutate",
-          "runId": "E82AEA36D1571FD1B0F40C17620D5690",
+          "runId": "E82AEA36D1571FD1B0F4FA9A54F11769",
           "revision": 1,
           "rowCount": 12003,
-          "durationMs": 47,
-          "checksum": "5658BA8BADF669BD4F6C9BA620D54DEBF79F39B2E5DF1C35EDB70358E7AF4348",
-          "createdAt": "2026-10-09T05:15:01,2852380Z"
+          "durationMs": 51,
+          "checksum": "782A336168EFB19330332AD8227A093A35F13D4325EC65A29937AD0F5C6972E8",
+          "createdAt": "2026-10-09T06:08:22,5762510Z"
         }
       ]
     }
