@@ -2,7 +2,7 @@
 
 Saved SAP notebook: **DEMREVID003 - step-by-step allocation**, ID `E82AEA36D1571FD1B0F434ABC4D096B7`, environment **CH_PLANNING**, model **DEMREVID**. The source is on branch `codex/SSNG-3218-fixture-validation`.
 
-One notebook contains 20 ordered calculation tabs and a final reconciliation tab. Business rules are visible in these cells; the operational notebook does not call the original allocation class or the one-cell allocation engine. Each tab explains its rule and the control to inspect. Advanced ABAP is available for technical maintenance. This first version uses installed generic table/dimension/transform helpers; it is not a no-code rule editor.
+One notebook contains 20 ordered calculation tabs and a final reconciliation tab. Business rules are visible in these cells; the operational notebook does not call the original allocation class or the one-cell allocation engine. Each calculation tab names its original method and explains its rule and the control to inspect. Cells declare only the constants, parameters and flags they use. Local variables needed to import a preceding complete dataset remain local to each independently compiled cell. Advanced ABAP is available for technical maintenance. This first version uses installed generic table/dimension/transform helpers; it is not a no-code rule editor.
 
 ## How to test
 

@@ -42,6 +42,16 @@ function replaceNames(text, names) {
  // ABAP literals/comments are preserved; only lexical code identifiers are changed.
  return text.split(/('(?:''|[^'])*'|"[^\r\n]*)/g).map((part, i) => i % 2 ? part : part.replace(/<?[A-Za-z_][A-Za-z_0-9]*>?/g, token => names.get(token.toLowerCase()) || token)).join('');
 }
+function identifiers(text) {
+ const code = text.replace(/'(?:''|[^'])*'|"[^\r\n]*/g, ' ');
+ return new Set([...code.matchAll(/[A-Za-z_][A-Za-z_0-9]*/g)].map(m=>m[0].toLowerCase()));
+}
+function usedDeclarations(declarations, used) {
+ return declarations.split('\n').filter(line=>{
+   const match=line.match(/^(?:constants|types)\s+(\w+)/i);
+   return !match || used.has(match[1].toLowerCase());
+ }).join('\n');
+}
 function enrichment(target, suffix) {
  let source = body('assign_new_fields_rev');
  const renames = new Map([['model_ref', target]]);
@@ -104,7 +114,7 @@ complete_source_data = NEW #( environment = io model_data = <source_facts> compr
  }
  if (stage === 'FFLAS_RATIOS_BY_MATERIAL') calculation = 'DATA fflas_ratios TYPE REF TO zcl_bn_dem_model.\n' + calculation + '\nnew_data->append( fflas_ratios ).';
  calculation = calculation.replace(/capture\( dataset = '([^']+)' model = (\w+) \)\./gi, (_, name, model) => `io->emit_table( name = '${name}' rows = ${model}->model_data ).`);
- const codeOnly = calculation.replace(/'[^']*'|"[^\r\n]*/g,'');
+ const codeOnly = calculation.replace(/'(?:''|[^'])*'|"[^\r\n]*/g,'');
  const referenced = models.filter(name => new RegExp('\\b' + name + '\\b','i').test(codeOnly));
  const deps = new Set(index ? [cells[index-1].id] : []);
  let imports = '';
@@ -137,7 +147,7 @@ ENDLOOP.`);
    exports += `IF ${name} IS BOUND.\nio->check_rows( lines( ${name}->model_data ) ).\nio->publish_dataset( name = '${name.toUpperCase()}' rows = ${name}->model_data ).\nENDIF.\n`;
    produced.set(name,id);
  }
- const explanation = rules[stage].rule + '\n\nCheck: ' + rules[stage].check;
+ const explanation = 'Method: ' + method + '\n\n' + rules[stage].rule + '\n\nCheck: ' + rules[stage].check;
  const controlModel = stage === 'INITIALISE' ? 'sap_revenues' : outputs[stage].includes('new_data') ? 'new_data' : outputs[stage][0];
  const controls = `IF ${controlModel} IS BOUND.
 " Complete control totals: retain key figures/audit trails so unlike measures are not mixed.
@@ -146,7 +156,26 @@ DATA(control_totals) = ${controlModel}->copy( )->group( VALUE #(
 io->emit_table( name = 'CONTROL_TOTALS' rows = control_totals->model_data ).
 ENDIF.
 `;
- const source = `" ${rules[stage].title}\n" Calculation is inline. Full dependencies are independent of display previews.\n${prelude}${imports}\nio->check_budget( ).\nDO 1 TIMES.\n${calculation}\nENDDO.\n${exports}${controls}io->check_budget( ).\n`;
+ // Each method has its own local scope, but it needs only its own declarations.
+ // Complete working tables are handed off through the declared native artifacts.
+ const used = identifiers(calculation + imports + exports + controls);
+ const needsSkip = used.has('skip_fflas_ratio_mat_group_id');
+ const needsParameters = stage === 'INITIALISE' || needsSkip || used.has('param') || used.has('parameters');
+ const parameterStart = prelude.indexOf('DATA(parameters)');
+ const parameterEnd = prelude.indexOf('ENDLOOP.', parameterStart) + 'ENDLOOP.'.length;
+ if (!needsParameters) prelude = prelude.slice(0,parameterStart) + prelude.slice(parameterEnd);
+ else if (!needsSkip) {
+   const skipStart=prelude.indexOf('DATA(skip_fflas_ratio_mat_group_id)');
+   prelude=prelude.slice(0,skipStart)+prelude.slice(parameterEnd);
+ }
+ for (const [name,declaration] of [
+   ['env','DATA(env) = io.'],
+   ['preview_rows',"DATA(preview_rows) = CONV i( io->input( 'PREVIEW_ROWS' ) )."],
+   ['category',"DATA(category) = io->member( 'CATEGORY' )."]
+ ]) if (!used.has(name)) prelude=prelude.replace(declaration,'');
+ prelude=prelude.replace(constants,usedDeclarations(constants,used)).replace(enums,usedDeclarations(enums,used));
+ prelude=prelude.replace(/\n{3,}/g,'\n\n').trim()+'\n';
+ const source = `" Method: ${method}\n" ${rules[stage].title}\n" Complete inputs come from the preceding method cells.\n${prelude}${imports}\nio->check_budget( ).\nDO 1 TIMES.\n${calculation}\nENDDO.\n${exports}${controls}io->check_budget( ).\n`;
  if (/get_rev_split_method\(|assign_new_fields_rev\(|calc_\w+\(|zcl_bn_dem_alloc=>/i.test(source.replace(/"[^\r\n]*/g,''))) throw Error('Hidden calculation call in ' + stage);
  if (source.length > 60000) throw Error('Cell source limit ' + stage);
  cells.push({id,title:String(index+1).padStart(2,'0') + ' · ' + rules[stage].title,explanation,source,dependencies:[...deps]});

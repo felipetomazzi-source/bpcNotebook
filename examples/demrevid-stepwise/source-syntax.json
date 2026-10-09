@@ -19,7 +19,7 @@
       "diagnostics": [
         {
           "uri": "/sap/bc/adt/oo/classes/zcl_bn_compiler/source/main",
-          "line": 281,
+          "line": 206,
           "offset": 23,
           "severity": "W",
           "text": "Redundant conversion for type I. be used in an aggregate function. -"
@@ -31,7 +31,7 @@
       "diagnostics": [
         {
           "uri": "/sap/bc/adt/oo/classes/zcl_bn_compiler/source/main",
-          "line": 134,
+          "line": 58,
           "offset": 26,
           "severity": "W",
           "text": "Redundant conversion for type REV_SPLIT_METHOD. be used in an aggregate function. -"
@@ -67,7 +67,7 @@
       "diagnostics": [
         {
           "uri": "/sap/bc/adt/oo/classes/zcl_bn_compiler/source/main",
-          "line": 263,
+          "line": 188,
           "offset": 23,
           "severity": "W",
           "text": "Redundant conversion for type I. be used in an aggregate function. -"
@@ -79,7 +79,7 @@
       "diagnostics": [
         {
           "uri": "/sap/bc/adt/oo/classes/zcl_bn_compiler/source/main",
-          "line": 134,
+          "line": 58,
           "offset": 26,
           "severity": "W",
           "text": "Redundant conversion for type REV_SPLIT_METHOD. be used in an aggregate function. -"
