@@ -22,6 +22,7 @@ The local service **simulates two demo cell bodies**. The SAP DEV version is dep
 - [Notebook Script and metadata completion](docs/notebook-script.md)
 - [Notebook handlers in BPC Script Logic](docs/notebook-script-logic.md)
 - [Notebook deletion and loading performance](docs/notebook-management.md)
+- Each cell has **Pretty print**: native SAP ABAP formatting or Notebook Script indentation. Formatting edits the draft; **Save version** persists it. ABAP formatting uses the same SAP system's ADT service and requires ADT access.
 - [API contract](docs/API.md)
 - [Native result comparison, read diagnostics and controlled fixtures](docs/native-validation.md)
 - [Native activation/test evidence](docs/evidence/native-check.json)

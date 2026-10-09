@@ -1,0 +1,77 @@
+{
+  "at": "2026-10-09T01:27:09.932Z",
+  "method": "Isolated $TMP BSP imported and reserialized with native abapGit WAPA deserializer/serializer; only the test application name is remapped for comparison",
+  "application": "ZBN_PRETTY_TEST",
+  "liveApplicationModified": false,
+  "nativeFormatter": {
+    "input": "DATA total TYPE decfloat34. IF total = 0. total = 1. io->message( 'É · literal. text' ). ENDIF.\n\n",
+    "formatted": "DATA total TYPE decfloat34.\nIF total = 0.\n  total = 1.\n  io->message( 'É · literal. text' ).\nENDIF.\n\n"
+  },
+  "files": [
+    {
+      "filename": "zbpc_notebook.wapa.component.js",
+      "gitBlob": "8e52ac7c256d1113d1e801941a829a69737076eb",
+      "sapSha256": "50f21761993ab37880e553f2c9a49e7257fc203d3ec27241dbe084e02b950b81",
+      "bytes": 430647,
+      "equal": true
+    },
+    {
+      "filename": "zbpc_notebook.wapa.componentpreload.js",
+      "gitBlob": "fdfe880a972cd8010430d8bcde881822ad1c11dd",
+      "sapSha256": "520c4cc90d4c8858152cb4a6ed1cfada0362f717b0dc9b7c97571e1a6a5230a6",
+      "bytes": 767,
+      "equal": true
+    },
+    {
+      "filename": "zbpc_notebook.wapa.css_-style.css",
+      "gitBlob": "700d23c20ead7217f7855ecbef76a191b4b2c16f",
+      "sapSha256": "091d87726741b1aab1f0d6d9747ae99c2059142b30223b6e1fdc8e13aa6bd063",
+      "bytes": 4095,
+      "equal": true
+    },
+    {
+      "filename": "zbpc_notebook.wapa.index.html",
+      "gitBlob": "4ef96848fe307654a216cb66d4886d2248a591b3",
+      "sapSha256": "9ef7c6d75bd39831989aec532fde68b474025cb5938db7ff20c336644c0c6484",
+      "bytes": 6399,
+      "equal": true
+    },
+    {
+      "filename": "zbpc_notebook.wapa.manifest.json",
+      "gitBlob": "a846a4414461f03505d796e32312cfa43e7331af",
+      "sapSha256": "33bcb590ffc0abcbda4b545cbb1513eee5a37d65c51a1e4979b16a3a388897af",
+      "bytes": 4095,
+      "equal": true
+    },
+    {
+      "filename": "zbpc_notebook.wapa.model_-api.js",
+      "gitBlob": "a2560b81f081146916cc714ec4b44eff883a96ac",
+      "sapSha256": "62a601410662837dafd6093d57b0adb44ab3c87da14bff656000dc8c854e6a88",
+      "bytes": 34047,
+      "equal": true
+    },
+    {
+      "filename": "zbpc_notebook.wapa.model_-script.js",
+      "gitBlob": "966602da8556b3621d36ae80ecbfacfd79724233",
+      "sapSha256": "4abdac513293a011e37d05e7381fd17aafd1bf70c7d6ae586e00dd75179dbdae",
+      "bytes": 82687,
+      "equal": true
+    },
+    {
+      "filename": "zbpc_notebook.wapa.ui5repositorypathmapping.xml",
+      "gitBlob": "c56e11d3286dae4da1417aa3206904548f9fc9b0",
+      "sapSha256": "6153be14f1db97411a127c21614f4b0fdaa605625ab884b91635164f1f105d3a",
+      "bytes": 3327,
+      "equal": true
+    },
+    {
+      "filename": "zbpc_notebook.wapa.xml",
+      "gitBlob": "623119ba941375d9462f6f570b43fb2d3d257223",
+      "sapSha256": "c2144520f2f1d04d2c06149409a574f31ff232dd48a74d3aaf939bced71962ce",
+      "bytes": 2987,
+      "equal": true
+    }
+  ],
+  "passed": true,
+  "missing": []
+}

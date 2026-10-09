@@ -304,5 +304,19 @@ sap.ui.define([], function () {
       var match = s.match(/^\* @bn-line (\d+)$/); if (match) { line = Number(match[1]); }
     }); return line;
   }
-  return {compile:compile,unpack:unpack,sourceLine:sourceLine,tokens:tokens};
+  function prettyPrint(text) {
+    compile(text); // Reject incomplete syntax before changing the author text.
+    var depth = 0, eol = text.indexOf("\r\n") >= 0 ? "\r\n" : "\n";
+    var formatted = text.split(/\r\n|\n/).map(function (line, index) {
+      if (!line.trim()) { return line; }
+      var parts = tokens(line,index+1), command = parts[0] && parts[0].value;
+      if (command === "end" || command === "else") { depth--; }
+      var result = "  ".repeat(depth) + line.replace(/^[ \t]*/,"");
+      if (command === "for" || command === "if" || command === "else") { depth++; }
+      return result;
+    }).join(eol);
+    compile(formatted);
+    return formatted;
+  }
+  return {compile:compile,unpack:unpack,sourceLine:sourceLine,tokens:tokens,prettyPrint:prettyPrint};
 });
