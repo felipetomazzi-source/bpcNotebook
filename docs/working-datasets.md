@@ -52,4 +52,4 @@ Definitions optionally provide plain text `notebook.explanation` (8,000 characte
 
 ## Verification status
 
-`docs/evidence/dataset-codec-roundtrip.json` records the isolated SAP abapGit import/serialization comparison and five native codec tests. It excludes two execution-context tests until coordinated deployment. Full platform deployment, native context/service integration and allocation equivalence are separate checks; codec success alone does not establish them.
+`docs/evidence/dataset-codec-roundtrip.json` records the isolated SAP abapGit import/serialization comparison and five native codec tests. The integrated deployment subsequently passed all seven tests (`docs/evidence/native-dataset-tests.json`) and full background-worker all/one/through tests (`docs/evidence/native-working-datasets.json`), including 12,003 native rows, private copies, empty schemas, bounded previews and stale/missing predecessor rejection. `docs/evidence/bpc-deployment.json` records exact online abapGit serialization of all 61 deployed repository files. Allocation equivalence remains a separate calculation-agent check.

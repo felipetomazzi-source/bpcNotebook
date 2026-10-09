@@ -1,6 +1,6 @@
 # BPC Notebook: definitive calculation conversion guide
 
-Updated: 9 October 2026. Includes hub embedding, model search, hierarchy pickers, grid previews and native validation tools. This guide consolidates the current implementation; earlier milestone documents can describe superseded limitations.
+Updated: 9 October 2026. Includes complete native working datasets, accountant-facing stages, hub embedding, model search, hierarchy pickers, grid previews and native validation tools. This guide consolidates the current implementation; earlier milestone documents can describe superseded limitations.
 
 ## 1. Instructions for the conversion agent
 
@@ -10,7 +10,7 @@ Inventory the original calculation before editing: environment/model, inputs, di
 
 Use generic BPC adapters for reads. Use ABAP cells or installed custom ABAP services for complex transformations. Use Notebook Script only within its documented grammar. Never use a bounded preview as complete calculation state or as implicit writeback.
 
-**Recommended initial architecture:** one ABAP cell calls one service, retaining complete multidimensional working tables in SAP memory. Separate cells work when handoff fits the implemented key/amount dependency contract. Full multidimensional dataset handoff between cells is not implemented.
+**Calculation architecture:** use visible ABAP stages with `publish_dataset` / `read_dataset` for complete native multidimensional handoff. A single ABAP cell/service is also supported. Read complete output/reference facts in the initial stage and retain them; later stages use those artifacts. See [working datasets and execution boundaries](working-datasets.md).
 
 ## 2. Capability map
 
@@ -19,6 +19,7 @@ Use generic BPC adapters for reads. Use ABAP cells or installed custom ABAP serv
 | Authoring | ABAP and Script cells, typed inputs, immutable saved versions/history |
 | Execution | Native SAP compilation/background jobs and frozen run snapshots |
 | Dependencies | Earlier-cell dependencies, freshness checks, all/through/one execution |
+| Working state | Complete typed/dynamic flat SAP tables, immutable publication and private consuming copies |
 | Selections | Authorized dimension members/ranges, actual hierarchy expansion |
 | Metadata | Generic members, descriptions, properties, fields and hierarchies |
 | Model reads | Security-enabled, validated, dynamically typed flat SAP tables |
@@ -30,11 +31,11 @@ Use generic BPC adapters for reads. Use ABAP cells or installed custom ABAP serv
 | Test fixtures | Explicit native schema/member-validated private input tables; no live fallback or allocation publication |
 | Script Logic | Revision-pinned NOTEBOOK BAdI handlers; preview/allocation modes |
 | Allocation result | Explicit native result validated before returning CT_DATA |
-| UI | Standard UI5 tree selectors, grid previews, Horizon themes, model grouping/search |
+| UI | Standard UI5 Setup/stage tabs, explanations, collapsed Advanced ABAP, boolean switches, tree selectors, grid previews, Horizon themes, model grouping/search |
 | Management | Notebook/cell deletion, saved history, Save/Discard/Cancel navigation |
 | Hub | Shared UI5 core/theme, environment setting and guarded Back event |
 
-Not implemented: general full-table cell handoff, automatic recursive-driver scheduling, a circular-dependency solver, installed derived-property providers, a Process Flow screen, analytical OData binding, cross-user published handlers, or production release approval.
+Not implemented: automatic recursive-driver scheduling, a circular-dependency solver, installed derived-property providers, a Process Flow screen, analytical OData binding, cross-user published handlers, or production release approval.
 
 For validation, use `io->compare_results( name = ... original = ... notebook = ... preview_rows = 100 )` on complete native results. Adapter reads expose `READ_n/SUMMARY` and `READ_n/FILTERS_AND_PERIODS` automatically. Reviewed test services can install native tables with `io->enable_fixtures( )` before reading. See [the full native validation contract and examples](native-validation.md), including duplicate-key rules, input-reader injection into both implementations, retry restrictions and verification evidence.
 
@@ -218,6 +219,20 @@ io->emit( rows ).
 
 TT_ROWS contains only `key TYPE string`, `amount TYPE decfloat34`. `read()` returns a private value copy of a declared scalar dependency; `emit()` publishes up to 10,000 scalar rows. `emit_table()` does not create a full working dataset and cannot be retrieved as one through `read()`.
 
+For full multidimensional state, publish a complete flat table and retrieve a private native copy:
+
+```abap
+" Producer, retaining native dimensions and SIGNEDDATA.
+io->publish_dataset( name = 'REVENUES' rows = revenues ).
+" Consumer declares the producing cell as a dependency.
+DATA(native_rows) = io->read_dataset( dependency = 'prepare' name = 'REVENUES' ).
+FIELD-SYMBOLS <revenues> TYPE STANDARD TABLE.
+ASSIGN native_rows->* TO <revenues>.
+```
+
+Native types, exact numeric values, iteration order and empty schemas are preserved. Returned tables are standard tables with an empty key; original sorted/hashed keys are not retained. Full tables remain on SAP; automatic DATASET/<name> previews are bounded. Ownership, member authorization, source/output revision, checksums, dependencies, budgets and 30-day retention are checked. Published artifacts commit only at successful cell boundaries; mid-cell failures are not resumable. `/datasets` returns full counts and schemas without binary contents. See [the full dataset contract](working-datasets.md).
+
+
 | Execution scope | Boundary |
 |---|---|
 | all | All cells in notebook order |
@@ -380,9 +395,9 @@ Preserve the original calculation's semantics; never subtract old amounts again 
 
 Runs freeze notebook/source revision, scalar values, selected/resolved IDs, fiscal links and dependency bindings. They do not archive every live external fact input or freeze called custom class implementations.
 
-- Ordinary retry preserves historical source/inputs/bindings, rechecks access and can be stale relative to current edits. New adapter reads are not guaranteed to reproduce historical facts.
+- Scalar-only ordinary retry preserves historical source/inputs/bindings and rechecks access. BPC model-bound historical retries fail DATA_SNAPSHOT; Run all establishes a new fact snapshot. A stage consuming a prior-run artifact cannot issue fresh generic model fact reads.
 - Historical reference-read retry fails DATA_SNAPSHOT (409). Run all establishes a new source/data invocation instead of silently mixing historical context and fresh references.
-- Fixture validation runs also reject historical retry with DATA_SNAPSHOT. Reinstall identical complete fixtures in a new run; fixture datasets cannot satisfy ordinary later-cell prerequisites.
+- Fixture validation runs also reject historical retry with DATA_SNAPSHOT. Reinstall identical complete fixtures in a new run; fixture datasets cannot satisfy ordinary-run prerequisites. Within the same validation run, each stage may retrieve retained fixture artifacts and must enable them before model reads; live fallback is blocked. Fixture Run cell reusing another run is rejected.
 - Script Logic runs must be reinvoked by their caller.
 - Run states: queued, running, succeeded, failed, cancelled. No automatic business-calculation retry.
 - Cancellation/timeouts are cooperative at cell/stage/read boundaries and explicit check_budget calls. Arbitrary ABAP is not safely preempted by this API; SAP job controls may be required.
@@ -394,7 +409,8 @@ Runs freeze notebook/source revision, scalar values, selected/resolved IDs, fisc
 | WORK_ROWS | Integer 1–1,000,000; enforced where service calls check_rows |
 | READ_LIMIT | Allocation/service convention; pass to read_data explicitly |
 | read_data max_rows | 1–1,000,000; default 100,000; complete result or error |
-| PREVIEW_ROWS | 1–5,000; service explicitly prepares/slices preview |
+| PREVIEW_ROWS | 1–5,000; native artifact previews default to 200 |
+| DATASET_BYTES | Per-cell aggregate native input/output byte budget; default 64 MiB, maximum 256 MiB; complete data or explicit error |
 | Scalar emit | Maximum 10,000 rows |
 | Named previews | 200 tables; 5,000 rows/table; one million aggregate values |
 | HTTP output page | 1–100 rows; UI requests 50 |
@@ -410,7 +426,7 @@ zcl_bn_dem_alloc=>execute(
   io = io stop_after = io->input( 'STOP_AFTER' ) ).
 ```
 
-Declare STOP_AFTER as a string. All 20 stages run inside one cell. Inputs also include CATEGORY, TIME, REFERENCE_TIME, READ_LIMIT, WORK_ROWS, PREVIEW_ROWS, RUN_SECONDS, FFLASMATGROUPS, FFLASMATGROUPSID, DEBUG and HSNS_REALLOC_LOCATIONS. See [the exact allocation contract](demrevid-allocation.md).
+The original single-cell example declares STOP_AFTER as a string and runs its 20 internal stages inside one cell. The newer `examples/demrevid-stepwise` definitions expose separate ABAP stages and native artifacts; their allocation equivalence is checked separately by the conversion agent. Inputs also include CATEGORY, TIME, REFERENCE_TIME, READ_LIMIT, WORK_ROWS, PREVIEW_ROWS, RUN_SECONDS, FFLASMATGROUPS, FFLASMATGROUPSID, DEBUG and HSNS_REALLOC_LOCATIONS. See [the exact allocation contract](demrevid-allocation.md).
 
 STOP_AFTER executes from INITIALISE through a chosen boundary with fresh state and returns no final BPC result. There is no run-only-internal-stage, old-state injection or mid-stage resume.
 
@@ -428,6 +444,7 @@ Use the service rather than direct database manipulation. Native base /sap/bc/zb
 |---|---|
 | POST /metadata | kind, environment, model, dimension, hierarchy, search, offset |
 | GET /notebooks | Owned summaries, including environment/model |
+| GET /datasets | runId, cellId, revision=1; completed native output/input manifests, no full binary data |
 | POST /notebooks | title, environment, model, inputs, cells; creates revision 1 |
 | GET /notebook?id=... | Definition/freshness |
 | PUT /notebook | id, title, environment, model, inputs, cells, expectedRevision |
@@ -499,7 +516,7 @@ On the connected implementation, DEV access requires exact-user enablement and s
 
 ### Suggested prompt for another agent
 
-> Read docs/AGENT-REFERENCE.md before changing the calculation. Inspect the original calculation and its called dependencies, then port it to BPC Notebook using the implemented generic adapters. Preserve authorization, output/reference scope, actual fiscal-period metadata, numeric types, precedence, rounding and BPC delta semantics. Prefer one ABAP service/cell for full multidimensional state. Do not use bounded previews as working data, invent unsupported Script syntax, or assume providers/full-table handoff exist. Deliver the notebook definition, required ABAP class changes, handler contract if posting is needed, representative original-versus-port comparison evidence and explicit remaining gaps. Keep DEV/production controls and the caller transaction intact.
+> Read docs/AGENT-REFERENCE.md before changing the calculation. Inspect the original calculation and its called dependencies, then port it to BPC Notebook using the implemented generic adapters. Preserve authorization, output/reference scope, actual fiscal-period metadata, numeric types, precedence, rounding and BPC delta semantics. Use visible ABAP stages and complete native dataset handoff, or one ABAP service/cell when appropriate. Do not use bounded previews as working data, invent unsupported Script syntax, or assume derived-property providers exist. Use only the documented complete native dataset API for full-table handoff. Deliver the notebook definition, required ABAP class changes, handler contract if posting is needed, representative original-versus-port comparison evidence and explicit remaining gaps. Keep DEV/production controls and the caller transaction intact.
 
 ## 22. Detailed references
 
