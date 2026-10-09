@@ -84,7 +84,7 @@ CLASS zcl_bn_types IMPLEMENTATION.
       pretty_name = /ui2/cl_json=>pretty_mode-camel_case ).
     " Some installed /UI2 serializers leave raw CR/control characters inside strings.
     " Preserve existing JSON/hash bytes unless a raw control requires repair.
-    FIND REGEX '[\x00-\x1F]' IN result.
+    FIND REGEX '[[:cntrl:]]' IN result.
     IF sy-subrc = 0.
       TYPES: BEGIN OF ty_control, character TYPE string, escaped TYPE string, END OF ty_control.
       DATA controls TYPE HASHED TABLE OF ty_control WITH UNIQUE KEY character.

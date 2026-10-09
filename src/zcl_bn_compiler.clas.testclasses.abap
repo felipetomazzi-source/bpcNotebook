@@ -29,7 +29,7 @@ CLASS ltcl_compiler IMPLEMENTATION.
       input-message = input-message && cl_abap_conv_in_ce=>uccp( hex ).
     ENDDO.
     DATA(json) = zcl_bn_types=>json( input ).
-    FIND REGEX '[\x00-\x1F]' IN json.
+    FIND REGEX '[[:cntrl:]]' IN json.
     cl_abap_unit_assert=>assert_equals( act = sy-subrc exp = 4 ).
     DATA output TYPE ty_text.
     /ui2/cl_json=>deserialize( EXPORTING json = json CHANGING data = output ).
