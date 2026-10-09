@@ -39,7 +39,9 @@ CLASS zcl_bn_bpc DEFINITION PUBLIC CREATE PUBLIC.
     CLASS-METHODS validate_result IMPORTING environment TYPE string model TYPE string rows TYPE ANY TABLE
       output_view TYPE ujk_t_cv RAISING zcx_bn.
     METHODS constructor IMPORTING environment TYPE string model TYPE string dimension TYPE string DEFAULT ''
-      inputs TYPE zcl_bn_types=>tt_inputs OPTIONAL scope TYPE ujk_t_cv OPTIONAL RAISING zcx_bn.
+      inputs TYPE zcl_bn_types=>tt_inputs OPTIONAL scope TYPE ujk_t_cv OPTIONAL
+      diagnostics TYPE REF TO zcl_bn_context OPTIONAL read_scope TYPE string DEFAULT 'calculation' RAISING zcx_bn.
+    CLASS-METHODS validate_fixture IMPORTING environment TYPE string model TYPE string rows TYPE ANY TABLE RAISING zcx_bn.
     METHODS member_data IMPORTING ids TYPE zcl_bn_types=>tt_ids OPTIONAL
       RETURNING VALUE(result) TYPE REF TO data RAISING zcx_bn.
     METHODS properties RETURNING VALUE(result) TYPE tt_fields RAISING zcx_bn.
@@ -62,6 +64,8 @@ CLASS zcl_bn_bpc DEFINITION PUBLIC CREATE PUBLIC.
     METHODS virtual_property IMPORTING member TYPE string name TYPE string
       RETURNING VALUE(result) TYPE string RAISING zcx_bn.
   PRIVATE SECTION.
+    DATA mo_diagnostics TYPE REF TO zcl_bn_context.
+    DATA mv_read_scope TYPE string.
     DATA mt_inputs TYPE zcl_bn_types=>tt_inputs.
     DATA mt_scope TYPE ujk_t_cv.
     CLASS-METHODS validate_filters IMPORTING environment TYPE string model TYPE string filters TYPE tt_filters RAISING zcx_bn.
@@ -79,6 +83,7 @@ CLASS zcl_bn_bpc DEFINITION PUBLIC CREATE PUBLIC.
 ENDCLASS.
 CLASS zcl_bn_bpc IMPLEMENTATION.
   METHOD constructor.
+    mo_diagnostics = diagnostics. mv_read_scope = read_scope.
     IF environment IS INITIAL OR model IS INITIAL.
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_CONTEXT' detail = 'An authorized environment and model are required'.
     ENDIF.
@@ -330,7 +335,53 @@ CLASS zcl_bn_bpc IMPLEMENTATION.
       ENDLOOP.
     ENDLOOP.
   ENDMETHOD.
+  METHOD validate_fixture.
+    DATA(adapter) = NEW zcl_bn_bpc( environment = environment model = model ).
+    DATA(dimensions) = adapter->dimensions( ).
+    DATA(expected) = model_table( dimensions ).
+    DATA supplied TYPE REF TO cl_abap_structdescr.
+    DATA native TYPE REF TO cl_abap_structdescr.
+    TRY.
+        supplied ?= CAST cl_abap_tabledescr( cl_abap_typedescr=>describe_by_data( rows ) )->get_table_line_type( ).
+        native ?= CAST cl_abap_tabledescr( cl_abap_typedescr=>describe_by_data_ref( expected ) )->get_table_line_type( ).
+      CATCH cx_root.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_SCHEMA' detail = 'Fixture must have the full native flat model schema'.
+    ENDTRY.
+    DATA supplied_fields TYPE cl_abap_structdescr=>component_table.
+    supplied_fields = supplied->get_components( ).
+    DATA native_fields TYPE cl_abap_structdescr=>component_table.
+    native_fields = native->get_components( ).
+    IF lines( supplied_fields ) <> lines( native_fields ).
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_SCHEMA' detail = 'Fixture must include exactly all dimensions and SIGNEDDATA'.
+    ENDIF.
+    LOOP AT native_fields INTO DATA(field).
+      READ TABLE supplied_fields INTO DATA(actual) WITH KEY name = field-name.
+      IF sy-subrc <> 0 OR actual-type->kind <> cl_abap_typedescr=>kind_elem.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_SCHEMA' detail = 'Missing or nested fixture field'.
+      ENDIF.
+      IF actual-type->type_kind <> field-type->type_kind OR actual-type->length <> field-type->length
+         OR actual-type->decimals <> field-type->decimals.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_SCHEMA' detail = 'Fixture field types must match the native model exactly'.
+      ENDIF.
+    ENDLOOP.
+    DATA filters TYPE tt_filters.
+    LOOP AT dimensions INTO DATA(dimension).
+      DATA filter TYPE ty_filter. CLEAR filter. filter-dimension = dimension-id.
+      FIELD-SYMBOLS <value> TYPE any.
+      LOOP AT rows ASSIGNING FIELD-SYMBOL(<row>).
+        ASSIGN COMPONENT dimension-id OF STRUCTURE <row> TO <value>.
+        APPEND CONV string( <value> ) TO filter-members.
+      ENDLOOP.
+      SORT filter-members. DELETE ADJACENT DUPLICATES FROM filter-members.
+      IF filter-members IS NOT INITIAL. APPEND filter TO filters. ENDIF.
+    ENDLOOP.
+    validate_filters( environment = environment model = model filters = filters ).
+  ENDMETHOD.
   METHOD read_data.
+    DATA(diagnostic) = VALUE zcl_bn_context=>ty_read( environment = mv_environment model = mv_model
+      scope = mv_read_scope source = 'live SAP' security = 'SAP_AUTH_ON; QUERY_BADI_OFF'
+      state = 'failed' row_count = -1 max_rows = max_rows ).
+    TRY.
     IF mv_dimension IS NOT INITIAL OR max_rows < 1 OR max_rows > 1000000.
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_READ' detail = 'Use a model adapter; row limit must be 1 to 1000000'.
     ENDIF.
@@ -348,6 +399,7 @@ CLASS zcl_bn_bpc IMPLEMENTATION.
     validate_filters( environment = mv_environment model = mv_model filters = filters ).
     validate_filters( environment = mv_environment model = mv_model filters = frozen ).
     DATA(effective) = merge_filters( frozen = frozen requested = filters ).
+    diagnostic-effective_filters = effective.
     DATA selections TYPE uj0_t_sel.
     LOOP AT effective INTO DATA(filter).
       " Base IDs were validated above; only equality filters reach the query adapter.
@@ -363,6 +415,12 @@ CLASS zcl_bn_bpc IMPLEMENTATION.
     DATA dim_names TYPE uja_t_dim_list.
     LOOP AT available INTO DATA(dim). APPEND CONV #( dim-id ) TO dim_names. ENDLOOP.
     TRY.
+        IF mo_diagnostics IS BOUND AND mo_diagnostics->fixture_mode = abap_true.
+          diagnostic-source = 'fixture'. diagnostic-security = 'MEMBER_AUTH_ON; NO_QUERY'.
+          result = mo_diagnostics->fixture_read( environment = mv_environment model = mv_model
+            filters = effective max_rows = max_rows ).
+          ASSIGN result->* TO <rows>.
+        ELSE.
         " Re-establish this adapter's secure model context after member validation.
         context( environment = mv_environment model = mv_model ).
         DATA(query) = cl_ujo_query_factory=>get_query_adapter(
@@ -372,7 +430,7 @@ CLASS zcl_bn_bpc IMPLEMENTATION.
         DATA messages TYPE uj0_t_message.
         DATA packages TYPE i.
         DO.
-          packages = packages + 1.
+          packages = packages + 1. diagnostic-packages = packages.
           IF packages > 10000.
             RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_READ_LIMIT' detail = 'SAP query exceeds 10000 packages; narrow filters'.
           ENDIF.
@@ -388,11 +446,30 @@ CLASS zcl_bn_bpc IMPLEMENTATION.
               detail = 'Model read exceeds the SAP processing limit; narrow filters or raise max_rows explicitly'.
           ENDIF.
           APPEND LINES OF <package> TO <rows>.
+          IF mo_diagnostics IS BOUND. mo_diagnostics->check_budget( ). ENDIF.
           IF ended = abap_true. EXIT. ENDIF.
         ENDDO.
+        ENDIF.
       CATCH zcx_bn INTO DATA(error). RAISE EXCEPTION error.
       CATCH cx_root INTO DATA(native).
         RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_READ' detail = native->get_text( ).
+    ENDTRY.
+    diagnostic-state = 'succeeded'. diagnostic-row_count = lines( <rows> ).
+    IF mo_diagnostics IS BOUND. mo_diagnostics->record_read( diagnostic ). ENDIF.
+    CATCH zcx_bn INTO DATA(read_error).
+      diagnostic-state = 'failed'. diagnostic-row_count = -1.
+      diagnostic-error_code = read_error->code.
+      IF mo_diagnostics IS BOUND.
+        TRY. mo_diagnostics->record_read( diagnostic ). CATCH zcx_bn. ENDTRY.
+      ENDIF.
+      RAISE EXCEPTION read_error.
+    CATCH cx_root INTO DATA(read_failure).
+      diagnostic-state = 'failed'. diagnostic-row_count = -1.
+      diagnostic-error_code = 'BPC_READ'.
+      IF mo_diagnostics IS BOUND.
+        TRY. mo_diagnostics->record_read( diagnostic ). CATCH zcx_bn. ENDTRY.
+      ENDIF.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_READ' detail = read_failure->get_text( ).
     ENDTRY.
   ENDMETHOD.
 

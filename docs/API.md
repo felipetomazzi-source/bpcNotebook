@@ -24,6 +24,8 @@ Cells: `{id,title,source,dependencies,sourceVersion,checksum}`. Server owns vers
 
 Output revision is immutable 1 in this milestone; reruns get different IDs. Source/input changes or a newly superseding upstream dataset invalidate consumers, even if values match. Historical outputs remain reviewable. Preview requires correct owner/revision, offset ≥ 0 and limit 1–100, with stable stored row order.
 
+Native comparisons and read diagnostics appear as named tables through the existing `/output` endpoint (`table` query). Full native counts are separate from bounded preview counts. Native `/run` includes `fixtureMode`; fixture runs reject historical retry and cannot provide ordinary cell dependencies. Fixtures require one independent ABAP cell and validated native in-memory tables installed before reads; there is no JSON upload route. See [native validation APIs and examples](native-validation.md).
+
 Idempotency keys bind user/client and request checksum. Repeats return the original run; changed requests with the same key return 409. Concurrent first SAP submissions may return a CAS conflict: repeat the identical key after the first resolves. Snapshots/reservations commit before job release. There are no automatic calculation retries.
 
 States: queued → running → succeeded/failed/cancelled. SAP ten-minute submission deadline/cancellation is checked between cells; local deadline is 60 seconds. Native polling reconciles termination and expiry. Mid-cell preemption requires SM37/operator intervention. Syntax diagnostics include source/generated lines, word and message; run diagnostics also identify cell. Production approved-release execution and live BPC writes are unavailable.

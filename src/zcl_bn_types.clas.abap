@@ -58,7 +58,7 @@ CLASS zcl_bn_types DEFINITION PUBLIC FINAL CREATE PUBLIC.
              id TYPE string, owner TYPE string, notebook_id TYPE string,
              state TYPE string, scope TYPE string,
              job_name TYPE btcjob, job_id TYPE btcjobcnt,
-             native TYPE abap_bool, created_at TYPE string,
+             native TYPE abap_bool, fixture_mode TYPE abap_bool, created_at TYPE string,
              started_at TYPE string, finished_at TYPE string,
              progress TYPE decfloat34, duration_ms TYPE i,
              cancel_requested TYPE abap_bool, checksum TYPE string,

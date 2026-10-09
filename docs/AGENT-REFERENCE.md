@@ -1,6 +1,6 @@
 # BPC Notebook: definitive calculation conversion guide
 
-Updated: 9 October 2026. Runtime baseline: `main` at `8e5a641`, including hub embedding, model search, hierarchy pickers and grid previews. This guide consolidates the current implementation; earlier milestone documents can describe superseded limitations.
+Updated: 9 October 2026. Includes hub embedding, model search, hierarchy pickers, grid previews and native validation tools. This guide consolidates the current implementation; earlier milestone documents can describe superseded limitations.
 
 ## 1. Instructions for the conversion agent
 
@@ -25,6 +25,9 @@ Use generic BPC adapters for reads. Use ABAP cells or installed custom ABAP serv
 | Reference data | Explicit mapping/lookback read scope separate from output periods |
 | Custom code | ABAP cells can call installed ABAP classes/services |
 | Inspection | Messages, bounded named previews, schemas/counts, stage timing/checkpoints |
+| Result comparison | Complete native tables, all supplied dimensions and exact SIGNEDDATA; added/missing/changed counts and bounded differences |
+| Read diagnostics | Effective filters, separate output/reference periods, security mode and complete native row counts |
+| Test fixtures | Explicit native schema/member-validated private input tables; no live fallback or allocation publication |
 | Script Logic | Revision-pinned NOTEBOOK BAdI handlers; preview/allocation modes |
 | Allocation result | Explicit native result validated before returning CT_DATA |
 | UI | Standard UI5 tree selectors, grid previews, Horizon themes, model grouping/search |
@@ -32,6 +35,8 @@ Use generic BPC adapters for reads. Use ABAP cells or installed custom ABAP serv
 | Hub | Shared UI5 core/theme, environment setting and guarded Back event |
 
 Not implemented: general full-table cell handoff, automatic recursive-driver scheduling, a circular-dependency solver, installed derived-property providers, a Process Flow screen, analytical OData binding, cross-user published handlers, or production release approval.
+
+For validation, use `io->compare_results( name = ... original = ... notebook = ... preview_rows = 100 )` on complete native results. Adapter reads expose `READ_n/SUMMARY` and `READ_n/FILTERS_AND_PERIODS` automatically. Reviewed test services can install native tables with `io->enable_fixtures( )` before reading. See [the full native validation contract and examples](native-validation.md), including duplicate-key rules, input-reader injection into both implementations, retry restrictions and verification evidence.
 
 ## 3. Application and source locations
 
@@ -377,6 +382,7 @@ Runs freeze notebook/source revision, scalar values, selected/resolved IDs, fisc
 
 - Ordinary retry preserves historical source/inputs/bindings, rechecks access and can be stale relative to current edits. New adapter reads are not guaranteed to reproduce historical facts.
 - Historical reference-read retry fails DATA_SNAPSHOT (409). Run all establishes a new source/data invocation instead of silently mixing historical context and fresh references.
+- Fixture validation runs also reject historical retry with DATA_SNAPSHOT. Reinstall identical complete fixtures in a new run; fixture datasets cannot satisfy ordinary later-cell prerequisites.
 - Script Logic runs must be reinvoked by their caller.
 - Run states: queued, running, succeeded, failed, cancelled. No automatic business-calculation retry.
 - Cancellation/timeouts are cooperative at cell/stage/read boundaries and explicit check_budget calls. Arbitrary ABAP is not safely preempted by this API; SAP job controls may be required.

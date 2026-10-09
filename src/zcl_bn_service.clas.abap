@@ -13,6 +13,7 @@ CLASS zcl_bn_service DEFINITION PUBLIC FINAL CREATE PUBLIC.
              rows TYPE zcl_bn_context=>tt_rows,
              tables TYPE zcl_bn_context=>tt_tables,
              checkpoints TYPE zcl_bn_context=>tt_checkpoints,
+             reads TYPE zcl_bn_context=>tt_reads, fixture_mode TYPE abap_bool,
            END OF ty_dataset.
     CLASS-METHODS authorize IMPORTING activity TYPE char2 RAISING zcx_bn.
     CLASS-METHODS get_notebook IMPORTING id TYPE string
@@ -44,6 +45,7 @@ CLASS zcl_bn_service DEFINITION PUBLIC FINAL CREATE PUBLIC.
            BEGIN OF ty_dataset_header,
              run_id TYPE string, cell_id TYPE string, revision TYPE i, notebook_id TYPE string,
              fingerprint TYPE string, created_at TYPE string, row_count TYPE i, logic_call TYPE abap_bool,
+             fixture_mode TYPE abap_bool,
              bindings TYPE zcl_bn_types=>tt_bindings,
            END OF ty_dataset_header,
            tt_dataset_headers TYPE HASHED TABLE OF ty_dataset_header WITH UNIQUE KEY cell_id.
@@ -314,7 +316,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
     zcl_bn_store=>write( kind = 'N' id = notebook-id payload = zcl_bn_types=>json( notebook ) expected = request-expected_revision ).
   ENDMETHOD.
   METHOD is_current.
-    IF dataset-logic_call = abap_true. RETURN. ENDIF.
+    IF dataset-logic_call = abap_true OR dataset-fixture_mode = abap_true. RETURN. ENDIF.
     IF dataset-run_id IS INITIAL OR dataset-fingerprint <> fingerprint( notebook = notebook cell_id = dataset-cell_id ). RETURN. ENDIF.
     READ TABLE notebook-cells INTO DATA(cell) WITH KEY id = dataset-cell_id.
     LOOP AT cell-dependencies INTO DATA(dependency).
@@ -352,6 +354,10 @@ CLASS zcl_bn_service IMPLEMENTATION.
     DATA original TYPE zcl_bn_types=>ty_run.
     IF request-retry_run_id IS NOT INITIAL.
       original = get_run( request-retry_run_id ).
+      IF original-fixture_mode = abap_true.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATA_SNAPSHOT'
+          detail = 'Fixture inputs are private working tables; install them again in a new validation run' status = 409.
+      ENDIF.
       IF line_exists( original-snapshot-inputs[ purpose = 'reference' ] ).
         RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATA_SNAPSHOT'
           detail = 'Reference calculations require a new run and a new data snapshot; historical retry is unavailable' status = 409.
@@ -411,6 +417,10 @@ CLASS zcl_bn_service IMPLEMENTATION.
             IF is_current( notebook = notebook dataset = dataset ) = abap_false.
               RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'STALE_DEPENDENCY' detail = |Execute current dependency { dependency }| status = 409.
             ENDIF.
+          ENDIF.
+          IF dataset-fixture_mode = abap_true.
+            RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MODE'
+              detail = 'Fixture datasets cannot satisfy ordinary or historical cell dependencies' status = 409.
           ENDIF.
           IF NOT line_exists( run-bindings[ cell_id = dependency ] ).
             APPEND VALUE #( cell_id = dependency run_id = dataset-run_id revision = dataset-revision ) TO run-bindings.
@@ -528,7 +538,8 @@ CLASS zcl_bn_service IMPLEMENTATION.
       ENDIF.
       GET TIME STAMP FIELD stamp.
       DATA(dataset) = VALUE ty_dataset( logic_call = abap_true run_id = run-id cell_id = cell-id revision = 1 notebook_id = notebook-id
-        rows = context->outputs tables = context->tables checkpoints = context->checkpoints row_count = lines( context->outputs )
+        rows = context->outputs tables = context->tables checkpoints = context->checkpoints
+        reads = context->reads fixture_mode = context->fixture_mode row_count = lines( context->outputs )
         created_at = zcl_bn_types=>timestamp( ) fingerprint = fingerprint( notebook = notebook cell_id = cell-id )
         schema = VALUE #( ( name = 'key' type = 'string' ) ( name = 'amount' type = 'decimal' ) ) ).
       LOOP AT dataset-tables INTO DATA(table). dataset-row_count = dataset-row_count + table-row_count. ENDLOOP.
@@ -620,12 +631,20 @@ CLASS zcl_bn_service IMPLEMENTATION.
           DATA cell_started TYPE timestampl.
           GET TIME STAMP FIELD cell_started.
           PERFORM execute IN PROGRAM (pool) USING context.
+          IF context->fixture_mode = abap_true.
+            run-fixture_mode = abap_true.
+            IF lines( run-snapshot-cells ) <> 1 OR cell-dependencies IS NOT INITIAL.
+              RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MODE'
+                detail = 'Fixture validation requires one independent cell; retain both implementations in its service'.
+            ENDIF.
+          ENDIF.
           GET TIME STAMP FIELD stamp.
           DATA dataset TYPE ty_dataset.
           CLEAR dataset.
           dataset-run_id = id. dataset-cell_id = cell-id. dataset-revision = 1.
           dataset-notebook_id = run-notebook_id. dataset-rows = context->outputs.
           dataset-tables = context->tables. dataset-checkpoints = context->checkpoints.
+          dataset-reads = context->reads. dataset-fixture_mode = context->fixture_mode.
           dataset-row_count = lines( dataset-rows ).
           LOOP AT dataset-tables INTO DATA(counted_table).
             dataset-row_count = dataset-row_count + counted_table-row_count.
@@ -670,6 +689,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
         run-state = 'failed'. run-error-code = 'EXECUTION'. run-error-message = error->get_text( ).
     ENDTRY.
     IF context IS BOUND AND ( run-state = 'failed' OR run-state = 'cancelled' ).
+      IF context->fixture_mode = abap_true. run-fixture_mode = abap_true. ENDIF.
       APPEND LINES OF context->checkpoints TO run-checkpoints.
       LOOP AT run-checkpoints ASSIGNING FIELD-SYMBOL(<failed_step>) WHERE state = 'running'.
         <failed_step>-state = run-state. <failed_step>-finished_at = zcl_bn_types=>timestamp( ).
@@ -677,7 +697,8 @@ CLASS zcl_bn_service IMPLEMENTATION.
       IF context->tables IS NOT INITIAL.
         run-checkpoint_cell = cell-id.
         DATA(partial) = VALUE ty_dataset( run_id = id cell_id = cell-id revision = 1 notebook_id = run-notebook_id
-          tables = context->tables checkpoints = context->checkpoints created_at = zcl_bn_types=>timestamp( ) ).
+          tables = context->tables checkpoints = context->checkpoints
+          reads = context->reads fixture_mode = context->fixture_mode created_at = zcl_bn_types=>timestamp( ) ).
         LOOP AT partial-checkpoints ASSIGNING FIELD-SYMBOL(<partial_step>) WHERE state = 'running'.
           <partial_step>-state = run-state. <partial_step>-finished_at = zcl_bn_types=>timestamp( ).
         ENDLOOP.
@@ -824,6 +845,11 @@ CLASS zcl_bn_service IMPLEMENTATION.
           DATA selected_table TYPE zcl_bn_context=>ty_table.
           IF table_name IS INITIAL.
             selected_table = dataset-tables[ 1 ].
+            LOOP AT dataset-tables INTO DATA(preferred_table).
+              IF preferred_table-name NP 'READ_*/SUMMARY' AND preferred_table-name NP 'READ_*/FILTERS_AND_PERIODS'.
+                selected_table = preferred_table. EXIT.
+              ENDIF.
+            ENDLOOP.
           ELSE.
             READ TABLE dataset-tables INTO selected_table WITH KEY name = table_name.
             IF sy-subrc <> 0.

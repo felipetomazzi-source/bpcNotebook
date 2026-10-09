@@ -25,6 +25,28 @@ CLASS zcl_bn_context DEFINITION PUBLIC FINAL CREATE PUBLIC.
     TYPES ty_checkpoint TYPE zcl_bn_types=>ty_checkpoint.
     TYPES tt_checkpoints TYPE zcl_bn_types=>tt_checkpoints.
     DATA checkpoints TYPE tt_checkpoints READ-ONLY.
+    TYPES: BEGIN OF ty_comparison,
+      name TYPE string, original_rows TYPE i, notebook_rows TYPE i,
+      unchanged TYPE i, added TYPE i, missing TYPE i, changed TYPE i,
+    END OF ty_comparison.
+    TYPES: BEGIN OF ty_fixture,
+      environment TYPE string, model TYPE string, rows TYPE REF TO data,
+    END OF ty_fixture, tt_fixtures TYPE STANDARD TABLE OF ty_fixture WITH DEFAULT KEY.
+    TYPES: BEGIN OF ty_read,
+      id TYPE string, environment TYPE string, model TYPE string, scope TYPE string,
+      source TYPE string, security TYPE string, state TYPE string,
+      row_count TYPE i, packages TYPE i, max_rows TYPE i, error_code TYPE string,
+      effective_filters TYPE zcl_bn_bpc=>tt_filters,
+      output_periods TYPE zcl_bn_types=>tt_ids, reference_periods TYPE zcl_bn_types=>tt_ids,
+    END OF ty_read, tt_reads TYPE STANDARD TABLE OF ty_read WITH DEFAULT KEY.
+    DATA reads TYPE tt_reads READ-ONLY.
+    DATA fixture_mode TYPE abap_bool READ-ONLY.
+    METHODS compare_results IMPORTING name TYPE string original TYPE ANY TABLE notebook TYPE ANY TABLE
+      preview_rows TYPE i DEFAULT 100 RETURNING VALUE(summary) TYPE ty_comparison RAISING zcx_bn.
+    METHODS enable_fixtures IMPORTING fixtures TYPE tt_fixtures RAISING zcx_bn.
+    METHODS fixture_read IMPORTING environment TYPE string model TYPE string filters TYPE zcl_bn_bpc=>tt_filters
+      max_rows TYPE i RETURNING VALUE(result) TYPE REF TO data RAISING zcx_bn.
+    METHODS record_read IMPORTING diagnostic TYPE ty_read RAISING zcx_bn.
     METHODS checkpoint IMPORTING name TYPE string state TYPE string
       inputs TYPE zcl_bn_types=>tt_ids OPTIONAL outputs TYPE zcl_bn_types=>tt_ids OPTIONAL RAISING zcx_bn.
     METHODS check_budget RAISING zcx_bn.
@@ -67,6 +89,7 @@ CLASS zcl_bn_context DEFINITION PUBLIC FINAL CREATE PUBLIC.
     METHODS emit IMPORTING rows TYPE tt_rows RAISING zcx_bn.
     METHODS message IMPORTING text TYPE string.
   PRIVATE SECTION.
+    DATA mt_fixtures TYPE tt_fixtures.
     DATA mv_run_id TYPE string.
     DATA mv_started TYPE timestampl.
     DATA mv_seconds TYPE i VALUE 600.
@@ -146,7 +169,7 @@ CLASS zcl_bn_context IMPLEMENTATION.
     check_logic_model( model_name ).
     adapter = NEW zcl_bn_bpc( environment = CONV #( environment )
       model = COND #( WHEN model_name IS INITIAL THEN CONV string( model ) ELSE model_name )
-      dimension = name inputs = mt_inputs scope = mt_scope ).
+      dimension = name inputs = mt_inputs scope = mt_scope diagnostics = me ).
     IF name IS INITIAL.
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_DIMENSION' detail = 'Choose a dimension name'.
     ENDIF.
@@ -154,7 +177,7 @@ CLASS zcl_bn_context IMPLEMENTATION.
   METHOD bpc_model.
     check_logic_model( name ).
     adapter = NEW zcl_bn_bpc( environment = CONV #( environment )
-      model = COND #( WHEN name IS INITIAL THEN CONV string( model ) ELSE name ) inputs = mt_inputs scope = mt_scope ).
+      model = COND #( WHEN name IS INITIAL THEN CONV string( model ) ELSE name ) inputs = mt_inputs scope = mt_scope diagnostics = me ).
   ENDMETHOD.
   METHOD check_logic_model.
     IF mv_logic_call = abap_true AND name IS NOT INITIAL AND name <> model.
@@ -195,7 +218,8 @@ CLASS zcl_bn_context IMPLEMENTATION.
     ENDLOOP.
     LOOP AT inputs ASSIGNING FIELD-SYMBOL(<input>). CLEAR <input>-purpose. ENDLOOP.
     adapter = NEW zcl_bn_bpc( environment = CONV string( environment )
-      model = COND #( WHEN name IS INITIAL THEN CONV string( model ) ELSE name ) inputs = inputs scope = scope ).
+      model = COND #( WHEN name IS INITIAL THEN CONV string( model ) ELSE name ) inputs = inputs scope = scope
+      diagnostics = me read_scope = 'reference' ).
   ENDMETHOD.
   METHOD offset_period.
     result = member.
@@ -224,6 +248,9 @@ CLASS zcl_bn_context IMPLEMENTATION.
       detail = 'No reviewed server-side provider is installed; stored properties are separate'.
   ENDMETHOD.
   METHOD allocation_result.
+    IF fixture_mode = abap_true.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_POSTING' detail = 'Fixture executions cannot publish BPC allocation results'.
+    ENDIF.
     IF result_rows IS BOUND OR name IS INITIAL OR ( kind <> 'replacement' AND kind <> 'delta' ).
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'RESULT_CONTRACT' detail = 'Publish one explicitly named replacement or delta result'.
     ENDIF.
@@ -353,6 +380,251 @@ CLASS zcl_bn_context IMPLEMENTATION.
       APPEND outrow TO table-rows.
     ENDLOOP.
     APPEND table TO tables.
+  ENDMETHOD.
+  METHOD compare_results.
+    IF name IS INITIAL OR preview_rows < 1 OR preview_rows > 5000.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'COMPARISON' detail = 'Named comparison and preview_rows from 1 to 5000 required'.
+    ENDIF.
+    check_budget( ). check_rows( lines( original ) ). check_rows( lines( notebook ) ).
+    DATA left_type TYPE REF TO cl_abap_structdescr.
+    DATA right_type TYPE REF TO cl_abap_structdescr.
+    TRY.
+        left_type ?= CAST cl_abap_tabledescr( cl_abap_typedescr=>describe_by_data( original ) )->get_table_line_type( ).
+        right_type ?= CAST cl_abap_tabledescr( cl_abap_typedescr=>describe_by_data( notebook ) )->get_table_line_type( ).
+      CATCH cx_root.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'COMPARISON_SCHEMA' detail = 'Comparison needs flat structured tables'.
+    ENDTRY.
+    DATA components TYPE cl_abap_structdescr=>component_table.
+    components = left_type->get_components( ).
+    DATA right_components TYPE cl_abap_structdescr=>component_table.
+    right_components = right_type->get_components( ).
+    IF lines( components ) <> lines( right_components ) OR lines( components ) < 2.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'COMPARISON_SCHEMA' detail = 'Both result schemas must match exactly'.
+    ENDIF.
+    DATA diff_components TYPE cl_abap_structdescr=>component_table.
+    DATA amount_type TYPE REF TO cl_abap_elemdescr.
+    LOOP AT components INTO DATA(component).
+      READ TABLE right_components INTO DATA(other) WITH KEY name = component-name.
+      IF sy-subrc <> 0 OR component-type->kind <> cl_abap_typedescr=>kind_elem.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'COMPARISON_SCHEMA' detail = 'Flat identical result fields required'.
+      ENDIF.
+      IF component-type->type_kind <> other-type->type_kind OR component-type->length <> other-type->length
+         OR component-type->decimals <> other-type->decimals.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'COMPARISON_SCHEMA' detail = 'Native result field types must match exactly'.
+      ENDIF.
+      IF component-name = 'SIGNEDDATA'.
+        amount_type ?= component-type.
+        IF amount_type->type_kind <> cl_abap_typedescr=>typekind_packed AND
+           amount_type->type_kind <> cl_abap_typedescr=>typekind_decfloat16 AND
+           amount_type->type_kind <> cl_abap_typedescr=>typekind_decfloat34.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'COMPARISON_SCHEMA' detail = 'SIGNEDDATA must be an exact native decimal type'.
+        ENDIF.
+      ELSE.
+        IF component-name = 'DIFFERENCE_KIND' OR component-name = 'ORIGINAL_SIGNEDDATA' OR component-name = 'NOTEBOOK_SIGNEDDATA'.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'COMPARISON_SCHEMA' detail = 'Reserved difference fields in input schema'.
+        ENDIF.
+        APPEND component TO diff_components.
+      ENDIF.
+    ENDLOOP.
+    IF amount_type IS NOT BOUND.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'COMPARISON_SCHEMA' detail = 'SIGNEDDATA required'.
+    ENDIF.
+    APPEND VALUE #( name = 'DIFFERENCE_KIND' type = cl_abap_elemdescr=>get_string( ) ) TO diff_components.
+    APPEND VALUE #( name = 'ORIGINAL_SIGNEDDATA' type = amount_type ) TO diff_components.
+    APPEND VALUE #( name = 'NOTEBOOK_SIGNEDDATA' type = amount_type ) TO diff_components.
+    DATA diff_ref TYPE REF TO data.
+    DATA diff_row TYPE REF TO data.
+    DATA diff_type TYPE REF TO cl_abap_structdescr.
+    diff_type = cl_abap_structdescr=>create( diff_components ).
+    DATA diff_table_type TYPE REF TO cl_abap_tabledescr.
+    diff_table_type = cl_abap_tabledescr=>create( diff_type ).
+    CREATE DATA diff_ref TYPE HANDLE diff_table_type.
+    CREATE DATA diff_row TYPE HANDLE diff_type.
+    FIELD-SYMBOLS <differences> TYPE STANDARD TABLE.
+    FIELD-SYMBOLS <difference> TYPE any.
+    FIELD-SYMBOLS <field> TYPE any.
+    FIELD-SYMBOLS <left> TYPE any.
+    FIELD-SYMBOLS <right> TYPE any.
+    FIELD-SYMBOLS <left_amount> TYPE any.
+    FIELD-SYMBOLS <right_amount> TYPE any.
+    ASSIGN diff_ref->* TO <differences>. ASSIGN diff_row->* TO <difference>.
+    TYPES: BEGIN OF ty_index, key TYPE string, row TYPE REF TO data, END OF ty_index.
+    TYPES tt_index TYPE SORTED TABLE OF ty_index WITH UNIQUE KEY key.
+    DATA left_index TYPE tt_index. DATA right_index TYPE tt_index.
+    DATA index TYPE ty_index.
+    DATA values TYPE zcl_bn_types=>tt_ids.
+    DO 2 TIMES.
+      FIELD-SYMBOLS <source> TYPE ANY TABLE.
+      FIELD-SYMBOLS <index> TYPE tt_index.
+      IF sy-index = 1. ASSIGN original TO <source>. ASSIGN left_index TO <index>.
+      ELSE. ASSIGN notebook TO <source>. ASSIGN right_index TO <index>. ENDIF.
+      LOOP AT <source> ASSIGNING <left>.
+        CLEAR: values, index.
+        LOOP AT components INTO component WHERE name <> 'SIGNEDDATA'.
+          ASSIGN COMPONENT component-name OF STRUCTURE <left> TO <field>.
+          APPEND CONV string( <field> ) TO values.
+        ENDLOOP.
+        index-key = zcl_bn_types=>json( values ). GET REFERENCE OF <left> INTO index-row.
+        INSERT index INTO TABLE <index>.
+        IF sy-subrc <> 0.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'COMPARISON_DUPLICATE_KEY'
+            detail = 'Duplicate complete dimensional key; apply the original grouping rule before comparing'.
+        ENDIF.
+        check_rows( lines( <index> ) ).
+        IF lines( <index> ) MOD 1000 = 0. check_budget( ). ENDIF.
+      ENDLOOP.
+    ENDDO.
+    summary-name = name. summary-original_rows = lines( original ). summary-notebook_rows = lines( notebook ).
+    DATA combined TYPE STANDARD TABLE OF ty_index WITH DEFAULT KEY.
+    combined = CORRESPONDING #( left_index ).
+    LOOP AT right_index INTO index.
+      IF NOT line_exists( left_index[ key = index-key ] ). APPEND index TO combined. ENDIF.
+    ENDLOOP.
+    check_rows( lines( combined ) ).
+    SORT combined BY key.
+    DATA compared TYPE i.
+    LOOP AT combined INTO index.
+      compared = compared + 1.
+      IF compared MOD 1000 = 0. check_budget( ). ENDIF.
+      CLEAR <difference>.
+      UNASSIGN: <left>, <right>, <left_amount>, <right_amount>.
+      READ TABLE left_index INTO DATA(left_entry) WITH TABLE KEY key = index-key.
+      IF sy-subrc = 0.
+        ASSIGN left_entry-row->* TO <left>.
+        ASSIGN COMPONENT 'SIGNEDDATA' OF STRUCTURE <left> TO <left_amount>.
+      ENDIF.
+      READ TABLE right_index INTO DATA(right_entry) WITH TABLE KEY key = index-key.
+      IF sy-subrc = 0.
+        ASSIGN right_entry-row->* TO <right>.
+        ASSIGN COMPONENT 'SIGNEDDATA' OF STRUCTURE <right> TO <right_amount>.
+      ENDIF.
+      DATA kind TYPE string.
+      IF <left> IS NOT ASSIGNED. kind = 'added'. summary-added = summary-added + 1.
+      ELSEIF <right> IS NOT ASSIGNED. kind = 'missing'. summary-missing = summary-missing + 1.
+      ELSEIF <left_amount> <> <right_amount>. kind = 'changed'. summary-changed = summary-changed + 1.
+      ELSE. summary-unchanged = summary-unchanged + 1. CONTINUE. ENDIF.
+      IF lines( <differences> ) < preview_rows.
+        IF <right> IS ASSIGNED. MOVE-CORRESPONDING <right> TO <difference>.
+        ELSE. MOVE-CORRESPONDING <left> TO <difference>. ENDIF.
+        ASSIGN COMPONENT 'DIFFERENCE_KIND' OF STRUCTURE <difference> TO <field>. <field> = kind.
+        IF <left_amount> IS ASSIGNED.
+          ASSIGN COMPONENT 'ORIGINAL_SIGNEDDATA' OF STRUCTURE <difference> TO <field>. <field> = <left_amount>.
+        ENDIF.
+        IF <right_amount> IS ASSIGNED.
+          ASSIGN COMPONENT 'NOTEBOOK_SIGNEDDATA' OF STRUCTURE <difference> TO <field>. <field> = <right_amount>.
+        ENDIF.
+        APPEND <difference> TO <differences>.
+      ENDIF.
+    ENDLOOP.
+    DATA summaries TYPE STANDARD TABLE OF ty_comparison WITH DEFAULT KEY.
+    APPEND summary TO summaries.
+    emit_table( name = name && '/SUMMARY' rows = summaries ).
+    emit_table( name = name && '/DIFFERENCES' rows = <differences>
+      total_count = summary-added + summary-missing + summary-changed ).
+  ENDMETHOD.
+  METHOD enable_fixtures.
+    zcl_bn_service=>authorize( '16' ).
+    IF mv_logic_call = abap_true OR fixture_mode = abap_true OR reads IS NOT INITIAL OR result_rows IS BOUND
+       OR fixtures IS INITIAL OR lines( fixtures ) > 10.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MODE'
+        detail = 'Fixtures require a fresh DEV preview context, 1 to 10 model tables, and cannot be enabled in Script Logic'.
+    ENDIF.
+    check_budget( ).
+    DATA copies TYPE tt_fixtures.
+    LOOP AT fixtures INTO DATA(fixture).
+      IF fixture-rows IS NOT BOUND OR fixture-environment <> environment OR fixture-model IS INITIAL
+         OR line_exists( copies[ environment = fixture-environment model = fixture-model ] ).
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MODE' detail = 'Unique model tables in this environment required'.
+      ENDIF.
+      FIELD-SYMBOLS <source> TYPE ANY TABLE.
+      ASSIGN fixture-rows->* TO <source>.
+      IF sy-subrc <> 0.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_SCHEMA' detail = 'Fixture data reference must point to a table'.
+      ENDIF.
+      check_rows( lines( <source> ) ).
+      zcl_bn_bpc=>validate_fixture( environment = fixture-environment model = fixture-model rows = <source> ).
+      DATA(descriptor) = CAST cl_abap_tabledescr( cl_abap_typedescr=>describe_by_data( <source> ) ).
+      DATA(copy) = VALUE ty_fixture( environment = fixture-environment model = fixture-model ).
+      CREATE DATA copy-rows TYPE HANDLE descriptor.
+      FIELD-SYMBOLS <target> TYPE ANY TABLE. ASSIGN copy-rows->* TO <target>. <target> = <source>.
+      APPEND copy TO copies.
+      check_budget( ).
+    ENDLOOP.
+    mt_fixtures = copies. fixture_mode = abap_true.
+    message( 'FIXTURE MODE: in-memory inputs only; no live model reads or allocation result publication' ).
+  ENDMETHOD.
+  METHOD fixture_read.
+    IF fixture_mode <> abap_true.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MODE' detail = 'Fixture mode is not enabled'.
+    ENDIF.
+    READ TABLE mt_fixtures INTO DATA(fixture) WITH KEY environment = environment model = model.
+    IF sy-subrc <> 0.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MISSING' detail = 'Required model fixture is missing; live fallback is prohibited'.
+    ENDIF.
+    FIELD-SYMBOLS <source> TYPE ANY TABLE.
+    ASSIGN fixture-rows->* TO <source>.
+    DATA(descriptor) = CAST cl_abap_tabledescr( cl_abap_typedescr=>describe_by_data( <source> ) ).
+    DATA result_type TYPE REF TO cl_abap_tabledescr.
+    result_type = cl_abap_tabledescr=>create( descriptor->get_table_line_type( ) ).
+    CREATE DATA result TYPE HANDLE result_type.
+    FIELD-SYMBOLS <result> TYPE STANDARD TABLE. ASSIGN result->* TO <result>.
+    DATA visited TYPE i.
+    LOOP AT <source> ASSIGNING FIELD-SYMBOL(<row>).
+      visited = visited + 1.
+      DATA keep TYPE abap_bool VALUE abap_true. keep = abap_true.
+      LOOP AT filters INTO DATA(filter).
+        FIELD-SYMBOLS <value> TYPE any.
+        ASSIGN COMPONENT filter-dimension OF STRUCTURE <row> TO <value>.
+        IF sy-subrc <> 0 OR NOT line_exists( filter-members[ table_line = CONV string( <value> ) ] ).
+          keep = abap_false. EXIT.
+        ENDIF.
+      ENDLOOP.
+      IF keep = abap_true.
+        IF lines( <result> ) >= max_rows.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_READ_LIMIT' detail = 'Complete fixture read exceeds max_rows'.
+        ENDIF.
+        APPEND <row> TO <result>.
+      ENDIF.
+      IF visited MOD 1000 = 0. check_budget( ). ENDIF.
+    ENDLOOP.
+    check_rows( lines( <result> ) ). check_budget( ).
+  ENDMETHOD.
+  METHOD record_read.
+    IF lines( reads ) >= 50.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'READ_DIAGNOSTICS_LIMIT' detail = 'Maximum 50 diagnostic reads per cell; reduce reads or split processing steps'.
+    ENDIF.
+    DATA(record) = diagnostic. record-id = |READ_{ lines( reads ) + 1 }|.
+    LOOP AT mt_inputs INTO DATA(input) WHERE dimension = 'TIME'.
+      IF input-purpose = 'reference'. APPEND LINES OF input-resolved TO record-reference_periods.
+      ELSE. APPEND LINES OF input-resolved TO record-output_periods. ENDIF.
+    ENDLOOP.
+    SORT record-output_periods. DELETE ADJACENT DUPLICATES FROM record-output_periods.
+    SORT record-reference_periods. DELETE ADJACENT DUPLICATES FROM record-reference_periods.
+    APPEND record TO reads.
+    TYPES: BEGIN OF ty_summary,
+      environment TYPE string, model TYPE string, scope TYPE string, source TYPE string,
+      security TYPE string, state TYPE string, row_count TYPE i, packages TYPE i, max_rows TYPE i, error_code TYPE string,
+    END OF ty_summary.
+    DATA summaries TYPE STANDARD TABLE OF ty_summary WITH DEFAULT KEY.
+    APPEND CORRESPONDING #( record ) TO summaries.
+    emit_table( name = record-id && '/SUMMARY' rows = summaries ).
+    TYPES: BEGIN OF ty_selection, purpose TYPE string, dimension TYPE string, member TYPE string, END OF ty_selection.
+    DATA selections TYPE STANDARD TABLE OF ty_selection WITH DEFAULT KEY.
+    LOOP AT record-effective_filters INTO DATA(filter).
+      LOOP AT filter-members INTO DATA(member).
+        APPEND VALUE #( purpose = 'effective filter' dimension = filter-dimension member = member ) TO selections.
+      ENDLOOP.
+    ENDLOOP.
+    LOOP AT record-output_periods INTO member.
+      APPEND VALUE #( purpose = 'output period' dimension = 'TIME' member = member ) TO selections.
+    ENDLOOP.
+    LOOP AT record-reference_periods INTO member.
+      APPEND VALUE #( purpose = 'declared reference period' dimension = 'TIME' member = member ) TO selections.
+    ENDLOOP.
+    emit_table( name = record-id && '/FILTERS_AND_PERIODS' rows = selections ).
+    IF record-row_count = 0 AND record-state = 'succeeded'.
+      message( record-id && ': complete read returned zero rows; inspect effective filters and security diagnostics' ).
+    ENDIF.
   ENDMETHOD.
   METHOD message.
     APPEND VALUE #( cell_id = mv_cell_id severity = 'Information' text = text ) TO messages.
