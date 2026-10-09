@@ -121,6 +121,12 @@ LOOP AT skip_fflas_ratio_mat_group_id INTO DATA(nb_skip_id).
  READ TABLE nb_skip_flags INTO DATA(nb_skip_flag) INDEX sy-tabix.
  IF sy-subrc <> 0 OR nb_skip_flag-low = 0. DELETE skip_fflas_ratio_mat_group_id. ENDIF.
 ENDLOOP.`);
+ // Load dimension metadata only in cells that use it; the original engine held
+ // these handles for the entire chain, whereas each cell has a fresh context.
+ for (const [variable,dimension] of [['product_type_dim','PRODUCT_TYPE'],['mat_group_id_dim','MAT_GROUP_ID'],['matconn_dim','MATCONN']]) {
+   const declaration = `DATA(${variable}) = NEW zcl_bn_dimension( io = io name = '${dimension}' ).`;
+   prelude = prelude.replace(declaration,new RegExp('\\b'+variable+'\\b','i').test(codeOnly) ? (stage === 'INITIALISE' ? `DATA ${variable} TYPE REF TO zcl_bn_dimension.` : declaration) : '');
+ }
  if (stage === 'INITIALISE') {
    prelude += 'DATA it_param TYPE ujk_t_script_logic_hashtable. it_param = parameters.\nDATA(current_view) = io->current_view( ).\nDATA time TYPE ujw_t_dimmem_range.\n';
    calculation = calculation.replace('param = new #( it_param ).','param = new #( it_param ).').replace(/\bdata\(skip_fflas_ratio_mat_group\)/i,'data(skip_fflas_ratio_mat_group)');

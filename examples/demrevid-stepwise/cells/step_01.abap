@@ -82,9 +82,9 @@ LOOP AT skip_fflas_ratio_mat_group_id INTO DATA(nb_skip_id).
  READ TABLE nb_skip_flags INTO DATA(nb_skip_flag) INDEX sy-tabix.
  IF sy-subrc <> 0 OR nb_skip_flag-low = 0. DELETE skip_fflas_ratio_mat_group_id. ENDIF.
 ENDLOOP.
-DATA(product_type_dim) = NEW zcl_bn_dimension( io = io name = 'PRODUCT_TYPE' ).
-DATA(mat_group_id_dim) = NEW zcl_bn_dimension( io = io name = 'MAT_GROUP_ID' ).
-DATA(matconn_dim) = NEW zcl_bn_dimension( io = io name = 'MATCONN' ).
+DATA product_type_dim TYPE REF TO zcl_bn_dimension.
+DATA mat_group_id_dim TYPE REF TO zcl_bn_dimension.
+DATA matconn_dim TYPE REF TO zcl_bn_dimension.
 DATA it_param TYPE ujk_t_script_logic_hashtable. it_param = parameters.
 DATA(current_view) = io->current_view( ).
 DATA time TYPE ujw_t_dimmem_range.

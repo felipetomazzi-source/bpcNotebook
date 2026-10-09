@@ -83,8 +83,8 @@ LOOP AT skip_fflas_ratio_mat_group_id INTO DATA(nb_skip_id).
  IF sy-subrc <> 0 OR nb_skip_flag-low = 0. DELETE skip_fflas_ratio_mat_group_id. ENDIF.
 ENDLOOP.
 DATA(product_type_dim) = NEW zcl_bn_dimension( io = io name = 'PRODUCT_TYPE' ).
-DATA(mat_group_id_dim) = NEW zcl_bn_dimension( io = io name = 'MAT_GROUP_ID' ).
-DATA(matconn_dim) = NEW zcl_bn_dimension( io = io name = 'MATCONN' ).
+
+
 DATA input_data TYPE REF TO zcl_bn_dem_model.
 DATA(ref_input_data) = io->read_dataset( dependency = 'step_01' name = 'INPUT_DATA' ).
 FIELD-SYMBOLS <t_input_data> TYPE STANDARD TABLE.
