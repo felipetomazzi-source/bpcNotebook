@@ -72,6 +72,7 @@ CLASS zcl_bn_types DEFINITION PUBLIC FINAL CREATE PUBLIC.
              error TYPE ty_error,
            END OF ty_run,
            tt_runs TYPE STANDARD TABLE OF ty_run WITH DEFAULT KEY.
+    CLASS-METHODS native_json IMPORTING text TYPE string RETURNING VALUE(result) TYPE string.
     CLASS-METHODS validate_text IMPORTING text TYPE string RAISING zcx_bn.
     CLASS-METHODS request_json IMPORTING text TYPE string RETURNING VALUE(result) TYPE string RAISING zcx_bn.
     CLASS-METHODS json IMPORTING data TYPE any RETURNING VALUE(result) TYPE string.
@@ -81,6 +82,29 @@ CLASS zcl_bn_types DEFINITION PUBLIC FINAL CREATE PUBLIC.
     CLASS-METHODS normalize_inputs IMPORTING inputs TYPE tt_inputs RETURNING VALUE(result) TYPE tt_inputs.
 ENDCLASS.
 CLASS zcl_bn_types IMPLEMENTATION.
+  METHOD native_json.
+    result = text.
+    FIND '\r' IN text.
+    IF sy-subrc <> 0. RETURN. ENDIF.
+    " Only the legacy decoder's private input: it does not decode standalone \r.
+    " Leave doubled backslashes/literal text untouched; outgoing wire JSON stays valid.
+    DATA pieces TYPE STANDARD TABLE OF string WITH EMPTY KEY.
+    DATA offset TYPE i.
+    WHILE offset < strlen( text ).
+      DATA(character) = substring( val = text off = offset len = 1 ).
+      IF character = '\' AND offset + 1 < strlen( text ).
+        DATA(next) = substring( val = text off = offset + 1 len = 1 ).
+        IF next = 'r'.
+          APPEND substring( val = cl_abap_char_utilities=>cr_lf off = 0 len = 1 ) TO pieces.
+        ELSE.
+          APPEND substring( val = text off = offset len = 2 ) TO pieces.
+        ENDIF.
+        offset = offset + 2. CONTINUE.
+      ENDIF.
+      APPEND character TO pieces. offset = offset + 1.
+    ENDWHILE.
+    result = concat_lines_of( table = pieces ).
+  ENDMETHOD.
   METHOD validate_text.
     DATA(remaining) = replace( val = text sub = cl_abap_char_utilities=>newline with = '' occ = 0 ).
     remaining = replace( val = remaining sub = cl_abap_char_utilities=>horizontal_tab with = '' occ = 0 ).

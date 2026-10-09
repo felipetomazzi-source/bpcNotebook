@@ -109,11 +109,11 @@ CLASS zcl_bn_service IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'NOTEBOOK_DELETED' detail = 'Notebook has been deleted' status = 410.
     ENDIF.
     DATA(payload) = zcl_bn_store=>read( kind = 'N' id = id ).
-    /ui2/cl_json=>deserialize( EXPORTING json = payload pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = notebook ).
+    /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( payload ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = notebook ).
   ENDMETHOD.
   METHOD get_run.
     DATA(payload) = zcl_bn_store=>read( kind = 'R' id = id ).
-    /ui2/cl_json=>deserialize( EXPORTING json = payload pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = run ).
+    /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( payload ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = run ).
   ENDMETHOD.
   METHOD budget_seconds.
     seconds = 600.
@@ -206,7 +206,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
     LOOP AT zcl_bn_store=>documents( 'R' ) INTO DATA(document).
       DATA header TYPE ty_run_header.
       CLEAR header.
-      /ui2/cl_json=>deserialize( EXPORTING json = document-payload pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = header ).
+      /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( document-payload ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = header ).
       IF header-notebook_id = notebook_id. APPEND header TO result. ENDIF.
     ENDLOOP.
     SORT result BY created_at DESCENDING id DESCENDING.
@@ -245,7 +245,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
           DATA(payload) = zcl_bn_store=>read( kind = 'D' id = |{ result-run_id }:{ result-cell_id }| revision = result-revision ).
           DATA candidate TYPE ty_dataset_header.
           CLEAR candidate.
-          /ui2/cl_json=>deserialize( EXPORTING json = payload pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = candidate ).
+          /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( payload ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = candidate ).
           IF candidate-notebook_id <> notebook-id. CONTINUE. ENDIF.
           IF <latest> IS ASSIGNED.
             IF candidate-created_at > <latest>-created_at. <latest> = candidate. ENDIF.
@@ -367,7 +367,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
     digest = zcl_bn_types=>hash( zcl_bn_types=>json( request ) ).
     IF zcl_bn_store=>current( kind = 'K' id = key ) > 0.
       DATA(existing) = zcl_bn_store=>read( kind = 'K' id = key ).
-      /ui2/cl_json=>deserialize( EXPORTING json = existing CHANGING data = reservation ).
+      /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( existing ) CHANGING data = reservation ).
       IF reservation-checksum <> digest.
         RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'KEY_REUSED' detail = 'Key was used for another request' status = 409.
       ENDIF.
@@ -387,7 +387,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
       ENDIF.
       zcl_bn_store=>lock_notebook( original-notebook_id ).
       DATA(original_json) = zcl_bn_store=>read( kind = 'N' id = original-notebook_id revision = original-snapshot-revision ).
-      /ui2/cl_json=>deserialize( EXPORTING json = original_json pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = notebook ).
+      /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( original_json ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = notebook ).
     ELSE.
       zcl_bn_store=>lock_notebook( request-notebook_id ).
       notebook = get_notebook( request-notebook_id ).
@@ -434,7 +434,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
               RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DEPENDENCY' detail = 'Historical binding missing'.
             ENDIF.
             DATA(old_output) = zcl_bn_store=>read( kind = 'D' id = |{ old_binding-run_id }:{ dependency }| revision = old_binding-revision ).
-            /ui2/cl_json=>deserialize( EXPORTING json = old_output pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = dataset ).
+            /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( old_output ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = dataset ).
           ELSE.
             dataset = latest( notebook = notebook cell_id = dependency ).
             IF is_current( notebook = notebook dataset = dataset ) = abap_false.
@@ -647,7 +647,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
         " Read the full immutable notebook revision for recursive fingerprints (one-cell scope).
         DATA(full_json) = zcl_bn_store=>read( kind = 'N' id = run-notebook_id revision = run-snapshot-revision ).
         DATA full TYPE zcl_bn_types=>ty_notebook.
-        /ui2/cl_json=>deserialize( EXPORTING json = full_json pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = full ).
+        /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( full_json ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = full ).
         LOOP AT run-snapshot-cells INTO DATA(cell).
           DATA current TYPE zcl_bn_types=>ty_run.
           current = get_run( id ).
@@ -790,7 +790,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
     authorize( '03' ).
     DATA request TYPE ty_request.
     IF body IS NOT INITIAL.
-      /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>request_json( body ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = request ).
+      /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( zcl_bn_types=>request_json( body ) ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = request ).
     ENDIF.
     DATA notebook TYPE zcl_bn_types=>ty_notebook.
     DATA run TYPE zcl_bn_types=>ty_run.
@@ -815,7 +815,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
           IF line_exists( deleted[ table_line = document-id ] ). CONTINUE. ENDIF.
           DATA listing TYPE ty_notebook_header.
           CLEAR listing.
-          /ui2/cl_json=>deserialize( EXPORTING json = document-payload pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = listing ).
+          /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( document-payload ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = listing ).
           APPEND listing TO notebooks.
         ENDLOOP.
         SORT notebooks BY saved_at DESCENDING id.
@@ -841,7 +841,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
         DO zcl_bn_store=>current( kind = 'N' id = id ) TIMES.
           DATA(payload) = zcl_bn_store=>read( kind = 'N' id = id revision = sy-index ).
           CLEAR notebook.
-          /ui2/cl_json=>deserialize( EXPORTING json = payload pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = notebook ).
+          /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( payload ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = notebook ).
           APPEND notebook TO versions.
         ENDDO.
         json = zcl_bn_types=>json( versions ).
@@ -903,7 +903,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
         ENDIF.
         DATA(header_json) = zcl_bn_store=>read( kind = 'D' id = |{ run_id }:{ cell_id }| revision = revision ).
         DATA native_headers TYPE ty_dataset.
-        /ui2/cl_json=>deserialize( EXPORTING json = header_json pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = native_headers ).
+        /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( header_json ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = native_headers ).
         IF native_headers-notebook_id <> run-notebook_id OR native_headers-run_id <> run_id OR native_headers-cell_id <> cell_id OR native_headers-revision <> revision.
           RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_INTEGRITY' detail = 'Dataset metadata does not match the completed result'.
         ENDIF.
@@ -926,7 +926,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
           output_json = zcl_bn_store=>read( kind = 'D' id = |{ run_id }:{ cell_id }| revision = revision ).
         ENDIF.
         CLEAR dataset.
-        /ui2/cl_json=>deserialize( EXPORTING json = output_json pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = dataset ).
+        /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( output_json ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = dataset ).
         IF dataset-tables IS NOT INITIAL.
           DATA selected_table TYPE zcl_bn_context=>ty_table.
           IF table_name IS INITIAL.

@@ -145,7 +145,7 @@ CLASS zcl_bn_context IMPLEMENTATION.
     IF mv_run_id IS NOT INITIAL AND zcl_bn_store=>current( kind = 'R' id = mv_run_id ) > 0.
       DATA json TYPE string. json = zcl_bn_store=>read( kind = 'R' id = mv_run_id ).
       DATA run TYPE zcl_bn_types=>ty_run.
-      /ui2/cl_json=>deserialize( EXPORTING json = json pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = run ).
+      /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( json ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = run ).
       IF run-cancel_requested = abap_true.
         RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'CANCELLED' detail = 'Cancellation requested at a calculation boundary'.
       ENDIF.
@@ -341,7 +341,7 @@ CLASS zcl_bn_context IMPLEMENTATION.
              rows TYPE tt_rows,
            END OF ty_dataset.
     DATA dataset TYPE ty_dataset.
-    /ui2/cl_json=>deserialize( EXPORTING json = json pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = dataset ).
+    /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( json ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = dataset ).
     rows = dataset-rows.
   ENDMETHOD.
   METHOD check_data_snapshot.
@@ -433,7 +433,7 @@ CLASS zcl_bn_context IMPLEMENTATION.
         RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_BINDING' detail = 'Persisted dataset access requires a notebook execution context'.
       ENDIF.
       DATA(json) = zcl_bn_store=>read( kind = 'D' id = |{ binding-run_id }:{ dependency }| revision = binding-revision ).
-      /ui2/cl_json=>deserialize( EXPORTING json = json pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = bound ).
+      /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( json ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = bound ).
       IF bound-notebook_id <> mv_notebook_id OR bound-run_id <> binding-run_id OR bound-cell_id <> dependency OR
          bound-revision <> binding-revision.
         RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_BINDING' detail = 'Producer does not match the frozen notebook dependency'.
@@ -452,7 +452,7 @@ CLASS zcl_bn_context IMPLEMENTATION.
       DATA(key) = zcl_bn_dataset=>storage_id( run_id = binding-run_id cell_id = dependency name = name ).
       DATA(saved_json) = zcl_bn_store=>read( kind = 'W' id = key revision = 1 ).
       DATA saved TYPE zcl_bn_dataset=>ty_saved.
-      /ui2/cl_json=>deserialize( EXPORTING json = saved_json pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = saved ).
+      /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( saved_json ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = saved ).
       IF saved-notebook_id <> mv_notebook_id OR saved-run_id <> binding-run_id OR saved-cell_id <> dependency OR
          saved-revision <> binding-revision OR saved-fingerprint <> bound-fingerprint OR
          CORRESPONDING zcl_bn_dataset=>ty_header( saved-packet ) <> header.
@@ -460,7 +460,7 @@ CLASS zcl_bn_context IMPLEMENTATION.
       ENDIF.
       DATA(producer_json) = zcl_bn_store=>read( kind = 'R' id = binding-run_id ).
       DATA producer TYPE zcl_bn_types=>ty_run.
-      /ui2/cl_json=>deserialize( EXPORTING json = producer_json pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = producer ).
+      /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( producer_json ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = producer ).
       READ TABLE producer-snapshot-cells INTO DATA(producing_cell) WITH KEY id = dependency.
       IF sy-subrc <> 0 OR producer-notebook_id <> mv_notebook_id OR NOT line_exists( producer-results[ cell_id = dependency ] ) OR
          producing_cell-source_version <> saved-source_version OR producing_cell-checksum <> saved-source_checksum.

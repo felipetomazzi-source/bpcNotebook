@@ -34,7 +34,7 @@ CLASS ltcl_compiler IMPLEMENTATION.
     DATA(json) = zcl_bn_types=>request_json( '{"value":"\u000D\u000A\u0009"}' ).
     TYPES: BEGIN OF ty_value, value TYPE string, END OF ty_value.
     DATA parsed TYPE ty_value.
-    /ui2/cl_json=>deserialize( EXPORTING json = json CHANGING data = parsed ).
+    /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( json ) CHANGING data = parsed ).
     cl_abap_unit_assert=>assert_equals( act = parsed-value
       exp = cl_abap_char_utilities=>cr_lf && cl_abap_char_utilities=>horizontal_tab ).
     DATA(literal) = `{"value":"\\u0001"}`.
@@ -61,10 +61,11 @@ CLASS ltcl_compiler IMPLEMENTATION.
     " The installed legacy /UI2 decoder does not decode all \u escapes.
     " Browser JSON.parse verifies the complete 32-control wire round trip separately.
     DATA(normal) = VALUE ty_text( word = cl_abap_char_utilities=>cr_lf
-      message = |É · "quoted" \\ slash{ cl_abap_char_utilities=>horizontal_tab }| ).
+      message = |É · "quoted" \\ slash{ cl_abap_char_utilities=>horizontal_tab }| &&
+        substring( val = cl_abap_char_utilities=>cr_lf off = 0 len = 1 ) && `literal \r` ).
     DATA(normal_json) = zcl_bn_types=>json( normal ).
     DATA output TYPE ty_text.
-    /ui2/cl_json=>deserialize( EXPORTING json = normal_json CHANGING data = output ).
+    /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( normal_json ) CHANGING data = output ).
     cl_abap_unit_assert=>assert_equals( act = output exp = normal ).
   ENDMETHOD.
   METHOD wrapper_and_output.
