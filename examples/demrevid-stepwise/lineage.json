@@ -1,0 +1,564 @@
+{
+  "status": "awaiting platform deployment and native validation",
+  "sourceClass": "ZCL_BN_DEM_ALLOC",
+  "sourceRevision": "91d08e3",
+  "cells": [
+    {
+      "id": "step_01",
+      "stage": "INITIALISE",
+      "method": "initialise",
+      "imports": [],
+      "exports": [
+        "input_data",
+        "output_data",
+        "new_data",
+        "sap_revenues",
+        "conn_reg_split",
+        "l1_l2_mapping",
+        "mat_group_mapping",
+        "rsp_location_material_ratio",
+        "rsp_location_gl_ratio",
+        "cal_location_gl_ratio",
+        "cal_location_conn_seg_ratio",
+        "rsp_supplier_material_ratio",
+        "rsp_supplier_gl_ratio",
+        "cal_supplier_gl_ratio",
+        "cal_supplier_conn_seg_ratio"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "step_02",
+      "stage": "ENRICH_REVENUES",
+      "method": "assign_new_fields_rev",
+      "imports": [
+        {
+          "name": "input_data"
+        },
+        {
+          "name": "new_data"
+        },
+        {
+          "name": "conn_reg_split"
+        },
+        {
+          "name": "l1_l2_mapping"
+        },
+        {
+          "name": "sap_revenues"
+        },
+        {
+          "name": "mat_group_mapping"
+        }
+      ],
+      "exports": [
+        "sap_revenues",
+        "new_data"
+      ],
+      "dependencies": [
+        "step_01"
+      ]
+    },
+    {
+      "id": "step_03",
+      "stage": "CONSOLIDATE",
+      "method": "group",
+      "imports": [
+        {
+          "name": "sap_revenues"
+        },
+        {
+          "name": "sap_revenues_consol"
+        }
+      ],
+      "exports": [
+        "sap_revenues_consol"
+      ],
+      "dependencies": [
+        "step_02"
+      ]
+    },
+    {
+      "id": "step_04",
+      "stage": "LOCATION_ALLOC_METHOD",
+      "method": "calc_location_alloc_method",
+      "imports": [
+        {
+          "name": "new_data"
+        },
+        {
+          "name": "conn_reg_split"
+        },
+        {
+          "name": "rsp_location_material_ratio"
+        },
+        {
+          "name": "rsp_location_gl_ratio"
+        },
+        {
+          "name": "rsp_supplier_material_ratio"
+        },
+        {
+          "name": "cal_location_gl_ratio"
+        },
+        {
+          "name": "cal_location_conn_seg_ratio"
+        },
+        {
+          "name": "sap_revenues_consol"
+        },
+        {
+          "name": "rsp_supplier_gl_ratio"
+        },
+        {
+          "name": "cal_supplier_gl_ratio"
+        },
+        {
+          "name": "cal_supplier_conn_seg_ratio"
+        }
+      ],
+      "exports": [
+        "new_data"
+      ],
+      "dependencies": [
+        "step_03",
+        "step_02",
+        "step_01"
+      ]
+    },
+    {
+      "id": "step_05",
+      "stage": "LOCATION_ALLOC_RATIOS",
+      "method": "calc_location_alloc_ratios",
+      "imports": [
+        {
+          "name": "new_data"
+        },
+        {
+          "name": "conn_reg_split"
+        },
+        {
+          "name": "rsp_location_material_ratio"
+        },
+        {
+          "name": "rsp_location_gl_ratio"
+        },
+        {
+          "name": "cal_location_gl_ratio"
+        },
+        {
+          "name": "cal_location_conn_seg_ratio"
+        },
+        {
+          "name": "rsp_split_ratios"
+        }
+      ],
+      "exports": [
+        "rsp_split_ratios",
+        "new_data"
+      ],
+      "dependencies": [
+        "step_04",
+        "step_01"
+      ]
+    },
+    {
+      "id": "step_06",
+      "stage": "ALLOC_RSP_BILLED_DATA",
+      "method": "calc_alloc_rsp_billed_data",
+      "imports": [
+        {
+          "name": "input_data"
+        },
+        {
+          "name": "new_data"
+        },
+        {
+          "name": "conn_reg_split"
+        },
+        {
+          "name": "l1_l2_mapping"
+        },
+        {
+          "name": "mat_group_mapping"
+        }
+      ],
+      "exports": [
+        "new_data"
+      ],
+      "dependencies": [
+        "step_05",
+        "step_01"
+      ]
+    },
+    {
+      "id": "step_07",
+      "stage": "REMAINING_RSP_BILLING",
+      "method": "calc_remaining_rsp_billing",
+      "imports": [
+        {
+          "name": "new_data"
+        },
+        {
+          "name": "sap_revenues"
+        },
+        {
+          "name": "rsp_split_ratios"
+        }
+      ],
+      "exports": [
+        "new_data"
+      ],
+      "dependencies": [
+        "step_06",
+        "step_02",
+        "step_05"
+      ]
+    },
+    {
+      "id": "step_08",
+      "stage": "RSP_NOT_BILLED_LOCATION",
+      "method": "calc_rsp_not_billed_location",
+      "imports": [
+        {
+          "name": "new_data"
+        },
+        {
+          "name": "sap_revenues"
+        },
+        {
+          "name": "rsp_split_ratios"
+        }
+      ],
+      "exports": [
+        "new_data"
+      ],
+      "dependencies": [
+        "step_07",
+        "step_02",
+        "step_05"
+      ]
+    },
+    {
+      "id": "step_09",
+      "stage": "FFLAS_GROUPING",
+      "method": "calc_fflas_grouping",
+      "imports": [
+        {
+          "name": "input_data"
+        },
+        {
+          "name": "new_data"
+        },
+        {
+          "name": "fflas_month_ratio"
+        },
+        {
+          "name": "sap_revenues_consol"
+        }
+      ],
+      "exports": [
+        "new_data",
+        "fflas_month_ratio"
+      ],
+      "dependencies": [
+        "step_08",
+        "step_01",
+        "step_03"
+      ]
+    },
+    {
+      "id": "step_10",
+      "stage": "PQ_ID_FFLAS_REVENUE",
+      "method": "calc_pq_id_fflas_revenue",
+      "imports": [
+        {
+          "name": "new_data"
+        }
+      ],
+      "exports": [
+        "new_data"
+      ],
+      "dependencies": [
+        "step_09"
+      ]
+    },
+    {
+      "id": "step_11",
+      "stage": "PQ_FFLAS_RATIO",
+      "method": "calc_pq_fflas_ratio",
+      "imports": [
+        {
+          "name": "new_data"
+        }
+      ],
+      "exports": [
+        "new_data"
+      ],
+      "dependencies": [
+        "step_10"
+      ]
+    },
+    {
+      "id": "step_12",
+      "stage": "SUPPLIER_ALLOC_METHOD",
+      "method": "calc_supplier_alloc_method",
+      "imports": [
+        {
+          "name": "new_data"
+        },
+        {
+          "name": "conn_reg_split"
+        },
+        {
+          "name": "rsp_location_material_ratio"
+        },
+        {
+          "name": "rsp_location_gl_ratio"
+        },
+        {
+          "name": "rsp_supplier_material_ratio"
+        },
+        {
+          "name": "cal_location_gl_ratio"
+        },
+        {
+          "name": "cal_location_conn_seg_ratio"
+        },
+        {
+          "name": "sap_revenues_consol"
+        },
+        {
+          "name": "rsp_supplier_gl_ratio"
+        },
+        {
+          "name": "cal_supplier_gl_ratio"
+        },
+        {
+          "name": "cal_supplier_conn_seg_ratio"
+        }
+      ],
+      "exports": [
+        "new_data"
+      ],
+      "dependencies": [
+        "step_11",
+        "step_01",
+        "step_03"
+      ]
+    },
+    {
+      "id": "step_13",
+      "stage": "SUPPLIER_ALLOC_RATIOS",
+      "method": "calc_supplier_alloc_ratios",
+      "imports": [
+        {
+          "name": "new_data"
+        },
+        {
+          "name": "conn_reg_split"
+        },
+        {
+          "name": "rsp_supplier_material_ratio"
+        },
+        {
+          "name": "rsp_supplier_gl_ratio"
+        },
+        {
+          "name": "cal_supplier_gl_ratio"
+        },
+        {
+          "name": "cal_supplier_conn_seg_ratio"
+        },
+        {
+          "name": "supplier_ratios"
+        }
+      ],
+      "exports": [
+        "new_data",
+        "supplier_ratios"
+      ],
+      "dependencies": [
+        "step_12",
+        "step_01"
+      ]
+    },
+    {
+      "id": "step_14",
+      "stage": "ALLOC_ID_REV_SUPPLIER",
+      "method": "calc_alloc_id_rev_supplier",
+      "imports": [
+        {
+          "name": "new_data"
+        },
+        {
+          "name": "supplier_ratios"
+        }
+      ],
+      "exports": [
+        "new_data"
+      ],
+      "dependencies": [
+        "step_13"
+      ]
+    },
+    {
+      "id": "step_15",
+      "stage": "PRICE_MATERIAL_LEVEL",
+      "method": "calc_price_material_level",
+      "imports": [
+        {
+          "name": "input_data"
+        },
+        {
+          "name": "new_data"
+        },
+        {
+          "name": "sap_revenues_consol"
+        }
+      ],
+      "exports": [
+        "new_data"
+      ],
+      "dependencies": [
+        "step_14",
+        "step_01",
+        "step_03"
+      ]
+    },
+    {
+      "id": "step_16",
+      "stage": "HSNS_REV_ALLOC",
+      "method": "calc_hsns_rev_alloc",
+      "imports": [
+        {
+          "name": "input_data"
+        },
+        {
+          "name": "new_data"
+        },
+        {
+          "name": "conn_reg_split"
+        },
+        {
+          "name": "l1_l2_mapping"
+        },
+        {
+          "name": "sap_revenues"
+        },
+        {
+          "name": "mat_group_mapping"
+        }
+      ],
+      "exports": [
+        "new_data"
+      ],
+      "dependencies": [
+        "step_15",
+        "step_01",
+        "step_02"
+      ]
+    },
+    {
+      "id": "step_17",
+      "stage": "FFLAS_RATIOS_BY_MATERIAL",
+      "method": "calc_fflas_ratios_by_material",
+      "imports": [
+        {
+          "name": "new_data"
+        },
+        {
+          "name": "sap_revenues"
+        }
+      ],
+      "exports": [
+        "new_data"
+      ],
+      "dependencies": [
+        "step_16",
+        "step_02"
+      ]
+    },
+    {
+      "id": "step_18",
+      "stage": "TRANSPOSE_REVENUES",
+      "method": "transpose_revenues",
+      "imports": [
+        {
+          "name": "input_data"
+        },
+        {
+          "name": "new_data"
+        },
+        {
+          "name": "transposed_revenues"
+        }
+      ],
+      "exports": [
+        "new_data",
+        "transposed_revenues"
+      ],
+      "dependencies": [
+        "step_17",
+        "step_01"
+      ]
+    },
+    {
+      "id": "step_19",
+      "stage": "TRANSPOSE_PRICES",
+      "method": "transpose_prices",
+      "imports": [
+        {
+          "name": "input_data"
+        },
+        {
+          "name": "new_data"
+        },
+        {
+          "name": "transposed_revenues"
+        }
+      ],
+      "exports": [
+        "new_data"
+      ],
+      "dependencies": [
+        "step_18",
+        "step_01"
+      ]
+    },
+    {
+      "id": "step_20",
+      "stage": "TRANSPOSE_CONNECTIONS",
+      "method": "transpose_connections",
+      "imports": [
+        {
+          "name": "input_data"
+        },
+        {
+          "name": "new_data"
+        },
+        {
+          "name": "conn_reg_split"
+        },
+        {
+          "name": "l1_l2_mapping"
+        },
+        {
+          "name": "mat_group_mapping"
+        },
+        {
+          "name": "transposed_revenues"
+        }
+      ],
+      "exports": [
+        "new_data",
+        "transposed_revenues"
+      ],
+      "dependencies": [
+        "step_19",
+        "step_01",
+        "step_18"
+      ]
+    }
+  ]
+}
