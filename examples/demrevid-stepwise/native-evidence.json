@@ -1,0 +1,153 @@
+{
+  "kind": "complete native multi-cell original comparison",
+  "notebookId": "E82AEA36D1571FD1B0F40B2F42FC568E",
+  "at": "2026-10-09T05:30:53.322Z",
+  "customerEquivalent": false,
+  "cases": [
+    {
+      "scenario": "standard",
+      "suppress": true,
+      "runId": "E82AEA36D1571FD1B0F453650F3356D6",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "24",
+        "NOTEBOOK_ROWS": "24",
+        "UNCHANGED": "24",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "25",
+        "NOTEBOOK_ROWS": "25",
+        "UNCHANGED": "25",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "zeroClears": 3
+    },
+    {
+      "scenario": "standard",
+      "suppress": false,
+      "runId": "E82AEA36D1571FD1B0F456E51D6356D6",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "25",
+        "NOTEBOOK_ROWS": "25",
+        "UNCHANGED": "25",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "26",
+        "NOTEBOOK_ROWS": "26",
+        "UNCHANGED": "26",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "zeroClears": 3
+    },
+    {
+      "scenario": "fallback",
+      "suppress": false,
+      "runId": "E82AEA36D1571FD1B0F45A78F69196D7",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "19",
+        "NOTEBOOK_ROWS": "19",
+        "UNCHANGED": "19",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "20",
+        "NOTEBOOK_ROWS": "20",
+        "UNCHANGED": "20",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "zeroClears": 3
+    },
+    {
+      "scenario": "rounding",
+      "suppress": false,
+      "runId": "E82AEA36D1571FD1B0F45E1E80D616DA",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "25",
+        "NOTEBOOK_ROWS": "25",
+        "UNCHANGED": "25",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "26",
+        "NOTEBOOK_ROWS": "26",
+        "UNCHANGED": "26",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "zeroClears": 3
+    },
+    {
+      "scenario": "negative",
+      "suppress": false,
+      "runId": "E82AEA36D1571FD1B0F46271479556DD",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "25",
+        "NOTEBOOK_ROWS": "25",
+        "UNCHANGED": "25",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "26",
+        "NOTEBOOK_ROWS": "26",
+        "UNCHANGED": "26",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "zeroClears": 3
+    }
+  ]
+}

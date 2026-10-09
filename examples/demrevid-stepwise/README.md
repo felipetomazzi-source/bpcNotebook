@@ -1,31 +1,32 @@
-# DEMREVID003 step-by-step conversion
+# DEMREVID003 step-by-step allocation
 
-Status: source draft, awaiting working-dataset/tab platform deployment and native verification. **This is not yet a saved, executable SAP notebook.** The existing one-cell allocation notebook is unchanged.
+Saved SAP notebook: **DEMREVID003 - step-by-step allocation**, ID `E82AEA36D1571FD1B0F434ABC4D096B7`, environment **CH_PLANNING**, model **DEMREVID**. The source is on branch `codex/SSNG-3218-fixture-validation`.
 
-`definition.draft.json` contains one notebook with 20 numbered calculation cells and a final replacement/delta reconciliation cell. `rules.json` supplies an accountant-facing explanation and check for each tab. `cells/` contains the visible ABAP bodies. `lineage.json` records native table dependencies. `build.cjs` mechanically expands the reviewed port's stage bodies; it does not invoke the allocation engine.
+One notebook contains 20 ordered calculation tabs and a final reconciliation tab. Business rules are visible in these cells; the operational notebook does not call the original allocation class or the one-cell allocation engine. Each tab explains its rule and the control to inspect. Advanced ABAP is available for technical maintenance. This first version uses installed generic table/dimension/transform helpers; it is not a no-code rule editor.
 
-The business rules are in the cells. Repeated enrichment and driver-precedence rules are expanded in place. Generic Notebook IO handles frozen selections, security, complete reads, native working artifacts and bounded previews. Existing `ZCL_BN_DEM_MODEL`, `ZCL_BN_DIMENSION`, `ZCL_BN_TRANSFORM`, BPC parameter/current-view classes and SAP types remain helper dependencies in this first iteration. This is not yet a no-code rule editor or a port to the limited Script v1 grammar.
+## How to test
 
-Requested platform contract, being implemented by the **Build BPC Notebook** session:
+1. Open BPC Notebook and select CH_PLANNING → DEMREVID → **DEMREVID003 - step-by-step allocation**.
+2. In Setup choose CATEGORY and output TIME. Review REFERENCE_TIME separately: it includes mapping periods and any required fiscal lookback/next periods. The saved example uses Actual / 2025.007, with TIME_NA and 2025.008 plus one metadata-based prior period. Change references to suit your output periods; do not infer dates from member names.
+3. Review FFLASMATGROUPS and its corresponding FFLASMATGROUPSID. The default suppresses MATGROUPID038. Keep paired flag/ID semantics when configuring more groups.
+4. Start at tab 1 using **Run cell**, or select a later tab and use **Run through**. **Run all** executes the complete chain. Later cells require completed, fresh declared predecessors.
+5. Inspect read diagnostics, complete dataset counts, bounded DATASET previews and CONTROL_TOTALS. Totals retain key figure/account/material/audit-trail grain; prices and ratios must not be added to revenue totals.
+6. In the reconciliation tab inspect complete replacement and delta counts/totals. Zero delta amounts intentionally clear disappeared old records.
 
-```abap
-io->publish_dataset( name = 'REVENUES' rows = complete_native_table ).
-DATA(table_ref) = io->read_dataset( dependency = 'step_01' name = 'REVENUES' ).
-```
+Changing inputs or source requires fresh downstream execution. Rerunning the initial stage establishes new complete financial inputs. It retains output/reference facts on SAP; later cells filter those native artifacts rather than reading new financial amounts. Metadata and authorization are checked at each cell boundary. A preview is never a calculation input.
 
-The API must preserve native SAP amounts, every dimension, original row order, schema and provenance. A preview never serves as a calculation input. Dependencies use the latest producer of each changed table; unchanged tables retain their original producer. Stage dependencies also include the previous step to enforce the ordered chain. Rerunning a step must invalidate affected downstream results.
+## Verification and limits
 
-The first cell retains complete output/mapping/lookback facts. The connection stage filters those retained facts rather than reading new period amounts later. Filtering an empty retained table must remain empty, never trigger a live query fallback. Metadata helpers still use current authorized metadata; this is not a full historical SAP database snapshot.
+Every primary cell passed native SAP compilation. `verify-native.cjs` runs a separate nonposting comparison notebook against the original calculation using identical complete native fixtures. It compares every dimension and exact SAP SIGNEDDATA for replacement and delta. See `native-evidence.json` for completed scenario evidence, including suppression, fallback, rounding, negative amounts, carry-forward, HSNS and disappeared records. Only recorded succeeded cases establish fixture equivalence.
 
-`cells[].explanation` and `notebook.explanation` provide plain-text guidance. Each cell must be reachable through the forthcoming tab navigation. Accountants select CATEGORY and output TIME, review separate reference periods and suppression flags, then run each tab and inspect the output. Advanced source remains inspectable/editable. Input selections and source edits require fresh dependent results.
+`verify-execution.cjs` checks all/one/through execution on the operational notebook; `execution-evidence.json` records results when complete. Empty customer data proves execution only. Actual 2025.007 customer financial equivalence and production-scale performance remain acceptance tasks.
 
-Before publishing the finished notebook:
+Complete working tables remain in SAP with explicit row/byte budgets. The browser receives bounded previews. Budget failures stop the calculation rather than truncate inputs; million-row workloads have not been validated.
 
-1. Integrate the documented working-table and tab API into the pushed feature branch, check live drift and deploy through abapGit.
-2. Save and SAP-validate every cell; review expanded helpers and exact table lineage.
-3. Run all cells on complete nonempty native fixtures; compare final replacement and delta against the unchanged original calculation across all dimensions and exact SIGNEDDATA.
-4. Repeat suppression, fallback, rounding, negative amounts, carry-forward, HSNS and disappeared-old-record cases.
-5. Exercise Run cell, Run through, Run all, source/input changes, stale dependencies, failed cells and resource limits.
-6. Verify real selected customer data separately. Empty reads and successful compilation do not prove equivalence.
+No financial posting, Script Logic binding, allocation_result or transaction commit is included. The existing Data Manager calculation remains unchanged. Posting requires separate acceptance and its caller-owned CT_DATA change-set contract.
 
-No `allocation_result`, financial write, Script Logic binding or transaction commit is included. Final artifacts preserve complete replacement and delta for inspection/comparison only. Posting requires separate acceptance and the explicit caller-owned change-set contract.
+## Source maintenance
+
+`build.cjs` expands reviewed stage bodies and repeated lookup/enrichment rules into visible cells. `rules.json` supplies explanations, `lineage.json` records dependencies, and `definition.draft.json` is the executable saved definition (historical filename retained for tooling compatibility). `build-validation.cjs` adds fixture preparation and independent original comparison around the same stages. Never interpret `check-source.cjs` substituted-body syntax checks as native API/runtime evidence.
+
+Global ABAP helpers/platform changes must be committed, pushed and imported through abapGit with a transport. Notebook definitions are saved through the Notebook API. Do not upload global ABAP source directly through ADT.

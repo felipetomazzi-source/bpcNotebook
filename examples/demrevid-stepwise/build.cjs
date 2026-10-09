@@ -175,5 +175,5 @@ definition.explanation = 'Choose CATEGORY, output TIME, and separate reference p
 definition.inputs = definition.inputs.filter(x=>x.name!=='STOP_AFTER').map(x=>{delete x.fiscalLinks; delete x.resolved; return x;});
 definition.cells = cells;
 fs.writeFileSync(path.join(__dirname,'definition.draft.json'),JSON.stringify(definition,null,2)+'\n');
-fs.writeFileSync(path.join(__dirname,'lineage.json'),JSON.stringify({status:'awaiting platform deployment and native validation',sourceClass:'ZCL_BN_DEM_ALLOC',sourceRevision:'91d08e3',cells:lineage},null,2)+'\n');
-console.log(JSON.stringify({cells:cells.length,maxSourceLength:Math.max(...cells.map(c=>c.source.length)),status:'draft; not SAP-validated'}));
+fs.writeFileSync(path.join(__dirname,'lineage.json'),JSON.stringify({status:'generated source; deployment and verification recorded separately',sourceClass:'ZCL_BN_DEM_ALLOC',sourceRevision:'91d08e3',cells:lineage},null,2)+'\n');
+console.log(JSON.stringify({cells:cells.length,maxSourceLength:Math.max(...cells.map(c=>c.source.length)),status:'generated; see native-evidence.json and execution-evidence.json for SAP verification'}));

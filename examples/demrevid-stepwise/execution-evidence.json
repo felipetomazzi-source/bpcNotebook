@@ -1,0 +1,166 @@
+{
+  "notebookId": "E82AEA36D1571FD1B0F434ABC4D096B7",
+  "at": "2026-10-09T05:33:26.651Z",
+  "financialPosting": false,
+  "customerEquivalent": false,
+  "runs": [
+    {
+      "id": "E82AEA36D1571FD1B0F45E981E6416DA",
+      "scope": "all",
+      "cellId": "",
+      "state": "succeeded",
+      "cells": [
+        {
+          "id": "step_01",
+          "durationMs": 9528,
+          "previewRows": 0
+        },
+        {
+          "id": "step_02",
+          "durationMs": 1248,
+          "previewRows": 0
+        },
+        {
+          "id": "step_03",
+          "durationMs": 400,
+          "previewRows": 0
+        },
+        {
+          "id": "step_04",
+          "durationMs": 1816,
+          "previewRows": 0
+        },
+        {
+          "id": "step_05",
+          "durationMs": 1199,
+          "previewRows": 0
+        },
+        {
+          "id": "step_06",
+          "durationMs": 973,
+          "previewRows": 0
+        },
+        {
+          "id": "step_07",
+          "durationMs": 603,
+          "previewRows": 0
+        },
+        {
+          "id": "step_08",
+          "durationMs": 540,
+          "previewRows": 0
+        },
+        {
+          "id": "step_09",
+          "durationMs": 649,
+          "previewRows": 0
+        },
+        {
+          "id": "step_10",
+          "durationMs": 366,
+          "previewRows": 0
+        },
+        {
+          "id": "step_11",
+          "durationMs": 461,
+          "previewRows": 0
+        },
+        {
+          "id": "step_12",
+          "durationMs": 1877,
+          "previewRows": 0
+        },
+        {
+          "id": "step_13",
+          "durationMs": 1386,
+          "previewRows": 0
+        },
+        {
+          "id": "step_14",
+          "durationMs": 489,
+          "previewRows": 0
+        },
+        {
+          "id": "step_15",
+          "durationMs": 660,
+          "previewRows": 0
+        },
+        {
+          "id": "step_16",
+          "durationMs": 1421,
+          "previewRows": 0
+        },
+        {
+          "id": "step_17",
+          "durationMs": 515,
+          "previewRows": 0
+        },
+        {
+          "id": "step_18",
+          "durationMs": 608,
+          "previewRows": 0
+        },
+        {
+          "id": "step_19",
+          "durationMs": 781,
+          "previewRows": 0
+        },
+        {
+          "id": "step_20",
+          "durationMs": 1494,
+          "previewRows": 0
+        },
+        {
+          "id": "reconcile",
+          "durationMs": 603,
+          "previewRows": 0
+        }
+      ]
+    },
+    {
+      "id": "E82AEA36D1571FD1B0F461F6222C16DD",
+      "scope": "one",
+      "cellId": "step_02",
+      "state": "succeeded",
+      "cells": [
+        {
+          "id": "step_02",
+          "durationMs": 564,
+          "previewRows": 0
+        }
+      ]
+    },
+    {
+      "id": "E82AEA36D1571FD1B0F46216EAF596DD",
+      "scope": "through",
+      "cellId": "step_04",
+      "state": "succeeded",
+      "cells": [
+        {
+          "id": "step_01",
+          "durationMs": 1118,
+          "previewRows": 0
+        },
+        {
+          "id": "step_02",
+          "durationMs": 786,
+          "previewRows": 0
+        },
+        {
+          "id": "step_03",
+          "durationMs": 191,
+          "previewRows": 0
+        },
+        {
+          "id": "step_04",
+          "durationMs": 911,
+          "previewRows": 0
+        }
+      ]
+    }
+  ],
+  "staleDependency": {
+    "code": "STALE_DEPENDENCY",
+    "message": "Execute current dependency step_05"
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "status": "awaiting platform deployment and native validation",
+  "status": "generated source; deployment and verification recorded separately",
   "sourceClass": "ZCL_BN_DEM_ALLOC",
   "sourceRevision": "91d08e3",
   "cells": [
