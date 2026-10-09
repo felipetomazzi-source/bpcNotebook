@@ -127,6 +127,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
   METHOD check_definition.
+    zcl_bn_types=>validate_text( notebook-title ). zcl_bn_types=>validate_text( notebook-explanation ).
     budget_seconds( notebook-inputs ).
     LOOP AT notebook-inputs INTO DATA(resource) WHERE name = 'READ_LIMIT' OR name = 'WORK_ROWS' OR name = 'PREVIEW_ROWS' OR name = 'DATASET_BYTES'.
       DATA(limit_value) = CONV decfloat34( resource-value ).
@@ -144,6 +145,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
     ENDIF.
     DATA seen TYPE zcl_bn_types=>tt_ids.
     LOOP AT notebook-inputs INTO DATA(parameter).
+      zcl_bn_types=>validate_text( parameter-value ).
       FIND REGEX '^[A-Za-z][A-Za-z0-9_]{0,29}$' IN parameter-name.
       IF sy-subrc <> 0 OR line_exists( seen[ table_line = parameter-name ] ).
         RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'INPUT_NAME' detail = 'Input names must be unique identifiers'.
@@ -167,6 +169,8 @@ CLASS zcl_bn_service IMPLEMENTATION.
     ENDLOOP.
     CLEAR seen.
     LOOP AT notebook-cells INTO DATA(cell).
+      zcl_bn_types=>validate_text( cell-source ). zcl_bn_types=>validate_text( cell-title ).
+      zcl_bn_types=>validate_text( cell-explanation ).
       IF strlen( cell-explanation ) > 4000.
         RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'EXPLANATION' detail = 'Stage explanation exceeds 4000 characters'.
       ENDIF.
@@ -786,7 +790,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
     authorize( '03' ).
     DATA request TYPE ty_request.
     IF body IS NOT INITIAL.
-      /ui2/cl_json=>deserialize( EXPORTING json = body pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = request ).
+      /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>request_json( body ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = request ).
     ENDIF.
     DATA notebook TYPE zcl_bn_types=>ty_notebook.
     DATA run TYPE zcl_bn_types=>ty_run.

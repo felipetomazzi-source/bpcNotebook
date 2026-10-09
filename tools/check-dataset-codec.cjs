@@ -49,10 +49,10 @@ CLASS ${helper.toLowerCase()} IMPLEMENTATION.
  ENDMETHOD.
 ENDCLASS.`;
 (async()=>{await c.login();c.stateful='stateful';try{
- const found=await c.searchObject(helper,'',10);if(!found.some(o=>o['adtcore:name']===helper))await c.createObject('CLAS/OC',helper,'$TMP','Isolated native dataset verification','/sap/bc/adt/packages/%24tmp');
- const url='/sap/bc/adt/oo/classes/'+helper.toLowerCase(),{LOCK_HANDLE}=await c.lock(url);
- try{await c.setObjectSource(url+'/source/main',source,LOCK_HANDLE);}finally{await c.unLock(url,LOCK_HANDLE);}
- const activation=await c.activate(helper,url);if(!activation.success)throw Error(JSON.stringify(activation));
+ const url='/sap/bc/adt/oo/classes/'+helper.toLowerCase();
+ const installed=await c.getObjectSource(url+'/source/main');
+ if(!installed.includes("obj_name = '"+target+"'") || !installed.includes("devclass = '$TMP'"))
+   throw Error('Install the reviewed isolated helper through Git/abapGit first; no direct global source upload is allowed');
  const output=await c.runClass(helper);if(output.includes('ERROR|'))throw Error(output.split(/\r?\n/).filter(s=>s.includes('ERROR|')).join('\n'));
  const evidence={at:new Date().toISOString(),method:'Isolated $TMP CLAS import/serialize using native abapGit; class renamed; two context integration tests excluded until coordinated deployment',files:[],tests:null,passed:false};
  for(const line of output.split(/\r?\n/)){if(!line.startsWith('FILE|'))continue;const [,filename,data]=line.split('|'),bytes=Buffer.from(data,'base64');fs.writeFileSync(folder+'/'+filename,bytes);evidence.files.push({filename,equal:bytes.equals(expected.get(filename)),sapSha256:createHash('sha256').update(bytes).digest('hex')});expected.delete(filename);}
