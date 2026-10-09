@@ -151,6 +151,7 @@ sap.ui.define(
           },
         });
         this.runStatus = new m.ObjectStatus({ text: "No executions yet" }).addStyleClass("runStatus");
+        this.datasetInfo = new m.Text({wrapping:true,renderWhitespace:true});
         this.runDetails = new m.Text().addStyleClass("runDetails");
         this.runMessages = new m.VBox();
         this.outputSelect = new m.Select({
@@ -204,7 +205,7 @@ sap.ui.define(
             }),
             this.runDetails,
             this.runMessages,
-            this.outputSelect,
+            this.datasetInfo, this.outputSelect,
             this.datasetSelect,
             this.table,
             new m.HBox({
@@ -287,9 +288,11 @@ sap.ui.define(
             }),
           ],
         }).addStyleClass("notebookToolbar");
+        this.stageTabs = new m.IconTabBar({expandable:false, applyContentPadding:false, select:function(e) { self.selectStage(e.getParameter("key")); }});
+        this.setupHelp = new m.VBox();
         var main = this.workspace = new m.VBox({
           width: "100%",
-          items: [this.title, this.meta, toolbar, this.inputs, this.cells, this.resultBox],
+          items: [this.title, this.meta, toolbar, this.stageTabs, this.setupHelp, this.inputs, this.cells, this.resultBox],
         }).addStyleClass("main");
         main.setLayoutData(new m.FlexItemData({ growFactor: 1, baseSize: "0" }));
         var banner = new m.MessageStrip({
@@ -419,7 +422,12 @@ sap.ui.define(
       },
       clearNotebook: function () {
         this.resetReview(); this.notebook = null; this.scriptNotebook = null; this.scriptDrafts = {}; this.dirty = false;
-        this.cells.destroyItems(); this.inputs.destroyItems(); this.title.setText("Select a notebook or create one"); this.meta.setText("");
+        this.cells.destroyItems(); this.stageTabs.destroyItems();
+        this.stageTabs.addItem(new m.IconTabFilter({key:"setup",text:"Setup",icon:"sap-icon://settings"}));
+        this.setupHelp.destroyItems();
+        this.setupHelp.addItem(new m.Text({text:n.explanation || "Select the calculation parameters, then run all stages or choose a stage.",wrapping:true}));
+        this.setupHelp.addItem(new m.Button({text:"Edit explanation",press:function() { self.editExplanation(n,8000); }}));
+        this.inputs.destroyItems(); this.title.setText("Select a notebook or create one"); this.meta.setText("");
       },
       deleteNotebook: function (notebook) {
         var self = this;
@@ -503,7 +511,8 @@ sap.ui.define(
       renderNotebook: function () {
         var self = this,
           n = this.notebook;
-        if (this.scriptNotebook !== n.id) { this.scriptDrafts = {}; this.scriptNotebook = n.id; }
+        if (this.scriptNotebook !== n.id) { this.scriptDrafts = {}; this.scriptNotebook = n.id;
+          if (this.stageNotebook !== n.id) { this.selectedStage = "setup"; this.stageNotebook = n.id; } }
         this.dirty = false;
         this.title.setText(n.title);
         this.meta.setText(
@@ -520,7 +529,7 @@ sap.ui.define(
             new m.VBox({
               items: [
                 new m.Label({ text: p.name + " · " + p.type }),
-                new m.Input({
+                p.type === "boolean" ? new m.Switch({state:p.value === true || p.value === "true",change:function(e) { p.value=e.getParameter("state"); self.mark(); }}) : new m.Input({
                   width: "170px",
                   change: function (e) {
                     var value = e.getSource().getValue();
@@ -535,6 +544,7 @@ sap.ui.define(
         });
         this.cells.destroyItems();
         n.cells.forEach(function (c, index) {
+          self.stageTabs.addItem(new m.IconTabFilter({key:c.id,text:(index+1) + " · " + c.title}));
           var state = new m.ObjectStatus({
             text: c.output
               ? c.output.stale
@@ -603,6 +613,14 @@ sap.ui.define(
               new m.Text({ text: "Cell " + c.id + " · source v" + c.sourceVersion }).addStyleClass(
                 "cellMeta",
               ),
+              new m.Text({text:c.explanation || "No stage explanation has been added.",wrapping:true}),
+              new m.Text({text:"Prerequisites: " + (c.dependencies.length ? c.dependencies.join(", ") : "None"),wrapping:true}),
+              new m.OverflowToolbar({content:[
+                new m.Button({text:"Run cell",icon:"sap-icon://media-play",press:function() { self.execute("one",c.id); }}),
+                new m.Button({text:"Run through",press:function() { self.execute("through",c.id); }}),
+                new m.Button({text:"Edit explanation",press:function() { self.editExplanation(c,4000); }})
+              ]}),
+              new m.Panel({headerText:"Advanced ABAP and dependencies",expandable:true,expanded:false,content:[
               editor,
               scriptStatus,
               new m.HBox({
@@ -637,27 +655,35 @@ sap.ui.define(
                       self.validate(c.id);
                     },
                   }),
-                  new m.Button({
-                    text: "Run cell",
-                    icon: "sap-icon://media-play",
-                    press: function () {
-                      self.execute("one", c.id);
-                    },
-                  }),
-                  new m.Button({
-                    text: "Run through",
-                    press: function () {
-                      self.execute("through", c.id);
-                    },
-                  }),
                 ],
-              }).addStyleClass("cellActions"),
+              }).addStyleClass("cellActions")]}),
             ],
           })
             .addStyleClass("cell")
             .data("status", state).data("cellId",c.id).data("editor",editor);
           self.cells.addItem(box);
         });
+        this.selectStage(this.selectedStage || "setup");
+      },
+      selectStage: function(key) {
+        if (key !== "setup" && !this.notebook.cells.some(function(c) { return c.id === key; })) { key="setup"; }
+        this.selectedStage=key; this.stageTabs.setSelectedKey(key);
+        this.inputs.setVisible(key === "setup"); this.setupHelp.setVisible(key === "setup");
+        this.cells.getItems().forEach(function(panel) { panel.setVisible(panel.data("cellId") === key); });
+        if (key !== "setup") {
+          this.activeCell=key;
+          if (this.outputSelect.getItems().some(function(item) { return item.getKey() === key; })) {
+            this.outputSelect.setSelectedKey(key); this.pageOffset=0; this.tableName=""; this.preview();
+          }
+        }
+      },
+      editExplanation: function(target,limit) {
+        var self=this, input=new m.TextArea({value:target.explanation || "",width:"100%",rows:10,maxLength:limit});
+        var dialog=new m.Dialog({title:"Calculation explanation",contentWidth:"40rem",content:[input],
+          beginButton:new m.Button({text:"Apply",type:"Emphasized",press:function() {
+            target.explanation=input.getValue(); self.renderNotebook(); self.mark(); dialog.close();
+          }}),endButton:new m.Button({text:"Cancel",press:function() { dialog.close(); }}),afterClose:function() { dialog.destroy(); }});
+        dialog.open();
       },
       save: function () {
         var self = this;
@@ -1425,7 +1451,7 @@ sap.ui.define(
             });
             var outputs = r.results.slice();
             if (r.checkpointCell) { outputs.push({cellId:r.checkpointCell,rowCount:"partial checkpoint previews",durationMs:r.durationMs}); }
-            var selected = self.outputSelect.getSelectedKey();
+            var selected = outputs.some(function(o) { return o.cellId === self.selectedStage; }) ? self.selectedStage : self.outputSelect.getSelectedKey();
             self.outputSelect.removeAllItems();
             outputs.forEach(function (o) {
               self.outputSelect.addItem(
@@ -1481,8 +1507,8 @@ sap.ui.define(
         }
       },
       retry: function () {
-        if (this.currentRun && this.currentRun.snapshot.inputs.some(function (p) { return p.purpose === "reference"; })) {
-          MessageBox.information("Reference calculations require a new run with a new data snapshot. Use Run all; historical retry is unavailable."); return;
+        if (this.currentRun && this.currentRun.snapshot.model || this.currentRun && this.currentRun.snapshot.inputs.some(function (p) { return p.purpose === "reference"; })) {
+          MessageBox.information("BPC calculations require a new run with a new data snapshot. Use Run all; historical retry is unavailable."); return;
         }
         if (this.currentRun && this.currentRun.scope === "logic") {
           MessageBox.information("Invoke the handler again from Script Logic to preserve its current view and transaction."); return;
@@ -1561,6 +1587,19 @@ sap.ui.define(
         )
           .then(function (page) {
             if (self.previewToken !== token || self.runId !== requestRun) { return; }
+            self.datasetInfo.setText("");
+            if (!Api.local && !page.partial) {
+              Api.request("/datasets?runId=" + encodeURIComponent(requestRun) + "&cellId=" + encodeURIComponent(id) + "&revision=1")
+                .then(function(info) {
+                  if (self.previewToken !== token || self.runId !== requestRun) { return; }
+                  var inputs=(info.reads || []).map(function(d) { return d.dependency + "." + d.name + " (" + d.rowCount + " rows)"; });
+                  var outputs=(info.artifacts || []).map(function(d) { return d.name + " (" + d.rowCount + " rows)"; });
+                  if (inputs.length || outputs.length) {
+                    self.datasetInfo.setText("Input datasets: " + (inputs.join(", ") || "None") + "\nOutput datasets: " + (outputs.join(", ") || "None") +
+                      "\nComplete working tables remain on SAP. The grid shows bounded previews.");
+                  }
+                }).catch(function(e) { if (self.previewToken === token && self.runId === requestRun) { self.error(e); } });
+            }
             self.total = page.total;
             self.previewModel.setProperty("/rows",[]);
             self.table.destroyColumns();

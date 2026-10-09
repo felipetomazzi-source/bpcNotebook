@@ -66,6 +66,7 @@ export class Engine {
     if (typeof n.title !== 'string' || !n.title.trim() || n.title.length > 120) fail(400, 'TITLE', 'Title is required (max 120 characters)');
     if (!Array.isArray(n.cells) || n.cells.length > 30) fail(400, 'CELL_LIMIT', 'At most 30 cells per notebook');
     if (!Array.isArray(n.inputs) || n.inputs.length > 50) fail(400, 'INPUTS', 'At most 50 typed inputs');
+    if (n.explanation !== undefined && (typeof n.explanation !== 'string' || n.explanation.length > 8000)) fail(400, 'EXPLANATION', 'Setup explanation exceeds 8000 characters');
     const names = new Set();
     for (const p of n.inputs) {
       if (!/^[a-zA-Z][a-zA-Z0-9_]{0,29}$/.test(p.name) || names.has(p.name)) fail(400, 'INPUT_NAME', 'Input names must be unique identifiers');
@@ -76,6 +77,7 @@ export class Engine {
     }
     const seen = new Set();
     for (const c of n.cells) {
+      if (c.explanation !== undefined && (typeof c.explanation !== 'string' || c.explanation.length > 4000)) fail(400, 'EXPLANATION', 'Stage explanation exceeds 4000 characters');
       if (!/^[a-zA-Z][a-zA-Z0-9_-]{0,29}$/.test(c.id) || seen.has(c.id)) fail(400, 'CELL_ID', 'Cell IDs must be unique identifiers');
       if (typeof c.source !== 'string' || c.source.length > 60000) fail(400, 'SOURCE', 'Source must be text (max 60 KB)');
       if (typeof c.title !== 'string' || c.title.length > 120) fail(400, 'CELL_TITLE', 'Cell title is required');
@@ -98,7 +100,7 @@ export class Engine {
       const checksum = hash(c.source);
       return {...copy(c), checksum, sourceVersion: (previous?.sourceVersion || 0) + (previous?.checksum === checksum ? 0 : 1)};
     });
-    const version = {id, title: data.title.trim(), environment: data.environment || '', model: data.model || '', inputs: copy(data.inputs), cells,
+    const version = {id, explanation: data.explanation || '', title: data.title.trim(), environment: data.environment || '', model: data.model || '', inputs: copy(data.inputs), cells,
       revision: n.current + 1, author: user, savedAt: now()};
     version.checksum = hash(version); n.versions.push(version); n.current++;
     this.audit(user, 'SAVE', id); this.persist(); return this.get(id, user);

@@ -14,6 +14,7 @@ CLASS zcl_bn_service DEFINITION PUBLIC FINAL CREATE PUBLIC.
              tables TYPE zcl_bn_context=>tt_tables,
              checkpoints TYPE zcl_bn_context=>tt_checkpoints,
              reads TYPE zcl_bn_context=>tt_reads, fixture_mode TYPE abap_bool,
+             artifacts TYPE zcl_bn_dataset=>tt_headers, dataset_reads TYPE zcl_bn_dataset=>tt_access,
            END OF ty_dataset.
     CLASS-METHODS authorize IMPORTING activity TYPE char2 RAISING zcx_bn.
     CLASS-METHODS get_notebook IMPORTING id TYPE string
@@ -46,7 +47,8 @@ CLASS zcl_bn_service DEFINITION PUBLIC FINAL CREATE PUBLIC.
              run_id TYPE string, cell_id TYPE string, revision TYPE i, notebook_id TYPE string,
              fingerprint TYPE string, created_at TYPE string, row_count TYPE i, logic_call TYPE abap_bool,
              fixture_mode TYPE abap_bool,
-             bindings TYPE zcl_bn_types=>tt_bindings,
+             bindings TYPE zcl_bn_types=>tt_bindings, artifacts TYPE zcl_bn_dataset=>tt_headers,
+             retention_until TYPE timestampl,
            END OF ty_dataset_header,
            tt_dataset_headers TYPE HASHED TABLE OF ty_dataset_header WITH UNIQUE KEY cell_id.
     CLASS-DATA mv_cached_notebook TYPE string.
@@ -57,7 +59,7 @@ CLASS zcl_bn_service DEFINITION PUBLIC FINAL CREATE PUBLIC.
              id TYPE string, notebook_id TYPE string, expected_revision TYPE i,
              handler TYPE string, handler_revision TYPE i, execution_mode TYPE string,
              scope TYPE string, cell_id TYPE string, idempotency_key TYPE string,
-             title TYPE string, cells TYPE zcl_bn_types=>tt_cells,
+             title TYPE string, explanation TYPE string, cells TYPE zcl_bn_types=>tt_cells,
              inputs TYPE zcl_bn_types=>tt_inputs, demo TYPE abap_bool,
              retry_run_id TYPE string,
              environment TYPE string, model TYPE string, kind TYPE string,
@@ -67,6 +69,8 @@ CLASS zcl_bn_service DEFINITION PUBLIC FINAL CREATE PUBLIC.
       RETURNING VALUE(notebook) TYPE zcl_bn_types=>ty_notebook RAISING zcx_bn.
     CLASS-METHODS submit IMPORTING request TYPE ty_request
       RETURNING VALUE(run) TYPE zcl_bn_types=>ty_run RAISING zcx_bn.
+    CLASS-METHODS persist_artifacts IMPORTING notebook_id TYPE string run_id TYPE string
+      cell TYPE zcl_bn_types=>ty_cell fingerprint TYPE string packets TYPE zcl_bn_dataset=>tt_packets RAISING zcx_bn.
     CLASS-METHODS budget_seconds IMPORTING inputs TYPE zcl_bn_types=>tt_inputs RETURNING VALUE(seconds) TYPE i RAISING zcx_bn.
     CLASS-METHODS check_definition IMPORTING notebook TYPE zcl_bn_types=>ty_notebook RAISING zcx_bn.
     CLASS-METHODS fingerprint IMPORTING notebook TYPE zcl_bn_types=>ty_notebook cell_id TYPE string
@@ -124,15 +128,19 @@ CLASS zcl_bn_service IMPLEMENTATION.
   ENDMETHOD.
   METHOD check_definition.
     budget_seconds( notebook-inputs ).
-    LOOP AT notebook-inputs INTO DATA(resource) WHERE name = 'READ_LIMIT' OR name = 'WORK_ROWS' OR name = 'PREVIEW_ROWS'.
+    LOOP AT notebook-inputs INTO DATA(resource) WHERE name = 'READ_LIMIT' OR name = 'WORK_ROWS' OR name = 'PREVIEW_ROWS' OR name = 'DATASET_BYTES'.
       DATA(limit_value) = CONV decfloat34( resource-value ).
-      DATA(maximum) = COND i( WHEN resource-name = 'PREVIEW_ROWS' THEN 5000 ELSE 1000000 ).
+      DATA(maximum) = COND i( WHEN resource-name = 'PREVIEW_ROWS' THEN 5000
+        WHEN resource-name = 'DATASET_BYTES' THEN 268435456 ELSE 1000000 ).
       IF resource-type <> 'number' OR limit_value < 1 OR limit_value > maximum OR limit_value <> trunc( limit_value ).
         RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'RESOURCE_BUDGET' detail = 'Read, working-table and preview budgets must be positive integers within the server limit'.
       ENDIF.
     ENDLOOP.
     IF notebook-title IS INITIAL OR strlen( notebook-title ) > 120 OR lines( notebook-cells ) > 30 OR lines( notebook-inputs ) > 50.
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DEFINITION' detail = 'Title required; maximum 30 cells and 50 inputs'.
+    ENDIF.
+    IF strlen( notebook-explanation ) > 8000.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'EXPLANATION' detail = 'Setup explanation exceeds 8000 characters'.
     ENDIF.
     DATA seen TYPE zcl_bn_types=>tt_ids.
     LOOP AT notebook-inputs INTO DATA(parameter).
@@ -159,6 +167,9 @@ CLASS zcl_bn_service IMPLEMENTATION.
     ENDLOOP.
     CLEAR seen.
     LOOP AT notebook-cells INTO DATA(cell).
+      IF strlen( cell-explanation ) > 4000.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'EXPLANATION' detail = 'Stage explanation exceeds 4000 characters'.
+      ENDIF.
       FIND REGEX '^[A-Za-z][A-Za-z0-9_-]{0,29}$' IN cell-id.
       IF sy-subrc <> 0 OR line_exists( seen[ table_line = cell-id ] ) OR strlen( cell-source ) > 60000.
         RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'CELL' detail = 'Invalid or duplicate cell ID, or source too long'.
@@ -251,7 +262,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
     IF notebook-id IS INITIAL.
       notebook-id = zcl_bn_types=>uuid( ).
     ENDIF.
-    notebook-title = request-title. notebook-cells = request-cells.
+    notebook-title = request-title. notebook-cells = request-cells. notebook-explanation = request-explanation.
     notebook-environment = request-environment. notebook-model = request-model.
     notebook-inputs = zcl_bn_types=>normalize_inputs( request-inputs ).
     check_definition( notebook ).
@@ -318,6 +329,14 @@ CLASS zcl_bn_service IMPLEMENTATION.
   METHOD is_current.
     IF dataset-logic_call = abap_true OR dataset-fixture_mode = abap_true. RETURN. ENDIF.
     IF dataset-run_id IS INITIAL OR dataset-fingerprint <> fingerprint( notebook = notebook cell_id = dataset-cell_id ). RETURN. ENDIF.
+    IF dataset-artifacts IS NOT INITIAL.
+      DATA stamp TYPE timestampl. GET TIME STAMP FIELD stamp.
+      IF dataset-retention_until < stamp. RETURN. ENDIF.
+      LOOP AT dataset-artifacts INTO DATA(artifact).
+        IF zcl_bn_store=>current( kind = 'W' id = zcl_bn_dataset=>storage_id(
+          run_id = dataset-run_id cell_id = dataset-cell_id name = artifact-name ) ) = 0. RETURN. ENDIF.
+      ENDLOOP.
+    ENDIF.
     READ TABLE notebook-cells INTO DATA(cell) WITH KEY id = dataset-cell_id.
     LOOP AT cell-dependencies INTO DATA(dependency).
       DATA upstream TYPE ty_dataset.
@@ -358,9 +377,9 @@ CLASS zcl_bn_service IMPLEMENTATION.
         RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATA_SNAPSHOT'
           detail = 'Fixture inputs are private working tables; install them again in a new validation run' status = 409.
       ENDIF.
-      IF line_exists( original-snapshot-inputs[ purpose = 'reference' ] ).
+      IF original-snapshot-model IS NOT INITIAL OR line_exists( original-snapshot-inputs[ purpose = 'reference' ] ).
         RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATA_SNAPSHOT'
-          detail = 'Reference calculations require a new run and a new data snapshot; historical retry is unavailable' status = 409.
+          detail = 'BPC reads are not historical fact snapshots; start a new Run all instead of rereading facts under an old revision' status = 409.
       ENDIF.
       zcl_bn_store=>lock_notebook( original-notebook_id ).
       DATA(original_json) = zcl_bn_store=>read( kind = 'N' id = original-notebook_id revision = original-snapshot-revision ).
@@ -506,6 +525,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
     DATA stamp TYPE timestampl.
     GET TIME STAMP FIELD started.
     DATA live TYPE zcl_bn_context=>tt_live_outputs.
+    DATA live_datasets TYPE zcl_bn_dataset=>tt_live.
     DATA datasets TYPE STANDARD TABLE OF ty_dataset WITH DEFAULT KEY.
     LOOP AT notebook-cells INTO DATA(cell).
       GET TIME STAMP FIELD stamp.
@@ -526,10 +546,12 @@ CLASS zcl_bn_service IMPLEMENTATION.
       ENDIF.
       DATA(context) = NEW zcl_bn_context( inputs = notebook-inputs bindings = run-bindings
         dependencies = cell-dependencies cell_id = cell-id run_id = run-id environment = notebook-environment model = notebook-model
-        live_outputs = live scope = scope logic_parameters = parameters logic_call = abap_true ).
+        live_outputs = live live_datasets = live_datasets notebook_id = notebook-id
+        scope = scope logic_parameters = parameters logic_call = abap_true ).
       DATA cell_started TYPE timestampl.
       GET TIME STAMP FIELD cell_started.
       PERFORM execute IN PROGRAM (pool) USING context.
+      context->check_budget( ).
       IF context->result_rows IS BOUND AND allocation = abap_true.
         IF result_data IS BOUND OR context->result_kind <> 'delta'.
           RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'RESULT_CONTRACT' detail = 'Publish exactly one delta result for allocation'.
@@ -539,10 +561,16 @@ CLASS zcl_bn_service IMPLEMENTATION.
       GET TIME STAMP FIELD stamp.
       DATA(dataset) = VALUE ty_dataset( logic_call = abap_true run_id = run-id cell_id = cell-id revision = 1 notebook_id = notebook-id
         rows = context->outputs tables = context->tables checkpoints = context->checkpoints
-        reads = context->reads fixture_mode = context->fixture_mode row_count = lines( context->outputs )
+        reads = context->reads fixture_mode = context->fixture_mode artifacts = context->artifacts
+        dataset_reads = context->dataset_reads row_count = lines( context->outputs )
         created_at = zcl_bn_types=>timestamp( ) fingerprint = fingerprint( notebook = notebook cell_id = cell-id )
         schema = VALUE #( ( name = 'key' type = 'string' ) ( name = 'amount' type = 'decimal' ) ) ).
-      LOOP AT dataset-tables INTO DATA(table). dataset-row_count = dataset-row_count + table-row_count. ENDLOOP.
+      IF dataset-artifacts IS NOT INITIAL.
+        dataset-row_count = 0.
+        LOOP AT dataset-artifacts INTO DATA(artifact_count). dataset-row_count = dataset-row_count + artifact_count-row_count. ENDLOOP.
+      ELSE.
+        LOOP AT dataset-tables INTO DATA(table). dataset-row_count = dataset-row_count + table-row_count. ENDLOOP.
+      ENDIF.
       GET TIME STAMP FIELD dataset-retention_until.
       dataset-retention_until = cl_abap_tstmp=>add( tstmp = dataset-retention_until secs = 2592000 ).
       LOOP AT cell-dependencies INTO DATA(dependency).
@@ -550,6 +578,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
         IF sy-subrc = 0. APPEND binding TO dataset-bindings. ENDIF.
       ENDLOOP.
       APPEND dataset TO datasets.
+      APPEND VALUE #( cell_id = cell-id packets = context->dataset_packets( ) ) TO live_datasets.
       APPEND VALUE #( cell_id = cell-id rows = context->outputs ) TO live.
       APPEND VALUE #( cell_id = cell-id run_id = run-id revision = 1 ) TO run-bindings.
       APPEND VALUE #( cell_id = cell-id run_id = run-id revision = 1 row_count = dataset-row_count
@@ -567,6 +596,10 @@ CLASS zcl_bn_service IMPLEMENTATION.
     ENDIF.
     " Stage records only after every cell succeeds. Script Logic owns commit/rollback.
     LOOP AT datasets INTO dataset.
+      READ TABLE notebook-cells INTO cell WITH KEY id = dataset-cell_id.
+      READ TABLE live_datasets INTO DATA(native) WITH KEY cell_id = dataset-cell_id.
+      persist_artifacts( notebook_id = notebook-id run_id = run-id cell = cell
+        fingerprint = dataset-fingerprint packets = native-packets ).
       zcl_bn_store=>write( kind = 'D' id = |{ run-id }:{ dataset-cell_id }|
         payload = zcl_bn_types=>json( dataset ) expected = 0 ).
     ENDLOOP.
@@ -574,6 +607,14 @@ CLASS zcl_bn_service IMPLEMENTATION.
     run-state = 'succeeded'. run-progress = 1. run-finished_at = zcl_bn_types=>timestamp( ).
     run-duration_ms = cl_abap_tstmp=>subtract( tstmp1 = stamp tstmp2 = started ) * 1000.
     zcl_bn_store=>write( kind = 'R' id = run-id payload = zcl_bn_types=>json( run ) expected = 0 ).
+  ENDMETHOD.
+  METHOD persist_artifacts.
+    LOOP AT packets INTO DATA(packet).
+      DATA(saved) = VALUE zcl_bn_dataset=>ty_saved( notebook_id = notebook_id run_id = run_id cell_id = cell-id
+        revision = 1 source_checksum = cell-checksum source_version = cell-source_version fingerprint = fingerprint packet = packet ).
+      zcl_bn_store=>write( kind = 'W' id = zcl_bn_dataset=>storage_id( run_id = run_id cell_id = cell-id name = packet-name )
+        expected = 0 payload = zcl_bn_types=>json( saved ) ).
+    ENDLOOP.
   ENDMETHOD.
   METHOD work.
     CLEAR: mv_cached_notebook, mt_latest.
@@ -627,16 +668,21 @@ CLASS zcl_bn_service IMPLEMENTATION.
           ENDIF.
           DATA(context) = NEW zcl_bn_context( inputs = run-snapshot-inputs bindings = run-bindings
             dependencies = cell-dependencies cell_id = cell-id run_id = run-id
-            environment = run-snapshot-environment model = run-snapshot-model ).
+            environment = run-snapshot-environment model = run-snapshot-model notebook_id = run-notebook_id
+            fixture_required = run-fixture_mode ).
           DATA cell_started TYPE timestampl.
           GET TIME STAMP FIELD cell_started.
           PERFORM execute IN PROGRAM (pool) USING context.
+          context->check_budget( ).
           IF context->fixture_mode = abap_true.
-            run-fixture_mode = abap_true.
-            IF lines( run-snapshot-cells ) <> 1 OR cell-dependencies IS NOT INITIAL.
+            IF run-fixture_mode <> abap_true AND run-results IS NOT INITIAL.
               RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MODE'
-                detail = 'Fixture validation requires one independent cell; retain both implementations in its service'.
+                detail = 'Fixture validation must begin in the first executed cell; live and fixture runs cannot be mixed'.
             ENDIF.
+            run-fixture_mode = abap_true.
+          ELSEIF run-fixture_mode = abap_true.
+            RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MODE'
+              detail = 'Each fixture validation stage must enable its retained fixture tables; live fallback is blocked'.
           ENDIF.
           GET TIME STAMP FIELD stamp.
           DATA dataset TYPE ty_dataset.
@@ -645,10 +691,16 @@ CLASS zcl_bn_service IMPLEMENTATION.
           dataset-notebook_id = run-notebook_id. dataset-rows = context->outputs.
           dataset-tables = context->tables. dataset-checkpoints = context->checkpoints.
           dataset-reads = context->reads. dataset-fixture_mode = context->fixture_mode.
+          dataset-artifacts = context->artifacts. dataset-dataset_reads = context->dataset_reads.
           dataset-row_count = lines( dataset-rows ).
-          LOOP AT dataset-tables INTO DATA(counted_table).
-            dataset-row_count = dataset-row_count + counted_table-row_count.
-          ENDLOOP.
+          IF dataset-artifacts IS NOT INITIAL.
+            dataset-row_count = 0.
+            LOOP AT dataset-artifacts INTO DATA(full_count). dataset-row_count = dataset-row_count + full_count-row_count. ENDLOOP.
+          ELSE.
+            LOOP AT dataset-tables INTO DATA(counted_table).
+              dataset-row_count = dataset-row_count + counted_table-row_count.
+            ENDLOOP.
+          ENDIF.
           dataset-created_at = zcl_bn_types=>timestamp( ).
           dataset-schema = VALUE #( ( name = 'key' type = 'string' ) ( name = 'amount' type = 'decimal' ) ).
           GET TIME STAMP FIELD dataset-retention_until.
@@ -658,6 +710,8 @@ CLASS zcl_bn_service IMPLEMENTATION.
             READ TABLE run-bindings INTO DATA(binding) WITH KEY cell_id = dependency.
             IF sy-subrc = 0. APPEND binding TO dataset-bindings. ENDIF.
           ENDLOOP.
+          persist_artifacts( notebook_id = run-notebook_id run_id = id cell = cell
+            fingerprint = dataset-fingerprint packets = context->dataset_packets( ) ).
           zcl_bn_store=>write( kind = 'D' id = |{ id }:{ cell-id }| payload = zcl_bn_types=>json( dataset ) expected = 0 ).
           DELETE run-bindings WHERE cell_id = cell-id.
           APPEND VALUE #( cell_id = cell-id run_id = id revision = 1 ) TO run-bindings.
@@ -825,6 +879,22 @@ CLASS zcl_bn_service IMPLEMENTATION.
             expected = cancel_revision ).
         ENDIF.
         json = zcl_bn_types=>json( run ).
+      WHEN 'GET /datasets'.
+        run = get_run( run_id ).
+        READ TABLE run-results TRANSPORTING NO FIELDS WITH KEY cell_id = cell_id.
+        IF sy-subrc <> 0 OR revision <> 1.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_BINDING' detail = 'Choose a completed cell result'.
+        ENDIF.
+        DATA(header_json) = zcl_bn_store=>read( kind = 'D' id = |{ run_id }:{ cell_id }| revision = revision ).
+        DATA native_headers TYPE ty_dataset.
+        /ui2/cl_json=>deserialize( EXPORTING json = header_json pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = native_headers ).
+        IF native_headers-notebook_id <> run-notebook_id OR native_headers-run_id <> run_id OR native_headers-cell_id <> cell_id OR native_headers-revision <> revision.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_INTEGRITY' detail = 'Dataset metadata does not match the completed result'.
+        ENDIF.
+        TYPES: BEGIN OF ty_dataset_info,
+                 artifacts TYPE zcl_bn_dataset=>tt_headers, reads TYPE zcl_bn_dataset=>tt_access,
+               END OF ty_dataset_info.
+        json = zcl_bn_types=>json( VALUE ty_dataset_info( artifacts = native_headers-artifacts reads = native_headers-dataset_reads ) ).
       WHEN 'GET /output'.
         run = get_run( run_id ).
         IF revision <> 1 OR offset < 0 OR page_size < 1 OR page_size > 100.

@@ -23,14 +23,14 @@ CLASS zcl_bn_types DEFINITION PUBLIC FINAL CREATE PUBLIC.
     TYPES: BEGIN OF ty_cell,
              id TYPE string, title TYPE string, source TYPE string,
              dependencies TYPE tt_ids, source_version TYPE i,
-             checksum TYPE string, output TYPE ty_ref,
+             checksum TYPE string, output TYPE ty_ref, explanation TYPE string,
            END OF ty_cell,
            tt_cells TYPE STANDARD TABLE OF ty_cell WITH DEFAULT KEY.
     TYPES: BEGIN OF ty_notebook,
              id TYPE string, title TYPE string, revision TYPE i,
              environment TYPE string, model TYPE string,
              author TYPE string, saved_at TYPE string,
-             checksum TYPE string, inputs TYPE tt_inputs, cells TYPE tt_cells,
+             checksum TYPE string, inputs TYPE tt_inputs, cells TYPE tt_cells, explanation TYPE string,
            END OF ty_notebook,
            tt_notebooks TYPE STANDARD TABLE OF ty_notebook WITH DEFAULT KEY.
     TYPES: BEGIN OF ty_message,
@@ -85,6 +85,9 @@ CLASS zcl_bn_types IMPLEMENTATION.
     " Preserve checksums for snapshots saved before reference/checkpoint fields existed.
     REPLACE ALL OCCURRENCES OF ',"purpose":"","lookbackFrom":"","lookbackSteps":0,"fiscalLinks":[]' IN result WITH ''.
     REPLACE ALL OCCURRENCES OF ',"checkpoints":[]' IN result WITH ''.
+    REPLACE ALL OCCURRENCES OF ',"explanation":""' IN result WITH ''.
+    REPLACE ALL OCCURRENCES OF ',"artifacts":[]' IN result WITH ''.
+    REPLACE ALL OCCURRENCES OF ',"datasetReads":[]' IN result WITH ''.
   ENDMETHOD.
   METHOD hash.
     TRY.
