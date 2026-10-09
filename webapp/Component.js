@@ -559,11 +559,14 @@ sap.ui.define(
           self.scriptDrafts[c.id] = draft;
           var scriptStatus = new m.ObjectStatus({visible:draft.language === "script",text:"Notebook Script · generates ABAP on save"});
           if (draft.error) { scriptStatus.setText(draft.error.message); scriptStatus.setState("Error"); }
+          var editorRendering = false;
           var editor = new CodeEditor({
             width:"100%", height:"20rem", type:draft.language === "script" ? "text" : "abap", lineNumbers:true,
             liveChange:function(e) {
+              if (editorRendering) { return; }
               var value = e.getParameter("value");
               if (value.replace(/\r\n|\r/g,"\n") === draft.text.replace(/\r\n|\r/g,"\n")) { return; }
+              e.getSource().setProperty("value", value, true);
               draft.text = value;
               if (draft.language === "script") {
                 try { c.source = Script.compile(value); draft.error = null; scriptStatus.setText("Script ready · generates ABAP on save"); scriptStatus.setState("Success"); }
@@ -572,7 +575,11 @@ sap.ui.define(
               self.activeCell = c.id; self.mark();
             }
           }).setValue(draft.text);
-          editor.addEventDelegate({onfocusin:function () { self.activeCell = c.id; }});
+          editor.addEventDelegate({
+            onBeforeRendering:function () { editorRendering = true; },
+            onAfterRendering:function () { editorRendering = false; },
+            onfocusin:function () { self.activeCell = c.id; }
+          });
           if (draft.language === "script") { editor.addEventDelegate({onAfterRendering:function () { self.configureScriptEditor(editor,draft); }}); }
           var box = new m.Panel({
             content: [
