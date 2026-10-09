@@ -303,4 +303,10 @@ io->check_rows( lines( cal_supplier_conn_seg_ratio->model_data ) ).
 io->publish_dataset( name = 'CAL_SUPPLIER_CONN_SEG_RATIO' rows = cal_supplier_conn_seg_ratio->model_data ).
 io->emit_table( name = 'CAL_SUPPLIER_CONN_SEG_RATIO' rows = cal_supplier_conn_seg_ratio->model_data ).
 ENDIF.
+IF sap_revenues IS BOUND.
+" Complete control totals: retain key figures/audit trails so unlike measures are not mixed.
+DATA(control_totals) = sap_revenues->copy( )->group( VALUE #(
+ ( 'CATEGORY' ) ( 'TIME' ) ( 'ACCOUNT' ) ( 'MATCONN' ) ( 'AUDITTRAIL' ) ( 'DEMREVID_KFS' ) ) ).
+io->emit_table( name = 'CONTROL_TOTALS' rows = control_totals->model_data ).
+ENDIF.
 io->check_budget( ).

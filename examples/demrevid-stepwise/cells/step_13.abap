@@ -177,4 +177,10 @@ io->check_rows( lines( supplier_ratios->model_data ) ).
 io->publish_dataset( name = 'SUPPLIER_RATIOS' rows = supplier_ratios->model_data ).
 io->emit_table( name = 'SUPPLIER_RATIOS' rows = supplier_ratios->model_data ).
 ENDIF.
+IF new_data IS BOUND.
+" Complete control totals: retain key figures/audit trails so unlike measures are not mixed.
+DATA(control_totals) = new_data->copy( )->group( VALUE #(
+ ( 'CATEGORY' ) ( 'TIME' ) ( 'ACCOUNT' ) ( 'MATCONN' ) ( 'AUDITTRAIL' ) ( 'DEMREVID_KFS' ) ) ).
+io->emit_table( name = 'CONTROL_TOTALS' rows = control_totals->model_data ).
+ENDIF.
 io->check_budget( ).

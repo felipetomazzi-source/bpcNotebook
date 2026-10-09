@@ -121,7 +121,15 @@ ENDLOOP.`);
    produced.set(name,id);
  }
  const explanation = rules[stage].rule + '\n\nCheck: ' + rules[stage].check;
- const source = `" ${rules[stage].title}\n" Calculation is inline. Full dependencies are independent of display previews.\n${prelude}${imports}\nio->check_budget( ).\nDO 1 TIMES.\n${calculation}\nENDDO.\n${exports}io->check_budget( ).\n`;
+ const controlModel = stage === 'INITIALISE' ? 'sap_revenues' : outputs[stage].includes('new_data') ? 'new_data' : outputs[stage][0];
+ const controls = `IF ${controlModel} IS BOUND.
+" Complete control totals: retain key figures/audit trails so unlike measures are not mixed.
+DATA(control_totals) = ${controlModel}->copy( )->group( VALUE #(
+ ( 'CATEGORY' ) ( 'TIME' ) ( 'ACCOUNT' ) ( 'MATCONN' ) ( 'AUDITTRAIL' ) ( 'DEMREVID_KFS' ) ) ).
+io->emit_table( name = 'CONTROL_TOTALS' rows = control_totals->model_data ).
+ENDIF.
+`;
+ const source = `" ${rules[stage].title}\n" Calculation is inline. Full dependencies are independent of display previews.\n${prelude}${imports}\nio->check_budget( ).\nDO 1 TIMES.\n${calculation}\nENDDO.\n${exports}${controls}io->check_budget( ).\n`;
  if (/get_rev_split_method\(|assign_new_fields_rev\(|calc_\w+\(|zcl_bn_dem_alloc=>/i.test(source.replace(/"[^\r\n]*/g,''))) throw Error('Hidden calculation call in ' + stage);
  if (source.length > 60000) throw Error('Cell source limit ' + stage);
  cells.push({id,title:String(index+1).padStart(2,'0') + ' · ' + rules[stage].title,explanation,source,dependencies:[...deps]});
