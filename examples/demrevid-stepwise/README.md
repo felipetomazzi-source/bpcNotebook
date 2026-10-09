@@ -17,7 +17,7 @@ Changing inputs or source requires fresh downstream execution. Rerunning the ini
 
 ## Verification and limits
 
-Every primary cell passed native SAP compilation. `verify-native.cjs` runs a separate nonposting comparison notebook against the original calculation using identical complete native fixtures. It compares every dimension and exact SAP SIGNEDDATA for replacement and delta. See `native-evidence.json` for completed scenario evidence, including suppression, fallback, rounding, negative amounts, carry-forward, HSNS and disappeared records. Only recorded succeeded cases establish fixture equivalence.
+Every primary cell passed native SAP compilation. `verify-native.cjs` runs a separate nonposting comparison notebook against the original calculation using identical complete native fixtures. It compares every dimension and exact SAP SIGNEDDATA for replacement and delta. See `native-evidence.json` for completed scenario evidence, including suppression, fallback, rounding, negative amounts, carry-forward, HSNS and disappeared records. All nine scenarios passed with zero added, missing or changed records. The polling integrity incident and its repeated successful case are recorded separately; this is fixture equivalence, not customer acceptance.
 
 `verify-execution.cjs` checks all/one/through execution on the operational notebook; `execution-evidence.json` records results when complete. Empty customer data proves execution only. Actual 2025.007 customer financial equivalence and production-scale performance remain acceptance tasks.
 

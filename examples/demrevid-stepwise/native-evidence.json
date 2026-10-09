@@ -148,6 +148,132 @@
         "CHANGED": "0"
       },
       "zeroClears": 3
+    },
+    {
+      "scenario": "carry",
+      "suppress": false,
+      "runId": "E82AEA36D1571FD1B0F47787D18116EE",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "27",
+        "NOTEBOOK_ROWS": "27",
+        "UNCHANGED": "27",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "28",
+        "NOTEBOOK_ROWS": "28",
+        "UNCHANGED": "28",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "zeroClears": 3
+    },
+    {
+      "scenario": "carry",
+      "suppress": true,
+      "runId": "E82AEA36D1571FD1B0F47A34A39156EE",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "26",
+        "NOTEBOOK_ROWS": "26",
+        "UNCHANGED": "26",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "27",
+        "NOTEBOOK_ROWS": "27",
+        "UNCHANGED": "27",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "zeroClears": 3
+    },
+    {
+      "scenario": "hsns",
+      "suppress": false,
+      "runId": "E82AEA36D1571FD1B0F47CBE975C96F0",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "42",
+        "NOTEBOOK_ROWS": "42",
+        "UNCHANGED": "42",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "43",
+        "NOTEBOOK_ROWS": "43",
+        "UNCHANGED": "43",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "zeroClears": 6
+    },
+    {
+      "scenario": "hsns",
+      "suppress": true,
+      "runId": "E82AEA36D1571FD1B0F47F5ADFC516F6",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "39",
+        "NOTEBOOK_ROWS": "39",
+        "UNCHANGED": "39",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "40",
+        "NOTEBOOK_ROWS": "40",
+        "UNCHANGED": "40",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "zeroClears": 5
+    }
+  ],
+  "readRetries": [],
+  "incidents": [
+    {
+      "runId": "E82AEA36D1571FD1B0F46664763396DF",
+      "endpoint": "GET /run",
+      "code": "INTEGRITY",
+      "laterRead": "succeeded",
+      "disposition": "Transient polling failure; retained run untouched. Carry case repeated and exact comparison passed. Platform investigation requested."
     }
   ]
 }

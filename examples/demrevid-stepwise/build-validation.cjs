@@ -41,4 +41,4 @@ io->message( 'Complete native replacement and delta match the original for this 
 definition.cells.unshift(fixtureCell);
 definition.cells.push({id:'compare',title:'22 · Compare with the original',explanation:'Compare all dimensions and exact native signed amounts. Every added, missing or changed record must be explained. Nonempty fixtures test only the paths they exercise.',source:comparison,dependencies:['fixtures','reconcile']});
 fs.writeFileSync(path.join(__dirname,'validation.draft.json'),JSON.stringify(definition,null,2)+'\n');
-console.log(JSON.stringify({cells:definition.cells.length,status:'awaiting platform/native validation'}));
+console.log(JSON.stringify({cells:definition.cells.length,status:'generated; see native-evidence.json for SAP verification'}));

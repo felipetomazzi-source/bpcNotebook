@@ -4,15 +4,26 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const rawApi=require('../../tools/bpc-api.cjs');
 async function api(endpoint,data,method){try{return await rawApi(endpoint,data,method);}catch(error){throw Error(endpoint+': '+error.message);}}
 const options=Object.fromEntries(process.argv.filter(x=>/^--[^=]+=/.test(x)).map(x=>{const i=x.indexOf('=');return[x.slice(2,i),x.slice(i+1)];}));
-const get=p=>api(p,null,'GET');
+const readRetries=[];
+async function get(p){
+ for(let attempt=0;attempt<3;attempt++){
+  try{return await api(p,null,'GET');}catch(error){
+   if(!p.startsWith('/run?id=')||!error.message.includes('"code":"INTEGRITY"')||attempt===2)throw error;
+   readRetries.push({endpoint:p,attempt:attempt+1,at:new Date().toISOString()});
+   await new Promise(resolve=>setTimeout(resolve,1500));
+  }
+ }
+}
 const definition=JSON.parse(fs.readFileSync(path.join(__dirname,'validation.draft.json'),'utf8'));
 async function table(run,name){const result=await get('/output?runId='+run.id+'&cellId=compare&revision=1&limit=100&table='+encodeURIComponent(name));return result.rows.map(row=>Object.fromEntries(result.schema.map((field,index)=>[field.name.toUpperCase(),row.values[index]])));}
 (async()=>{
  let notebook=options.notebook?await get('/notebook?id='+options.notebook):await api('/notebooks',definition);
- const evidence={kind:'complete native multi-cell original comparison',notebookId:notebook.id,at:new Date().toISOString(),customerEquivalent:false,cases:[]};
+ const evidence=options.resume==='true'?JSON.parse(fs.readFileSync(path.join(__dirname,'native-evidence.json'),'utf8')):{kind:'complete native multi-cell original comparison',notebookId:notebook.id,at:new Date().toISOString(),customerEquivalent:false,cases:[]};
+ assert.equal(evidence.notebookId,notebook.id);
  fs.writeFileSync(path.join(__dirname,'validation-notebook-id.txt'),notebook.id+'\n');
  const cases=[['standard',true],['standard',false],['fallback',false],['rounding',false],['negative',false],['carry',false],['carry',true],['hsns',false],['hsns',true]];
  for(const [scenario,suppress] of cases){
+  if(evidence.cases.some(c=>c.scenario===scenario&&c.suppress===suppress&&c.state==='succeeded'))continue;
   definition.inputs.find(i=>i.name==='FIXTURE_CASE').value=scenario;
   definition.inputs.find(i=>i.name==='FFLASMATGROUPS').value=String(suppress);
   if(notebook.revision){const latest=await get('/notebook?id='+notebook.id);notebook=await api('/notebook',{...definition,id:notebook.id,expectedRevision:latest.revision},'PUT');}
@@ -33,6 +44,7 @@ async function table(run,name){const result=await get('/output?runId='+run.id+'&
    if(scenario==='hsns')assert(delta.some(row=>row.AUDITTRAIL==='DEMREVID_CALC_HSNS'),'HSNS output missing');
    if(scenario==='carry')assert(delta.some(row=>['DEMREVID040','DEMREVID041'].includes(row.DEMREVID_KFS)),'Connection carry output missing');
   }
+  evidence.readRetries=[...(evidence.readRetries||[]),...readRetries.splice(0)];
   fs.writeFileSync(path.join(__dirname,'native-evidence.json'),JSON.stringify(evidence,null,2)+'\n');
   console.log(JSON.stringify(result));assert.equal(run.state,'succeeded',JSON.stringify(run.error));
  }
