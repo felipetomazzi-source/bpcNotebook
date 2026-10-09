@@ -1,0 +1,881 @@
+{
+  "at": "2026-10-09T01:17:08.730Z",
+  "notebookId": "E82AEA36D1571FD1B0EFCAF3D7BB92AE",
+  "title": "DEMREVID003 - allocation",
+  "runId": "E82AEA36D1571FD1B0EFE38DCCD892C1",
+  "state": "succeeded",
+  "error": {
+    "code": "",
+    "message": ""
+  },
+  "checkpoints": [
+    {
+      "name": "INITIALISE",
+      "state": "succeeded",
+      "startedAt": "2026-10-09T01:16:54,2528300Z",
+      "finishedAt": "2026-10-09T01:17:05,8508450Z",
+      "durationUs": 11597982,
+      "inputs": [
+        "GENERIC_MODEL_READS"
+      ],
+      "outputs": [
+        "INITIALISE/INPUT_DATA",
+        "INITIALISE/SAP_REVENUES",
+        "INITIALISE/OUTPUT_DATA",
+        "INITIALISE/NEW_DATA",
+        "INITIALISE/CONN_REG_SPLIT",
+        "INITIALISE/L1_L2_MAPPING",
+        "INITIALISE/RSP_LOCATION_MATERIAL_RATIO",
+        "INITIALISE/RSP_LOCATION_GL_RATIO",
+        "INITIALISE/RSP_SUPPLIER_MATERIAL_RATIO",
+        "INITIALISE/CAL_LOCATION_GL_RATIO",
+        "INITIALISE/CAL_LOCATION_CONN_SEG_RATIO",
+        "INITIALISE/RSP_SUPPLIER_GL_RATIO",
+        "INITIALISE/CAL_SUPPLIER_GL_RATIO",
+        "INITIALISE/CAL_SUPPLIER_CONN_SEG_RATIO",
+        "INITIALISE/MAT_GROUP_MAPPING"
+      ]
+    },
+    {
+      "name": "ENRICH_REVENUES",
+      "state": "succeeded",
+      "startedAt": "2026-10-09T01:17:05,8539870Z",
+      "finishedAt": "2026-10-09T01:17:06,1028170Z",
+      "durationUs": 248810,
+      "inputs": [
+        "INITIALISE/SAP_REVENUES",
+        "INITIALISE/NEW_DATA",
+        "INITIALISE/INPUT_DATA",
+        "INITIALISE/CONN_REG_SPLIT",
+        "INITIALISE/L1_L2_MAPPING",
+        "INITIALISE/MAT_GROUP_MAPPING"
+      ],
+      "outputs": [
+        "ENRICH_REVENUES/SAP_REVENUES",
+        "ENRICH_REVENUES/NEW_DATA",
+        "ENRICH_REVENUES/INPUT_DATA",
+        "ENRICH_REVENUES/CONN_REG_SPLIT",
+        "ENRICH_REVENUES/L1_L2_MAPPING",
+        "ENRICH_REVENUES/MAT_GROUP_MAPPING"
+      ]
+    },
+    {
+      "name": "CONSOLIDATE",
+      "state": "succeeded",
+      "startedAt": "2026-10-09T01:17:06,1058600Z",
+      "finishedAt": "2026-10-09T01:17:06,1274740Z",
+      "durationUs": 21596,
+      "inputs": [
+        "ENRICH_REVENUES/NEW_DATA",
+        "ENRICH_REVENUES/SAP_REVENUES"
+      ],
+      "outputs": [
+        "CONSOLIDATE/SAP_REVENUES_CONSOL",
+        "CONSOLIDATE/NEW_DATA",
+        "CONSOLIDATE/SAP_REVENUES"
+      ]
+    },
+    {
+      "name": "LOCATION_ALLOC_METHOD",
+      "state": "succeeded",
+      "startedAt": "2026-10-09T01:17:06,1305580Z",
+      "finishedAt": "2026-10-09T01:17:06,2014020Z",
+      "durationUs": 70820,
+      "inputs": [
+        "CONSOLIDATE/NEW_DATA",
+        "ENRICH_REVENUES/CONN_REG_SPLIT",
+        "CONSOLIDATE/SAP_REVENUES_CONSOL",
+        "INITIALISE/RSP_LOCATION_MATERIAL_RATIO",
+        "INITIALISE/RSP_LOCATION_GL_RATIO",
+        "INITIALISE/RSP_SUPPLIER_MATERIAL_RATIO",
+        "INITIALISE/CAL_LOCATION_GL_RATIO",
+        "INITIALISE/CAL_LOCATION_CONN_SEG_RATIO",
+        "INITIALISE/RSP_SUPPLIER_GL_RATIO",
+        "INITIALISE/CAL_SUPPLIER_GL_RATIO",
+        "INITIALISE/CAL_SUPPLIER_CONN_SEG_RATIO"
+      ],
+      "outputs": [
+        "LOCATION_ALLOC_METHOD/NEW_DATA",
+        "LOCATION_ALLOC_METHOD/CONN_REG_SPLIT",
+        "LOCATION_ALLOC_METHOD/SAP_REVENUES_CONSOL",
+        "LOCATION_ALLOC_METHOD/RSP_LOCATION_MATERIAL_RATIO",
+        "LOCATION_ALLOC_METHOD/RSP_LOCATION_GL_RATIO",
+        "LOCATION_ALLOC_METHOD/RSP_SUPPLIER_MATERIAL_RATIO",
+        "LOCATION_ALLOC_METHOD/CAL_LOCATION_GL_RATIO",
+        "LOCATION_ALLOC_METHOD/CAL_LOCATION_CONN_SEG_RATIO",
+        "LOCATION_ALLOC_METHOD/RSP_SUPPLIER_GL_RATIO",
+        "LOCATION_ALLOC_METHOD/CAL_SUPPLIER_GL_RATIO",
+        "LOCATION_ALLOC_METHOD/CAL_SUPPLIER_CONN_SEG_RATIO"
+      ]
+    },
+    {
+      "name": "LOCATION_ALLOC_RATIOS",
+      "state": "succeeded",
+      "startedAt": "2026-10-09T01:17:06,2044450Z",
+      "finishedAt": "2026-10-09T01:17:06,2576370Z",
+      "durationUs": 53168,
+      "inputs": [
+        "LOCATION_ALLOC_METHOD/NEW_DATA",
+        "LOCATION_ALLOC_METHOD/CONN_REG_SPLIT",
+        "LOCATION_ALLOC_METHOD/RSP_LOCATION_MATERIAL_RATIO",
+        "LOCATION_ALLOC_METHOD/RSP_LOCATION_GL_RATIO",
+        "LOCATION_ALLOC_METHOD/CAL_LOCATION_GL_RATIO",
+        "LOCATION_ALLOC_METHOD/CAL_LOCATION_CONN_SEG_RATIO"
+      ],
+      "outputs": [
+        "LOCATION_ALLOC_RATIOS/RSP_SPLIT_RATIOS",
+        "LOCATION_ALLOC_RATIOS/NEW_DATA",
+        "LOCATION_ALLOC_RATIOS/CONN_REG_SPLIT",
+        "LOCATION_ALLOC_RATIOS/RSP_LOCATION_MATERIAL_RATIO",
+        "LOCATION_ALLOC_RATIOS/RSP_LOCATION_GL_RATIO",
+        "LOCATION_ALLOC_RATIOS/CAL_LOCATION_GL_RATIO",
+        "LOCATION_ALLOC_RATIOS/CAL_LOCATION_CONN_SEG_RATIO"
+      ]
+    },
+    {
+      "name": "ALLOC_RSP_BILLED_DATA",
+      "state": "succeeded",
+      "startedAt": "2026-10-09T01:17:06,2607380Z",
+      "finishedAt": "2026-10-09T01:17:06,4872820Z",
+      "durationUs": 226521,
+      "inputs": [
+        "LOCATION_ALLOC_RATIOS/NEW_DATA",
+        "ENRICH_REVENUES/INPUT_DATA",
+        "LOCATION_ALLOC_RATIOS/CONN_REG_SPLIT",
+        "ENRICH_REVENUES/L1_L2_MAPPING",
+        "ENRICH_REVENUES/MAT_GROUP_MAPPING"
+      ],
+      "outputs": [
+        "ALLOC_RSP_BILLED_DATA/NEW_DATA",
+        "ALLOC_RSP_BILLED_DATA/INPUT_DATA",
+        "ALLOC_RSP_BILLED_DATA/CONN_REG_SPLIT",
+        "ALLOC_RSP_BILLED_DATA/L1_L2_MAPPING",
+        "ALLOC_RSP_BILLED_DATA/MAT_GROUP_MAPPING"
+      ]
+    },
+    {
+      "name": "REMAINING_RSP_BILLING",
+      "state": "succeeded",
+      "startedAt": "2026-10-09T01:17:06,4903660Z",
+      "finishedAt": "2026-10-09T01:17:06,5125150Z",
+      "durationUs": 22127,
+      "inputs": [
+        "ALLOC_RSP_BILLED_DATA/NEW_DATA",
+        "CONSOLIDATE/SAP_REVENUES",
+        "LOCATION_ALLOC_RATIOS/RSP_SPLIT_RATIOS"
+      ],
+      "outputs": [
+        "REMAINING_RSP_BILLING/NEW_DATA",
+        "REMAINING_RSP_BILLING/SAP_REVENUES",
+        "REMAINING_RSP_BILLING/RSP_SPLIT_RATIOS"
+      ]
+    },
+    {
+      "name": "RSP_NOT_BILLED_LOCATION",
+      "state": "succeeded",
+      "startedAt": "2026-10-09T01:17:06,5156250Z",
+      "finishedAt": "2026-10-09T01:17:06,5375440Z",
+      "durationUs": 21898,
+      "inputs": [
+        "REMAINING_RSP_BILLING/NEW_DATA",
+        "REMAINING_RSP_BILLING/SAP_REVENUES",
+        "REMAINING_RSP_BILLING/RSP_SPLIT_RATIOS"
+      ],
+      "outputs": [
+        "RSP_NOT_BILLED_LOCATION/NEW_DATA",
+        "RSP_NOT_BILLED_LOCATION/SAP_REVENUES",
+        "RSP_NOT_BILLED_LOCATION/RSP_SPLIT_RATIOS"
+      ]
+    },
+    {
+      "name": "FFLAS_GROUPING",
+      "state": "succeeded",
+      "startedAt": "2026-10-09T01:17:06,5406050Z",
+      "finishedAt": "2026-10-09T01:17:06,5688450Z",
+      "durationUs": 28219,
+      "inputs": [
+        "RSP_NOT_BILLED_LOCATION/NEW_DATA",
+        "ALLOC_RSP_BILLED_DATA/INPUT_DATA",
+        "LOCATION_ALLOC_METHOD/SAP_REVENUES_CONSOL"
+      ],
+      "outputs": [
+        "FFLAS_GROUPING/NEW_DATA",
+        "FFLAS_GROUPING/INPUT_DATA",
+        "FFLAS_GROUPING/FFLAS_MONTH_RATIO",
+        "FFLAS_GROUPING/SAP_REVENUES_CONSOL"
+      ]
+    },
+    {
+      "name": "PQ_ID_FFLAS_REVENUE",
+      "state": "succeeded",
+      "startedAt": "2026-10-09T01:17:06,5719620Z",
+      "finishedAt": "2026-10-09T01:17:06,5877580Z",
+      "durationUs": 15776,
+      "inputs": [
+        "FFLAS_GROUPING/NEW_DATA"
+      ],
+      "outputs": [
+        "PQ_ID_FFLAS_REVENUE/NEW_DATA"
+      ]
+    },
+    {
+      "name": "PQ_FFLAS_RATIO",
+      "state": "succeeded",
+      "startedAt": "2026-10-09T01:17:06,5908270Z",
+      "finishedAt": "2026-10-09T01:17:06,6034330Z",
+      "durationUs": 12586,
+      "inputs": [
+        "PQ_ID_FFLAS_REVENUE/NEW_DATA"
+      ],
+      "outputs": [
+        "PQ_FFLAS_RATIO/NEW_DATA"
+      ]
+    },
+    {
+      "name": "SUPPLIER_ALLOC_METHOD",
+      "state": "succeeded",
+      "startedAt": "2026-10-09T01:17:06,6065150Z",
+      "finishedAt": "2026-10-09T01:17:06,6784760Z",
+      "durationUs": 71930,
+      "inputs": [
+        "PQ_FFLAS_RATIO/NEW_DATA",
+        "FFLAS_GROUPING/SAP_REVENUES_CONSOL",
+        "ALLOC_RSP_BILLED_DATA/CONN_REG_SPLIT",
+        "LOCATION_ALLOC_RATIOS/RSP_LOCATION_MATERIAL_RATIO",
+        "LOCATION_ALLOC_RATIOS/RSP_LOCATION_GL_RATIO",
+        "LOCATION_ALLOC_METHOD/RSP_SUPPLIER_MATERIAL_RATIO",
+        "LOCATION_ALLOC_RATIOS/CAL_LOCATION_GL_RATIO",
+        "LOCATION_ALLOC_RATIOS/CAL_LOCATION_CONN_SEG_RATIO",
+        "LOCATION_ALLOC_METHOD/RSP_SUPPLIER_GL_RATIO",
+        "LOCATION_ALLOC_METHOD/CAL_SUPPLIER_GL_RATIO",
+        "LOCATION_ALLOC_METHOD/CAL_SUPPLIER_CONN_SEG_RATIO"
+      ],
+      "outputs": [
+        "SUPPLIER_ALLOC_METHOD/NEW_DATA",
+        "SUPPLIER_ALLOC_METHOD/SAP_REVENUES_CONSOL",
+        "SUPPLIER_ALLOC_METHOD/CONN_REG_SPLIT",
+        "SUPPLIER_ALLOC_METHOD/RSP_LOCATION_MATERIAL_RATIO",
+        "SUPPLIER_ALLOC_METHOD/RSP_LOCATION_GL_RATIO",
+        "SUPPLIER_ALLOC_METHOD/RSP_SUPPLIER_MATERIAL_RATIO",
+        "SUPPLIER_ALLOC_METHOD/CAL_LOCATION_GL_RATIO",
+        "SUPPLIER_ALLOC_METHOD/CAL_LOCATION_CONN_SEG_RATIO",
+        "SUPPLIER_ALLOC_METHOD/RSP_SUPPLIER_GL_RATIO",
+        "SUPPLIER_ALLOC_METHOD/CAL_SUPPLIER_GL_RATIO",
+        "SUPPLIER_ALLOC_METHOD/CAL_SUPPLIER_CONN_SEG_RATIO"
+      ]
+    },
+    {
+      "name": "SUPPLIER_ALLOC_RATIOS",
+      "state": "succeeded",
+      "startedAt": "2026-10-09T01:17:06,6815860Z",
+      "finishedAt": "2026-10-09T01:17:06,7402990Z",
+      "durationUs": 58683,
+      "inputs": [
+        "SUPPLIER_ALLOC_METHOD/NEW_DATA",
+        "SUPPLIER_ALLOC_METHOD/CONN_REG_SPLIT",
+        "SUPPLIER_ALLOC_METHOD/RSP_SUPPLIER_MATERIAL_RATIO",
+        "SUPPLIER_ALLOC_METHOD/RSP_SUPPLIER_GL_RATIO",
+        "SUPPLIER_ALLOC_METHOD/CAL_SUPPLIER_GL_RATIO",
+        "SUPPLIER_ALLOC_METHOD/CAL_SUPPLIER_CONN_SEG_RATIO"
+      ],
+      "outputs": [
+        "SUPPLIER_ALLOC_RATIOS/SUPPLIER_RATIOS",
+        "SUPPLIER_ALLOC_RATIOS/NEW_DATA",
+        "SUPPLIER_ALLOC_RATIOS/CONN_REG_SPLIT",
+        "SUPPLIER_ALLOC_RATIOS/RSP_SUPPLIER_MATERIAL_RATIO",
+        "SUPPLIER_ALLOC_RATIOS/RSP_SUPPLIER_GL_RATIO",
+        "SUPPLIER_ALLOC_RATIOS/CAL_SUPPLIER_GL_RATIO",
+        "SUPPLIER_ALLOC_RATIOS/CAL_SUPPLIER_CONN_SEG_RATIO"
+      ]
+    },
+    {
+      "name": "ALLOC_ID_REV_SUPPLIER",
+      "state": "succeeded",
+      "startedAt": "2026-10-09T01:17:06,7434180Z",
+      "finishedAt": "2026-10-09T01:17:06,7621120Z",
+      "durationUs": 18669,
+      "inputs": [
+        "SUPPLIER_ALLOC_RATIOS/NEW_DATA",
+        "SUPPLIER_ALLOC_RATIOS/SUPPLIER_RATIOS"
+      ],
+      "outputs": [
+        "ALLOC_ID_REV_SUPPLIER/NEW_DATA",
+        "ALLOC_ID_REV_SUPPLIER/SUPPLIER_RATIOS"
+      ]
+    },
+    {
+      "name": "PRICE_MATERIAL_LEVEL",
+      "state": "succeeded",
+      "startedAt": "2026-10-09T01:17:06,7652070Z",
+      "finishedAt": "2026-10-09T01:17:06,7870600Z",
+      "durationUs": 21828,
+      "inputs": [
+        "ALLOC_ID_REV_SUPPLIER/NEW_DATA",
+        "FFLAS_GROUPING/INPUT_DATA",
+        "SUPPLIER_ALLOC_METHOD/SAP_REVENUES_CONSOL"
+      ],
+      "outputs": [
+        "PRICE_MATERIAL_LEVEL/NEW_DATA",
+        "PRICE_MATERIAL_LEVEL/INPUT_DATA",
+        "PRICE_MATERIAL_LEVEL/SAP_REVENUES_CONSOL"
+      ]
+    },
+    {
+      "name": "HSNS_REV_ALLOC",
+      "state": "succeeded",
+      "startedAt": "2026-10-09T01:17:06,7902030Z",
+      "finishedAt": "2026-10-09T01:17:07,0269410Z",
+      "durationUs": 236707,
+      "inputs": [
+        "PRICE_MATERIAL_LEVEL/NEW_DATA",
+        "PRICE_MATERIAL_LEVEL/INPUT_DATA",
+        "RSP_NOT_BILLED_LOCATION/SAP_REVENUES",
+        "SUPPLIER_ALLOC_RATIOS/CONN_REG_SPLIT",
+        "ALLOC_RSP_BILLED_DATA/L1_L2_MAPPING",
+        "ALLOC_RSP_BILLED_DATA/MAT_GROUP_MAPPING"
+      ],
+      "outputs": [
+        "HSNS_REV_ALLOC/NEW_DATA",
+        "HSNS_REV_ALLOC/INPUT_DATA",
+        "HSNS_REV_ALLOC/SAP_REVENUES",
+        "HSNS_REV_ALLOC/CONN_REG_SPLIT",
+        "HSNS_REV_ALLOC/L1_L2_MAPPING",
+        "HSNS_REV_ALLOC/MAT_GROUP_MAPPING"
+      ]
+    },
+    {
+      "name": "FFLAS_RATIOS_BY_MATERIAL",
+      "state": "succeeded",
+      "startedAt": "2026-10-09T01:17:07,0300530Z",
+      "finishedAt": "2026-10-09T01:17:07,0960830Z",
+      "durationUs": 66000,
+      "inputs": [
+        "HSNS_REV_ALLOC/NEW_DATA",
+        "HSNS_REV_ALLOC/SAP_REVENUES"
+      ],
+      "outputs": [
+        "FFLAS_RATIOS_BY_MATERIAL/RATIO_BASE_BEFORE_EXCLUSIONS",
+        "FFLAS_RATIOS_BY_MATERIAL/SKIPPED_MATERIAL_FLAGS",
+        "FFLAS_RATIOS_BY_MATERIAL/RATIO_BASE_AFTER_EXCLUSIONS",
+        "FFLAS_RATIOS_BY_MATERIAL/FFLAS_REVENUE_NUMERATORS",
+        "FFLAS_RATIOS_BY_MATERIAL/RATIOS_BEFORE_ROUNDING",
+        "FFLAS_RATIOS_BY_MATERIAL/RATIOS_AND_FLAGS",
+        "FFLAS_RATIOS_BY_MATERIAL/NEW_DATA",
+        "FFLAS_RATIOS_BY_MATERIAL/SAP_REVENUES"
+      ]
+    },
+    {
+      "name": "TRANSPOSE_REVENUES",
+      "state": "succeeded",
+      "startedAt": "2026-10-09T01:17:07,0992370Z",
+      "finishedAt": "2026-10-09T01:17:07,1309740Z",
+      "durationUs": 31709,
+      "inputs": [
+        "FFLAS_RATIOS_BY_MATERIAL/NEW_DATA",
+        "HSNS_REV_ALLOC/INPUT_DATA",
+        "HSNS_REV_ALLOC/CONN_REG_SPLIT"
+      ],
+      "outputs": [
+        "TRANSPOSE_REVENUES/TRANSPOSED_REVENUES",
+        "TRANSPOSE_REVENUES/NEW_DATA",
+        "TRANSPOSE_REVENUES/INPUT_DATA",
+        "TRANSPOSE_REVENUES/CONN_REG_SPLIT"
+      ]
+    },
+    {
+      "name": "TRANSPOSE_PRICES",
+      "state": "succeeded",
+      "startedAt": "2026-10-09T01:17:07,1341210Z",
+      "finishedAt": "2026-10-09T01:17:07,3599750Z",
+      "durationUs": 225825,
+      "inputs": [
+        "TRANSPOSE_REVENUES/NEW_DATA",
+        "TRANSPOSE_REVENUES/INPUT_DATA",
+        "TRANSPOSE_REVENUES/TRANSPOSED_REVENUES"
+      ],
+      "outputs": [
+        "TRANSPOSE_PRICES/NEW_DATA",
+        "TRANSPOSE_PRICES/INPUT_DATA",
+        "TRANSPOSE_PRICES/TRANSPOSED_REVENUES"
+      ]
+    },
+    {
+      "name": "TRANSPOSE_CONNECTIONS",
+      "state": "succeeded",
+      "startedAt": "2026-10-09T01:17:07,3631500Z",
+      "finishedAt": "2026-10-09T01:17:07,4066760Z",
+      "durationUs": 43495,
+      "inputs": [
+        "TRANSPOSE_PRICES/NEW_DATA",
+        "TRANSPOSE_PRICES/INPUT_DATA",
+        "TRANSPOSE_PRICES/TRANSPOSED_REVENUES",
+        "TRANSPOSE_REVENUES/CONN_REG_SPLIT",
+        "HSNS_REV_ALLOC/L1_L2_MAPPING",
+        "HSNS_REV_ALLOC/MAT_GROUP_MAPPING"
+      ],
+      "outputs": [
+        "TRANSPOSE_CONNECTIONS/NEW_DATA",
+        "TRANSPOSE_CONNECTIONS/INPUT_DATA",
+        "TRANSPOSE_CONNECTIONS/TRANSPOSED_REVENUES",
+        "TRANSPOSE_CONNECTIONS/CONN_REG_SPLIT",
+        "TRANSPOSE_CONNECTIONS/L1_L2_MAPPING",
+        "TRANSPOSE_CONNECTIONS/MAT_GROUP_MAPPING"
+      ]
+    }
+  ],
+  "tables": [
+    {
+      "name": "READ_1/SUMMARY",
+      "rowCount": 1
+    },
+    {
+      "name": "READ_1/FILTERS_AND_PERIODS",
+      "rowCount": 7
+    },
+    {
+      "name": "INITIALISE/INPUT_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "INITIALISE/SAP_REVENUES",
+      "rowCount": 0
+    },
+    {
+      "name": "INITIALISE/OUTPUT_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "INITIALISE/NEW_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "INITIALISE/CONN_REG_SPLIT",
+      "rowCount": 0
+    },
+    {
+      "name": "INITIALISE/L1_L2_MAPPING",
+      "rowCount": 0
+    },
+    {
+      "name": "INITIALISE/RSP_LOCATION_MATERIAL_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "INITIALISE/RSP_LOCATION_GL_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "INITIALISE/RSP_SUPPLIER_MATERIAL_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "INITIALISE/CAL_LOCATION_GL_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "INITIALISE/CAL_LOCATION_CONN_SEG_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "INITIALISE/RSP_SUPPLIER_GL_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "INITIALISE/CAL_SUPPLIER_GL_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "INITIALISE/CAL_SUPPLIER_CONN_SEG_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "INITIALISE/MAT_GROUP_MAPPING",
+      "rowCount": 0
+    },
+    {
+      "name": "ENRICH_REVENUES/SAP_REVENUES",
+      "rowCount": 0
+    },
+    {
+      "name": "ENRICH_REVENUES/NEW_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "ENRICH_REVENUES/INPUT_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "ENRICH_REVENUES/CONN_REG_SPLIT",
+      "rowCount": 0
+    },
+    {
+      "name": "ENRICH_REVENUES/L1_L2_MAPPING",
+      "rowCount": 0
+    },
+    {
+      "name": "ENRICH_REVENUES/MAT_GROUP_MAPPING",
+      "rowCount": 0
+    },
+    {
+      "name": "CONSOLIDATE/SAP_REVENUES_CONSOL",
+      "rowCount": 0
+    },
+    {
+      "name": "CONSOLIDATE/NEW_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "CONSOLIDATE/SAP_REVENUES",
+      "rowCount": 0
+    },
+    {
+      "name": "LOCATION_ALLOC_METHOD/NEW_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "LOCATION_ALLOC_METHOD/CONN_REG_SPLIT",
+      "rowCount": 0
+    },
+    {
+      "name": "LOCATION_ALLOC_METHOD/SAP_REVENUES_CONSOL",
+      "rowCount": 0
+    },
+    {
+      "name": "LOCATION_ALLOC_METHOD/RSP_LOCATION_MATERIAL_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "LOCATION_ALLOC_METHOD/RSP_LOCATION_GL_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "LOCATION_ALLOC_METHOD/RSP_SUPPLIER_MATERIAL_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "LOCATION_ALLOC_METHOD/CAL_LOCATION_GL_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "LOCATION_ALLOC_METHOD/CAL_LOCATION_CONN_SEG_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "LOCATION_ALLOC_METHOD/RSP_SUPPLIER_GL_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "LOCATION_ALLOC_METHOD/CAL_SUPPLIER_GL_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "LOCATION_ALLOC_METHOD/CAL_SUPPLIER_CONN_SEG_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "LOCATION_ALLOC_RATIOS/RSP_SPLIT_RATIOS",
+      "rowCount": 0
+    },
+    {
+      "name": "LOCATION_ALLOC_RATIOS/NEW_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "LOCATION_ALLOC_RATIOS/CONN_REG_SPLIT",
+      "rowCount": 0
+    },
+    {
+      "name": "LOCATION_ALLOC_RATIOS/RSP_LOCATION_MATERIAL_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "LOCATION_ALLOC_RATIOS/RSP_LOCATION_GL_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "LOCATION_ALLOC_RATIOS/CAL_LOCATION_GL_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "LOCATION_ALLOC_RATIOS/CAL_LOCATION_CONN_SEG_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "ALLOC_RSP_BILLED_DATA/NEW_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "ALLOC_RSP_BILLED_DATA/INPUT_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "ALLOC_RSP_BILLED_DATA/CONN_REG_SPLIT",
+      "rowCount": 0
+    },
+    {
+      "name": "ALLOC_RSP_BILLED_DATA/L1_L2_MAPPING",
+      "rowCount": 0
+    },
+    {
+      "name": "ALLOC_RSP_BILLED_DATA/MAT_GROUP_MAPPING",
+      "rowCount": 0
+    },
+    {
+      "name": "REMAINING_RSP_BILLING/NEW_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "REMAINING_RSP_BILLING/SAP_REVENUES",
+      "rowCount": 0
+    },
+    {
+      "name": "REMAINING_RSP_BILLING/RSP_SPLIT_RATIOS",
+      "rowCount": 0
+    },
+    {
+      "name": "RSP_NOT_BILLED_LOCATION/NEW_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "RSP_NOT_BILLED_LOCATION/SAP_REVENUES",
+      "rowCount": 0
+    },
+    {
+      "name": "RSP_NOT_BILLED_LOCATION/RSP_SPLIT_RATIOS",
+      "rowCount": 0
+    },
+    {
+      "name": "FFLAS_GROUPING/NEW_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "FFLAS_GROUPING/INPUT_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "FFLAS_GROUPING/FFLAS_MONTH_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "FFLAS_GROUPING/SAP_REVENUES_CONSOL",
+      "rowCount": 0
+    },
+    {
+      "name": "PQ_ID_FFLAS_REVENUE/NEW_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "PQ_FFLAS_RATIO/NEW_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "SUPPLIER_ALLOC_METHOD/NEW_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "SUPPLIER_ALLOC_METHOD/SAP_REVENUES_CONSOL",
+      "rowCount": 0
+    },
+    {
+      "name": "SUPPLIER_ALLOC_METHOD/CONN_REG_SPLIT",
+      "rowCount": 0
+    },
+    {
+      "name": "SUPPLIER_ALLOC_METHOD/RSP_LOCATION_MATERIAL_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "SUPPLIER_ALLOC_METHOD/RSP_LOCATION_GL_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "SUPPLIER_ALLOC_METHOD/RSP_SUPPLIER_MATERIAL_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "SUPPLIER_ALLOC_METHOD/CAL_LOCATION_GL_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "SUPPLIER_ALLOC_METHOD/CAL_LOCATION_CONN_SEG_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "SUPPLIER_ALLOC_METHOD/RSP_SUPPLIER_GL_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "SUPPLIER_ALLOC_METHOD/CAL_SUPPLIER_GL_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "SUPPLIER_ALLOC_METHOD/CAL_SUPPLIER_CONN_SEG_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "SUPPLIER_ALLOC_RATIOS/SUPPLIER_RATIOS",
+      "rowCount": 0
+    },
+    {
+      "name": "SUPPLIER_ALLOC_RATIOS/NEW_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "SUPPLIER_ALLOC_RATIOS/CONN_REG_SPLIT",
+      "rowCount": 0
+    },
+    {
+      "name": "SUPPLIER_ALLOC_RATIOS/RSP_SUPPLIER_MATERIAL_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "SUPPLIER_ALLOC_RATIOS/RSP_SUPPLIER_GL_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "SUPPLIER_ALLOC_RATIOS/CAL_SUPPLIER_GL_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "SUPPLIER_ALLOC_RATIOS/CAL_SUPPLIER_CONN_SEG_RATIO",
+      "rowCount": 0
+    },
+    {
+      "name": "ALLOC_ID_REV_SUPPLIER/NEW_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "ALLOC_ID_REV_SUPPLIER/SUPPLIER_RATIOS",
+      "rowCount": 0
+    },
+    {
+      "name": "PRICE_MATERIAL_LEVEL/NEW_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "PRICE_MATERIAL_LEVEL/INPUT_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "PRICE_MATERIAL_LEVEL/SAP_REVENUES_CONSOL",
+      "rowCount": 0
+    },
+    {
+      "name": "HSNS_REV_ALLOC/NEW_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "HSNS_REV_ALLOC/INPUT_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "HSNS_REV_ALLOC/SAP_REVENUES",
+      "rowCount": 0
+    },
+    {
+      "name": "HSNS_REV_ALLOC/CONN_REG_SPLIT",
+      "rowCount": 0
+    },
+    {
+      "name": "HSNS_REV_ALLOC/L1_L2_MAPPING",
+      "rowCount": 0
+    },
+    {
+      "name": "HSNS_REV_ALLOC/MAT_GROUP_MAPPING",
+      "rowCount": 0
+    },
+    {
+      "name": "FFLAS_RATIOS_BY_MATERIAL/RATIO_BASE_BEFORE_EXCLUSIONS",
+      "rowCount": 0
+    },
+    {
+      "name": "FFLAS_RATIOS_BY_MATERIAL/SKIPPED_MATERIAL_FLAGS",
+      "rowCount": 0
+    },
+    {
+      "name": "FFLAS_RATIOS_BY_MATERIAL/RATIO_BASE_AFTER_EXCLUSIONS",
+      "rowCount": 0
+    },
+    {
+      "name": "FFLAS_RATIOS_BY_MATERIAL/FFLAS_REVENUE_NUMERATORS",
+      "rowCount": 0
+    },
+    {
+      "name": "FFLAS_RATIOS_BY_MATERIAL/RATIOS_BEFORE_ROUNDING",
+      "rowCount": 0
+    },
+    {
+      "name": "FFLAS_RATIOS_BY_MATERIAL/RATIOS_AND_FLAGS",
+      "rowCount": 0
+    },
+    {
+      "name": "FFLAS_RATIOS_BY_MATERIAL/NEW_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "FFLAS_RATIOS_BY_MATERIAL/SAP_REVENUES",
+      "rowCount": 0
+    },
+    {
+      "name": "TRANSPOSE_REVENUES/TRANSPOSED_REVENUES",
+      "rowCount": 0
+    },
+    {
+      "name": "TRANSPOSE_REVENUES/NEW_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "TRANSPOSE_REVENUES/INPUT_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "TRANSPOSE_REVENUES/CONN_REG_SPLIT",
+      "rowCount": 0
+    },
+    {
+      "name": "TRANSPOSE_PRICES/NEW_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "TRANSPOSE_PRICES/INPUT_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "TRANSPOSE_PRICES/TRANSPOSED_REVENUES",
+      "rowCount": 0
+    },
+    {
+      "name": "TRANSPOSE_CONNECTIONS/NEW_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "TRANSPOSE_CONNECTIONS/INPUT_DATA",
+      "rowCount": 0
+    },
+    {
+      "name": "TRANSPOSE_CONNECTIONS/TRANSPOSED_REVENUES",
+      "rowCount": 0
+    },
+    {
+      "name": "TRANSPOSE_CONNECTIONS/CONN_REG_SPLIT",
+      "rowCount": 0
+    },
+    {
+      "name": "TRANSPOSE_CONNECTIONS/L1_L2_MAPPING",
+      "rowCount": 0
+    },
+    {
+      "name": "TRANSPOSE_CONNECTIONS/MAT_GROUP_MAPPING",
+      "rowCount": 0
+    },
+    {
+      "name": "FINAL_REPLACEMENT",
+      "rowCount": 0
+    },
+    {
+      "name": "FINAL_DELTA",
+      "rowCount": 0
+    }
+  ],
+  "businessEquivalent": false
+}

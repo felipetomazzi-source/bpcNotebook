@@ -1,3 +1,5 @@
+> Status update: the reader hook, Notebook services and two saved notebooks are now deployed in NPL/client001. See [current usage and validation](demrevid-notebook-usage.md). The preparation notes below describe the earlier blocked state.
+
 # DEMREVID003 complete native validation: prepared, not deployed
 
 Branch: codex/SSNG-3218-fixture-validation in both Chorus and Notebook repositories.
