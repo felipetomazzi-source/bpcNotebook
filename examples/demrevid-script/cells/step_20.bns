@@ -471,6 +471,10 @@ replace63.MATREMAP = "MATREMAP_NA"
 end
 end
 group group64 = group61 all
+for previous_summary in transposed_revenues
+delete previous_summary
+end
+append transposed_revenues from group64
 empty transposed_conn = new_data
 for report_row in group64 copy
 find found65 = filtered59 where TIME = report_row.TIME and MAT_GROUP_ID = report_row.MAT_GROUP_ID search binary missing initial
