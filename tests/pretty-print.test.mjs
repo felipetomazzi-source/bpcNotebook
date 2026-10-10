@@ -107,3 +107,15 @@ test('both comment styles survive formatting, headers and text literals across l
   if(header.includes('compact')) assert.ok(after.startsWith('* BPC Notebook Script v2 compact\n'));
  }
 });
+
+ test('Script formatting spaces straight statements while preserving aliases and literal bytes',()=>{
+  const language=script();
+  const source='script version 2 compact\r\nreference model source_model=DEMREVID\r\ndata raw_source=source_model limit 100\r\nproject output=raw_source fields ["CATEGORY","TIME","SIGNEDDATA"]\r\nlet factor=2 // Keep É · punctuation =, intact\r\nmessage "literal =, // # \"  \r\n';
+  const formatted=language.prettyPrint(source);
+  assert.ok(formatted.includes('source_model = DEMREVID'));
+  assert.ok(formatted.includes('["CATEGORY", "TIME", "SIGNEDDATA"]'));
+  assert.ok(formatted.includes('// Keep É · punctuation =, intact'));
+  assert.ok(formatted.includes('message "literal =, // # "  \r\n'));
+  assert.equal(language.compile(formatted).body,language.compile(source).body);
+  assert.equal(language.prettyPrint(formatted),formatted);
+});
