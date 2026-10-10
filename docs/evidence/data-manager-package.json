@@ -1,0 +1,250 @@
+{
+  "at": "2026-10-10T05:22:36.750Z",
+  "appset": "CH_PLANNING",
+  "model": "DEMREVID",
+  "packageId": "BN_NOTEBOOK_PREVIEW",
+  "chain": "ZBPC_NOTEBOOK",
+  "processType": "ZBNBOOK",
+  "taskVariant": "ZBPC_NOTEBOOK_RUN",
+  "packageHash": "f995b0501d07ec648ccc14c4d5ca6440001dc7988f5ec2edad8e01092822703c",
+  "promptAnswers": [
+    {
+      "name": "%SELECTION%",
+      "value": "@@@SAVE@@@@@@EXPAND@@@|DIMENSION:CATEGORY|Actual|DIMENSION:TIME|2026.006|"
+    },
+    {
+      "name": "%BNFACTORVALUE%",
+      "value": "2"
+    }
+  ],
+  "instance": {
+    "PACKAGE_ID": "BN_NOTEBOOK_PREVIEW",
+    "USER_ID": "DEVELOPER",
+    "STATUS": 1,
+    "STEP_TOTAL": 0,
+    "STEP_CURRENT": 0,
+    "CURR_STEP_NAME": "",
+    "TIME_REQUEST": "",
+    "TIME_START": "2026-10-10T05:21:55Z",
+    "SEQ": "71GOBLOIWM50JNXGWTMMZTG85",
+    "ELAPSED": "",
+    "TIME_END": "2026-10-10T05:21:56Z",
+    "AUDIT_FLAG": 0,
+    "FILE_PROGRESS": "",
+    "LOG_FILE_NAME": "BN_NOTEBOOK_PREVIEW20261010182154_71GOBLOIWM50JNXGWTMMZTG85.LOG"
+  },
+  "log": {
+    "Name": "BN_NOTEBOOK_PREVIEW20261010182154_71GOBLOIWM50JNXGWTMMZTG85.LOG",
+    "Type": "File",
+    "Size": 518,
+    "CreatedOn": "2026-10-10T05:21:56Z",
+    "LastModified": "2026-10-10T05:21:56Z",
+    "Lock": false,
+    "Owner": "DEVELOPER",
+    "@_xmlns": "http://xml.sap.com/2010/02/bpc",
+    "kind": "text",
+    "content": "<RESULT><PROMPT><![CDATA[%SELECTION%\t@@@SAVE@@@@@@EXPAND@@@|DIMENSION:CATEGORY|Actual|DIMENSION:TIME|2026.006|\r\n%BNFACTORVALUE%\t2]]></PROMPT><STATUS_STEP><![CDATA[/CPMB/MODIFY completed in 0 seconds\r\nZBPC_NOTEBOOK_RUN completed in 1 seconds\r\n/CPMB/CLEAR completed in 0 seconds]]></STATUS_STEP><MESSAGE><![CDATA[Notebook run E82AEA36D1571FE1B18D505DA6084E35 succeeded; preview only; no financial posting\r\nDirect Data Manager preview; no business posting\r\n\r\nmodel: DEMREVID. Package status: SUCCESS]]></MESSAGE></RESULT>"
+  },
+  "notebookRunId": "E82AEA36D1571FE1B18D505DA6084E35",
+  "passed": true,
+  "mode": "preview",
+  "financialPosting": false,
+  "knownFailedAttempts": [
+    {
+      "instance": {
+        "PACKAGE_ID": "BN_NOTEBOOK_PREVIEW",
+        "USER_ID": "DEVELOPER",
+        "STATUS": 3,
+        "STEP_TOTAL": 0,
+        "STEP_CURRENT": 0,
+        "CURR_STEP_NAME": "",
+        "TIME_REQUEST": "",
+        "TIME_START": "2026-10-10T05:16:47Z",
+        "SEQ": "9VQ1HEYIB9R6TJVC17V6VVUCL",
+        "ELAPSED": "",
+        "TIME_END": "2026-10-10T05:16:49Z",
+        "AUDIT_FLAG": 0,
+        "FILE_PROGRESS": "",
+        "LOG_FILE_NAME": "BN_NOTEBOOK_PREVIEW20261010181647_9VQ1HEYIB9R6TJVC17V6VVUCL.LOG"
+      },
+      "log": {
+        "Name": "BN_NOTEBOOK_PREVIEW20261010181647_9VQ1HEYIB9R6TJVC17V6VVUCL.LOG",
+        "Type": "File",
+        "Size": 377,
+        "CreatedOn": "2026-10-10T05:16:49Z",
+        "LastModified": "2026-10-10T05:16:49Z",
+        "Lock": false,
+        "Owner": "DEVELOPER",
+        "@_xmlns": "http://xml.sap.com/2010/02/bpc",
+        "kind": "text",
+        "content": "<RESULT><PROMPT><![CDATA[SELECTION\t@@@SAVE@@@@@@EXPAND@@@|DIMENSION:CATEGORY|Actual|DIMENSION:TIME|2026.006|\r\nFACTOR\t2]]></PROMPT><STATUS_STEP><![CDATA[/CPMB/MODIFY completed in 0 seconds\r\nZBPC_NOTEBOOK_RUN completed in 2 seconds\r\n/CPMB/CLEAR completed in 0 seconds]]></STATUS_STEP><MESSAGE><![CDATA[\"LOGIC_INPUT\"\r\n\r\nmodel: DEMREVID. Package status: ERROR]]></MESSAGE></RESULT>"
+      }
+    },
+    {
+      "instance": {
+        "PACKAGE_ID": "BN_NOTEBOOK_PREVIEW",
+        "USER_ID": "DEVELOPER",
+        "STATUS": 3,
+        "STEP_TOTAL": 0,
+        "STEP_CURRENT": 0,
+        "CURR_STEP_NAME": "",
+        "TIME_REQUEST": "",
+        "TIME_START": "2026-10-10T05:19:51Z",
+        "SEQ": "AVYE02ALMRCL9GYVNEX37DS2T",
+        "ELAPSED": "",
+        "TIME_END": "2026-10-10T05:19:52Z",
+        "AUDIT_FLAG": 0,
+        "FILE_PROGRESS": "",
+        "LOG_FILE_NAME": "BN_NOTEBOOK_PREVIEW20261010181951_AVYE02ALMRCL9GYVNEX37DS2T.LOG"
+      },
+      "log": {
+        "Name": "BN_NOTEBOOK_PREVIEW20261010181951_AVYE02ALMRCL9GYVNEX37DS2T.LOG",
+        "Type": "File",
+        "Size": 411,
+        "CreatedOn": "2026-10-10T05:19:52Z",
+        "LastModified": "2026-10-10T05:19:52Z",
+        "Lock": false,
+        "Owner": "DEVELOPER",
+        "@_xmlns": "http://xml.sap.com/2010/02/bpc",
+        "kind": "text",
+        "content": "<RESULT><PROMPT><![CDATA[SELECTION\t@@@SAVE@@@@@@EXPAND@@@|DIMENSION:CATEGORY|Actual|DIMENSION:TIME|2026.006|\r\nFACTOR\t2]]></PROMPT><STATUS_STEP><![CDATA[/CPMB/MODIFY completed in 0 seconds\r\nZBPC_NOTEBOOK_RUN completed in 1 seconds\r\n/CPMB/CLEAR completed in 0 seconds]]></STATUS_STEP><MESSAGE><![CDATA[LOGIC_INPUT: Unknown notebook parameter INPUT_2\r\n\r\nmodel: DEMREVID. Package status: ERROR]]></MESSAGE></RESULT>"
+      }
+    },
+    {
+      "instance": {
+        "PACKAGE_ID": "BN_NOTEBOOK_PREVIEW",
+        "USER_ID": "DEVELOPER",
+        "STATUS": 3,
+        "STEP_TOTAL": 0,
+        "STEP_CURRENT": 0,
+        "CURR_STEP_NAME": "",
+        "TIME_REQUEST": "",
+        "TIME_START": "2026-10-10T05:20:31Z",
+        "SEQ": "50ZZAB0C9MY7NTQDOFIUCTKRP",
+        "ELAPSED": "",
+        "TIME_END": "2026-10-10T05:20:32Z",
+        "AUDIT_FLAG": 0,
+        "FILE_PROGRESS": "",
+        "LOG_FILE_NAME": "BN_NOTEBOOK_PREVIEW20261010182031_50ZZAB0C9MY7NTQDOFIUCTKRP.LOG"
+      },
+      "log": {
+        "Name": "BN_NOTEBOOK_PREVIEW20261010182031_50ZZAB0C9MY7NTQDOFIUCTKRP.LOG",
+        "Type": "File",
+        "Size": 407,
+        "CreatedOn": "2026-10-10T05:20:32Z",
+        "LastModified": "2026-10-10T05:20:32Z",
+        "Lock": false,
+        "Owner": "DEVELOPER",
+        "@_xmlns": "http://xml.sap.com/2010/02/bpc",
+        "kind": "text",
+        "content": "<RESULT><PROMPT><![CDATA[SELECTION\t@@@SAVE@@@@@@EXPAND@@@|DIMENSION:CATEGORY|Actual|DIMENSION:TIME|2026.006|\r\nBNFACTORVALUE\t2]]></PROMPT><STATUS_STEP><![CDATA[/CPMB/MODIFY completed in 0 seconds\r\nZBPC_NOTEBOOK_RUN completed in 1 seconds\r\n/CPMB/CLEAR completed in 0 seconds]]></STATUS_STEP><MESSAGE><![CDATA[INPUT_TYPE: Numeric input is invalid\r\n\r\nmodel: DEMREVID. Package status: ERROR]]></MESSAGE></RESULT>"
+      }
+    },
+    {
+      "instance": {
+        "PACKAGE_ID": "BN_NOTEBOOK_PREVIEW",
+        "USER_ID": "DEVELOPER",
+        "STATUS": 3,
+        "STEP_TOTAL": 0,
+        "STEP_CURRENT": 0,
+        "CURR_STEP_NAME": "",
+        "TIME_REQUEST": "",
+        "TIME_START": "2026-10-10T05:21:10Z",
+        "SEQ": "618BSYCFL4JM3QTXAMKQOBIHX",
+        "ELAPSED": "",
+        "TIME_END": "2026-10-10T05:21:11Z",
+        "AUDIT_FLAG": 0,
+        "FILE_PROGRESS": "",
+        "LOG_FILE_NAME": "BN_NOTEBOOK_PREVIEW20261010182109_618BSYCFL4JM3QTXAMKQOBIHX.LOG"
+      },
+      "log": {
+        "Name": "BN_NOTEBOOK_PREVIEW20261010182109_618BSYCFL4JM3QTXAMKQOBIHX.LOG",
+        "Type": "File",
+        "Size": 407,
+        "CreatedOn": "2026-10-10T05:21:11Z",
+        "LastModified": "2026-10-10T05:21:11Z",
+        "Lock": false,
+        "Owner": "DEVELOPER",
+        "@_xmlns": "http://xml.sap.com/2010/02/bpc",
+        "kind": "text",
+        "content": "<RESULT><PROMPT><![CDATA[SELECTION\t@@@SAVE@@@@@@EXPAND@@@|DIMENSION:CATEGORY|Actual|DIMENSION:TIME|2026.006|\r\nBNFACTORVALUE\t2]]></PROMPT><STATUS_STEP><![CDATA[/CPMB/MODIFY completed in 0 seconds\r\nZBPC_NOTEBOOK_RUN completed in 0 seconds\r\n/CPMB/CLEAR completed in 0 seconds]]></STATUS_STEP><MESSAGE><![CDATA[INPUT_TYPE: Numeric input is invalid\r\n\r\nmodel: DEMREVID. Package status: ERROR]]></MESSAGE></RESULT>"
+      }
+    }
+  ],
+  "diagnosis": "Initial UUID boundary mismatch corrected in01f3550; detailed native logging corrected in134ed5c. Prompt submissions must include exact percent-delimited NAME. Plain names changed INPUT_FACTOR or left percent markers around the numeric answer; corrected names succeeded.",
+  "run": {
+    "id": "E82AEA36D1571FE1B18D505DA6084E35",
+    "state": "succeeded",
+    "handler": "BN_DM_VERIFY",
+    "handlerRevision": 1,
+    "snapshotRevision": 1,
+    "currentView": [
+      {
+        "dimension": "CATEGORY",
+        "member": [
+          "Actual"
+        ],
+        "dimUpperCase": "CATEGORY",
+        "userSpecified": "X"
+      },
+      {
+        "dimension": "TIME",
+        "member": [
+          "2026.006"
+        ],
+        "dimUpperCase": "TIME",
+        "userSpecified": "X"
+      }
+    ],
+    "results": [
+      {
+        "cellId": "calculate",
+        "runId": "E82AEA36D1571FE1B18D505DA6084E35",
+        "revision": 1,
+        "rowCount": 1,
+        "durationMs": 0,
+        "checksum": "8DE0B84DA0AB449BDDF51B555964149FE72F6FD680D49FBD55716C722E3CBEA3",
+        "createdAt": "2026-10-10T05:21:56,7683680Z"
+      },
+      {
+        "cellId": "apply",
+        "runId": "E82AEA36D1571FE1B18D505DA6084E35",
+        "revision": 1,
+        "rowCount": 1,
+        "durationMs": 0,
+        "checksum": "6CE9B48FA2EE7A27D845CFB0B22BA34C79BB38492DD32E48F113100B0ADC252D",
+        "createdAt": "2026-10-10T05:21:56,8027130Z"
+      }
+    ]
+  },
+  "output": {
+    "runId": "E82AEA36D1571FE1B18D505DA6084E35",
+    "cellId": "apply",
+    "revision": 1,
+    "total": 1,
+    "offset": 0,
+    "limit": 20,
+    "valuesTruncated": false,
+    "truncatedValues": 0,
+    "valueCharacterLimit": 4096,
+    "previewByteLimit": 8388608,
+    "previewBytes": 605,
+    "schema": [
+      {
+        "name": "key",
+        "type": "string"
+      },
+      {
+        "name": "amount",
+        "type": "decimal"
+      }
+    ],
+    "rows": [
+      {
+        "key": "Data Manager preview",
+        "amount": 4
+      }
+    ]
+  },
+  "verifiedPinnedOutput": true
+}

@@ -1,0 +1,64 @@
+{
+  "at": "2026-10-10T05:23:09.748Z",
+  "commit": "134ed5c214f208c5d7b87de8e09b4f2a4bbd8ca1",
+  "method": "Installed online abapGit serializer readback of six new DM source/metadata files, byte-for-byte against Git; native syntax checks and transport/package readback; no source upload",
+  "objects": [
+    {
+      "name": "ZCL_BN_DM",
+      "package": "ZBPC_NOTEBOOK",
+      "transport": "NPLK900128",
+      "syntax": []
+    },
+    {
+      "name": "ZCL_BN_DM_PROCESS",
+      "package": "ZBPC_NOTEBOOK",
+      "transport": "NPLK900128",
+      "syntax": []
+    },
+    {
+      "name": "ZCL_BN_DM_INSTALL",
+      "package": "ZBPC_NOTEBOOK",
+      "transport": "NPLK900128",
+      "syntax": []
+    }
+  ],
+  "files": [
+    {
+      "file": "src/zcl_bn_dm.clas.abap",
+      "bytes": 6286,
+      "sha256": "50aa6e0b6b069f9604e5b6cf2bda4e8acaf201a7e88d2d771fbee2571a739214",
+      "equal": true
+    },
+    {
+      "file": "src/zcl_bn_dm.clas.xml",
+      "bytes": 482,
+      "sha256": "aee12108f57d5059a560f7b463ab1e753b52040156f9c76992377357a0b5b25e",
+      "equal": true
+    },
+    {
+      "file": "src/zcl_bn_dm_install.clas.abap",
+      "bytes": 7308,
+      "sha256": "88d2522427234664dccb25cadbe79938890fcfd9c7336aaf470e8d4dfc790373",
+      "equal": true
+    },
+    {
+      "file": "src/zcl_bn_dm_install.clas.xml",
+      "bytes": 490,
+      "sha256": "7192dd03b1793bf05f30dc94faab935851500b580e2e0654c92be82cdab033a5",
+      "equal": true
+    },
+    {
+      "file": "src/zcl_bn_dm_process.clas.abap",
+      "bytes": 6698,
+      "sha256": "77b3e391200a7d07a980edce7a0e781425ff3b64aadc29deeb26545f460f34c1",
+      "equal": true
+    },
+    {
+      "file": "src/zcl_bn_dm_process.clas.xml",
+      "bytes": 490,
+      "sha256": "d974b193ae4ed133589aff36d3c493b426b7e92ff01dc7a311d1f887d705a53d",
+      "equal": true
+    }
+  ],
+  "passed": true
+}
