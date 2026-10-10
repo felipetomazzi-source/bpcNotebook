@@ -133,6 +133,7 @@ sap.ui.define(
                 self.create(true);
               },
             }),
+            new m.Button({text:"Import JSON",icon:"sap-icon://upload",width:"100%",press:function () { self.importNotebookFile(); }}),
             new m.Button({text:"New folder",icon:"sap-icon://add-folder",width:"100%",press:function () { self.folderDialog(); }}),
             this.notebookSearch,
             this.list,
@@ -269,6 +270,8 @@ sap.ui.define(
                 self.renderNotebook(); self.mark();
               }); },
             }),
+            new m.Button({text:"Export JSON",icon:"sap-icon://download",press:function () { self.exportNotebookFile(); }}),
+            new m.Button({text:"Print / PDF",icon:"sap-icon://print",press:function () { self.printNotebook(); }}),
             new m.Button({text:"Notebook identity",icon:"sap-icon://edit",press:function () { self.editIdentity(); }}),
             new m.Button({text:"Delete notebook",icon:"sap-icon://delete",press:function () { self.deleteNotebook(self.notebook); }}),
             new m.Button({text:"Script Logic",icon:"sap-icon://source-code",press:function () { self.logicHandler(); }}),
@@ -527,14 +530,153 @@ sap.ui.define(
           this.chooseContext(function (ctx) { data.environment = ctx.environment; data.model = ctx.model; identify(); });
         } else { identify(); }
       },
+      portableNotebook: function () {
+        if (!this.notebook) { throw new Error("Open a notebook first."); }
+        var self=this,n=this.notebook;
+        return {format:"bpc-notebook",formatVersion:1,exportedAt:new Date().toISOString(),
+          origin:{notebookId:n.id,revision:n.revision,unsavedChanges:!!this.dirty},
+          notebook:{technicalName:n.technicalName || "",description:n.description || "",title:n.title,
+            environment:n.environment,model:n.model,explanation:n.explanation || "",
+            inputs:JSON.parse(JSON.stringify(n.inputs)),cells:n.cells.map(function (cell) {
+              var draft=self.scriptDrafts && self.scriptDrafts[cell.id] || Script.unpack(cell.source);
+              return {id:cell.id,title:cell.title,explanation:cell.explanation || "",
+                dependencies:cell.dependencies.slice(),language:draft.language,source:draft.text};
+            })}};
+      },
+      parseNotebookFile: function (text) {
+        if (typeof text !== "string" || text.length > 8000000) { throw new Error("Notebook JSON exceeds the 8 MB limit."); }
+        var file=JSON.parse(text.replace(/^\uFEFF/,"")),n=file && file.notebook;
+        if (file.format !== "bpc-notebook" || file.formatVersion !== 1 || !n || typeof n !== "object") {
+          throw new Error("Unsupported notebook JSON format or version.");
+        }
+        function string(value,max,label) {
+          if (typeof value !== "string" || value.length>max || /[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/.test(value)) { throw new Error("Invalid " + label + "."); }
+          return value;
+        }
+        var result={title:string(n.title,120,"title"),technicalName:string(n.technicalName,30,"technical name"),
+          description:string(n.description,240,"description"),environment:string(n.environment,100,"environment"),
+          model:string(n.model,100,"model"),explanation:string(n.explanation,8000,"notebook explanation"),inputs:[],cells:[]};
+        if (!Array.isArray(n.inputs) || n.inputs.length>50 || !Array.isArray(n.cells) || n.cells.length>30) { throw new Error("Maximum 50 inputs and 30 steps."); }
+        var names=Object.create(null),ids=Object.create(null);
+        n.inputs.forEach(function (input) {
+          if (!input || typeof input !== "object" || !/^[A-Za-z][A-Za-z0-9_]{0,29}$/.test(input.name) || names[input.name] ||
+              ["number","string","boolean","member","range"].indexOf(input.type)<0) { throw new Error("Invalid or duplicate input definition."); }
+          names[input.name]=true;
+          if (typeof input.value !== "string" && typeof input.value !== "number" && typeof input.value !== "boolean") { throw new Error("Invalid input value."); }
+          if (input.type === "number" && !isFinite(Number(input.value))) { throw new Error("Invalid numeric input."); }
+          if (input.type === "boolean" && [true,false,"true","false"].indexOf(input.value)<0) { throw new Error("Invalid boolean input."); }
+          var copy={};
+          ["name","type","value","dimension","hierarchy","required","selected","purpose","lookbackFrom","lookbackSteps","fiscalLinks"].forEach(function (key) {
+            if (Object.prototype.hasOwnProperty.call(input,key)) { copy[key]=input[key]; }
+          });
+          // SAP resolves and authorizes selections again; exported resolved periods are informational.
+          copy.resolved=[];result.inputs.push(copy);
+        });
+        n.cells.forEach(function (cell) {
+          if (!cell || !/^[A-Za-z][A-Za-z0-9_-]{0,29}$/.test(cell.id) || ids[cell.id] ||
+              ["script","abap"].indexOf(cell.language)<0 || !Array.isArray(cell.dependencies)) { throw new Error("Invalid step definition."); }
+          var dependencies=Object.create(null);
+          cell.dependencies.forEach(function (id) {
+            if (typeof id !== "string" || !ids[id] || dependencies[id]) { throw new Error("Step dependencies must be unique earlier step IDs."); }
+            dependencies[id]=true;
+          });
+          var source=string(cell.source,120000,"step source"),compiled=cell.language === "script" ? Script.compile(source) : source;
+          var max=compiled.indexOf("* BPC Notebook Script v2 compact\n") === 0 ? 120000 : 60000;
+          if (compiled.length>max) { throw new Error("Step " + cell.id + " exceeds the SAP source limit."); }
+          result.cells.push({id:cell.id,title:string(cell.title,120,"step title"),explanation:string(cell.explanation,4000,"step explanation"),
+            dependencies:cell.dependencies.slice(),source:compiled});ids[cell.id]=true;
+        });
+        if (JSON.stringify(result).length>1980000) { throw new Error("Compiled notebook exceeds the SAP 2 MB request limit."); }
+        return result;
+      },
+      exportNotebookFile: function () {
+        try {
+          var file=this.portableNotebook(),blob=new Blob([JSON.stringify(file,null,2)],{type:"application/json;charset=utf-8"}),
+            url=URL.createObjectURL(blob),link=document.createElement("a");
+          link.href=url;link.download=(file.notebook.technicalName || "BPC_Notebook").replace(/[^A-Za-z0-9_-]/g,"_") + ".json";
+          document.body.appendChild(link);link.click();link.remove();setTimeout(function () { URL.revokeObjectURL(url); },1000);
+          MessageToast.show("Notebook exported, including current unsaved code.");
+        } catch (error) { this.error(error); }
+      },
+      importNotebookFile: function () {
+        var self=this,input=document.createElement("input");input.type="file";input.accept=".json,application/json";
+        input.addEventListener("change",function () {
+          var file=input.files[0];if (!file) { return; }
+          if (file.size>8000000) { self.error(new Error("Notebook JSON exceeds the 8 MB limit."));return; }
+          var reader=new FileReader();reader.onerror=function () { self.error(new Error("Could not read the notebook file.")); };
+          reader.onload=function () { try { self.importNotebookDefinition(self.parseNotebookFile(new TextDecoder("utf-8",{fatal:true}).decode(reader.result))); } catch (e) { self.error(e); } };
+          reader.readAsArrayBuffer(file);
+        });input.click();
+      },
+      importNotebookDefinition: function (definition) {
+        var self=this;
+        this.leaveNotebook(function () {
+          if (self.getEmbedded() && !self.hostEnvironmentValid) { MessageBox.information("Select an authorized environment in the hub first.");return; }
+          MessageBox.information("Import as a new notebook from " + definition.environment + " / " + definition.model +
+            ". Choose the target model and an available technical name. SAP will validate all selections again. Import does not execute the calculation or bind a Script Logic handler.",{
+            onClose:function () {
+              function identify(ctx) {
+                self.identityDialog(null,function (identity) {
+                  var payload=JSON.parse(JSON.stringify(definition));payload.environment=ctx.environment;payload.model=ctx.model;
+                  payload.technicalName=identity.technicalName;payload.description=identity.description;
+                  return Api.request("/notebooks","POST",payload).then(function (n) {
+                    self.notebook=n;self.scriptNotebook=null;self.resetReview();self.renderNotebook();self.refresh();MessageToast.show("Notebook imported as a new version 1.");
+                  });
+                },definition);
+              }
+              if (Api.local) { identify({environment:definition.environment,model:definition.model}); }
+              else { self.chooseContext(identify); }
+            }});
+        });
+      },
+      notebookPrintHtml: function (file) {
+        function escape(value) { return String(value == null ? "" : value).replace(/[&<>"']/g,function (c) {
+          return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+        }); }
+        var n=file.notebook,html='<!doctype html><html><head><meta charset="utf-8"><title>' + escape(n.technicalName || n.title) + '</title>' +
+          '<style>@page{size:A4;margin:16mm}' +
+          'body{font:12px Arial,sans-serif;color:#111;background:white;margin:24px}' +
+          'h1{font-size:24px}' +
+          'h2{font-size:18px;break-after:avoid}' +
+          'h3{break-after:avoid}' +
+          'p{white-space:pre-wrap;overflow-wrap:anywhere}' +
+          '.step{break-before:page}' +
+          '.line{display:flex;break-inside:avoid;font:10px monospace;line-height:1.5}' +
+          '.number{flex:0 0 36px;color:#666;text-align:right;padding-right:12px;user-select:none}' +
+          '.code{white-space:pre-wrap;overflow-wrap:anywhere;min-width:0;flex:1}' +
+          'pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:10px}' +
+          'button{padding:10px}' +
+          '@media print{body{margin:0}' +
+          'button{display:none}}' +
+          '</style></head><body>' +
+          '<button id="print">Print / Save as PDF</button><h1>' + escape(n.technicalName || n.title) + '</h1><p>' + escape(n.description) + '</p><p>' +
+          escape(n.environment + ' / ' + n.model) + '\nExported revision ' + escape(file.origin.revision) +
+          (file.origin.unsavedChanges ? ' — includes unsaved changes' : '') + '\n' + escape(file.exportedAt) + '</p><h2>Calculation explanation</h2><p>' +
+          escape(n.explanation) + '</p><h2>Inputs and selection definitions</h2><pre>' + escape(JSON.stringify(n.inputs,null,2)) + '</pre><h2>Steps</h2><ol>';
+        n.cells.forEach(function (cell) { html+='<li>' + escape(cell.title + ' [' + cell.id + ']') + '</li>'; });html+='</ol>';
+        n.cells.forEach(function (cell,index) {
+          html+='<section class="step"><h2>' + escape((index+1) + '. ' + cell.title) + '</h2><p>' + escape(cell.language === 'script' ? 'Notebook Script' : 'ABAP') +
+            ' · ID: ' + escape(cell.id) + '\nDependencies: ' + escape(cell.dependencies.join(', ') || 'None') + '</p><h3>Explanation</h3><p>' + escape(cell.explanation) + '</p><h3>Code</h3>';
+          cell.source.split(/\r\n|\n|\r/).forEach(function (line,i) { html+='<div class="line"><span class="number">' + (i+1) + '</span><span class="code">' + escape(line || ' ') + '</span></div>'; });html+='</section>';
+        });return html+'</body></html>';
+      },
+      printNotebook: function () {
+        try {
+          var file=this.portableNotebook(),html=this.notebookPrintHtml(file),page=window.open("","_blank");
+          if (!page) { throw new Error("Allow this SAP application to open the print window."); }
+          page.opener=null;page.document.open();page.document.write(html);page.document.close();
+          page.document.getElementById("print").addEventListener("click",function () { page.print(); });
+          page.focus();setTimeout(function () { page.print(); },250);
+        } catch (error) { this.error(error); }
+      },
       renderIdentity: function () {
         var n=this.notebook;
         this.title.setText(n.technicalName || n.title);
         if (this.identityDescription) { this.identityDescription.setText(n.description || "Technical name not assigned — use Notebook identity to assign one."); }
       },
-      identityDialog: function (notebook,accept) {
-        var self=this, name=new m.Input({value:notebook && notebook.technicalName || "",maxLength:30,width:"100%",editable:!(notebook && notebook.technicalName)}),
-          description=new m.Input({value:notebook && notebook.description || "",maxLength:240,width:"100%"}),
+      identityDialog: function (notebook,accept,initial) {
+        var self=this, name=new m.Input({value:notebook && notebook.technicalName || initial && initial.technicalName || "",maxLength:30,width:"100%",editable:!(notebook && notebook.technicalName)}),
+          description=new m.Input({value:notebook && notebook.description || initial && initial.description || "",maxLength:240,width:"100%"}),
           error=new m.MessageStrip({text:"",type:"Error",visible:false});
         var dialog=new m.Dialog({title:notebook ? "Notebook identity" : "Create notebook",contentWidth:"32rem",content:[
           new m.VBox({items:[new m.Label({text:"Technical name",required:true,labelFor:name}),name,
