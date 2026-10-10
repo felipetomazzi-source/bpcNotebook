@@ -2,6 +2,17 @@ CLASS zcl_bn_table DEFINITION PUBLIC FINAL CREATE PUBLIC.
   PUBLIC SECTION.
     TYPES: BEGIN OF ty_column, name TYPE string, kind TYPE string, END OF ty_column,
            tt_columns TYPE STANDARD TABLE OF ty_column WITH DEFAULT KEY.
+    TYPES: BEGIN OF ty_default, name TYPE string, value TYPE string, END OF ty_default,
+           tt_defaults TYPE STANDARD TABLE OF ty_default WITH EMPTY KEY.
+    CLASS-METHODS defaults IMPORTING io TYPE REF TO zcl_bn_context values TYPE tt_defaults
+      CHANGING rows TYPE STANDARD TABLE RAISING zcx_bn.
+    CLASS-METHODS split IMPORTING text TYPE string separator TYPE string
+      RETURNING VALUE(result) TYPE zcl_bn_types=>tt_ids RAISING zcx_bn.
+    CLASS-METHODS at IMPORTING items TYPE zcl_bn_types=>tt_ids position TYPE i
+      RETURNING VALUE(result) TYPE string.
+    CLASS-METHODS numeric_text IMPORTING value TYPE any width TYPE i
+      RETURNING VALUE(result) TYPE string RAISING zcx_bn.
+    CLASS-METHODS no_gaps IMPORTING text TYPE string RETURNING VALUE(result) TYPE string.
     CLASS-METHODS make IMPORTING io TYPE REF TO zcl_bn_context columns TYPE tt_columns RETURNING VALUE(result) TYPE REF TO data RAISING zcx_bn.
     CLASS-METHODS signed_boundary IMPORTING rows TYPE ANY TABLE RAISING zcx_bn.
     CLASS-METHODS compare_ordered IMPORTING io TYPE REF TO zcl_bn_context name TYPE string
@@ -29,6 +40,62 @@ CLASS zcl_bn_table DEFINITION PUBLIC FINAL CREATE PUBLIC.
     CLASS-METHODS compatible IMPORTING left TYPE ANY TABLE right TYPE ANY TABLE RAISING zcx_bn.
 ENDCLASS.
 CLASS zcl_bn_table IMPLEMENTATION.
+  METHOD no_gaps.
+    result = text. CONDENSE result NO-GAPS.
+  ENDMETHOD.
+  METHOD numeric_text.
+    IF width < 1 OR width > 255.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'SCRIPT_NUMERIC_TEXT' detail = 'Native NUMC width must be 1-255'.
+    ENDIF.
+    TRY.
+        DATA(type) = cl_abap_elemdescr=>get_n( width ). DATA buffer TYPE REF TO data.
+        CREATE DATA buffer TYPE HANDLE type. FIELD-SYMBOLS <buffer> TYPE any. ASSIGN buffer->* TO <buffer>.
+        <buffer> = value. result = CONV string( <buffer> ).
+      CATCH cx_root INTO DATA(error).
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'SCRIPT_NUMERIC_TEXT' detail = error->get_text( ).
+    ENDTRY.
+  ENDMETHOD.
+  METHOD split.
+    IF separator IS INITIAL.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'SCRIPT_LIST' detail = 'Split separator must be nonempty'.
+    ENDIF.
+    SPLIT text AT separator INTO TABLE result.
+  ENDMETHOD.
+  METHOD at.
+    IF position < 1 OR position > lines( items ). RETURN. ENDIF.
+    result = items[ position ].
+  ENDMETHOD.
+  METHOD defaults.
+    check( io = io rows = rows ).
+    IF values IS INITIAL OR lines( values ) > 100.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'SCRIPT_DEFAULTS' detail = 'Supply 1-100 explicit defaults'.
+    ENDIF.
+    DATA(names) = VALUE zcl_bn_types=>tt_ids( ).
+    LOOP AT values INTO DATA(setting). APPEND setting-name TO names. ENDLOOP.
+    keys( rows = rows names = names ).
+    DATA(structure) = shape( rows ). DATA candidate TYPE REF TO data.
+    CREATE DATA candidate TYPE HANDLE structure.
+    FIELD-SYMBOLS <defaults> TYPE any. ASSIGN candidate->* TO <defaults>.
+    " Validate/convert every supplied value before touching any row, including empty tables.
+    TRY.
+        LOOP AT values INTO setting.
+          ASSIGN COMPONENT setting-name OF STRUCTURE <defaults> TO FIELD-SYMBOL(<value>).
+          <value> = setting-value.
+        ENDLOOP.
+      CATCH cx_root INTO DATA(error).
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'SCRIPT_DEFAULTS' detail = error->get_text( ).
+    ENDTRY.
+    LOOP AT rows ASSIGNING FIELD-SYMBOL(<row>).
+      DATA(ordinal) = sy-tabix. IF ordinal MOD 1000 = 0. io->check_budget( ). ENDIF.
+      LOOP AT values INTO setting.
+        ASSIGN COMPONENT setting-name OF STRUCTURE <row> TO FIELD-SYMBOL(<field>).
+        IF <field> IS INITIAL.
+          ASSIGN COMPONENT setting-name OF STRUCTURE <defaults> TO <value>. <field> = <value>.
+        ENDIF.
+      ENDLOOP.
+    ENDLOOP.
+    check( io = io rows = rows ).
+  ENDMETHOD.
   METHOD compare_ordered.
     compatible( left = original right = notebook ). check( io = io rows = original ). check( io = io rows = notebook ).
     IF preview_rows < 0 OR preview_rows > 5000.
