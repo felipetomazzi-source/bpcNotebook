@@ -1,6 +1,7 @@
 CLASS zcl_bn_dem_validation DEFINITION PUBLIC FINAL CREATE PUBLIC.
  PUBLIC SECTION.
   INTERFACES zif_bpc_validation_reader.
+  INTERFACES zif_bpc_validation_metadata.
   METHODS constructor IMPORTING io TYPE REF TO zcl_bn_context RAISING zcx_bn.
   CLASS-METHODS execute IMPORTING io TYPE REF TO zcl_bn_context RAISING zcx_bn.
  PRIVATE SECTION. DATA context TYPE REF TO zcl_bn_context.
@@ -14,6 +15,26 @@ CLASS zcl_bn_dem_validation IMPLEMENTATION.
  ENDMETHOD.
  METHOD zif_bpc_validation_reader~fixture_mode. enabled = context->fixture_mode. ENDMETHOD.
  METHOD zif_bpc_validation_reader~check_budget. context->check_budget( ). ENDMETHOD.
+ METHOD zif_bpc_validation_metadata~read_dimension.
+  TRY.
+   rows = context->bpc_dimension( CONV string( dimension ) )->member_data( ).
+  CATCH zcx_bn INTO DATA(error).
+   RAISE EXCEPTION TYPE zcx_bn_engine EXPORTING code = error->code detail = error->detail.
+  ENDTRY.
+ ENDMETHOD.
+ METHOD zif_bpc_validation_metadata~children.
+  IF only_base <> abap_true.
+   RAISE EXCEPTION TYPE zcx_bn_engine EXPORTING code = 'FIXTURE_METADATA'
+    detail = 'The validation adapter accepts explicitly captured base-member resolutions only'.
+  ENDIF.
+  TRY.
+   DATA(ids) = context->bpc_dimension( CONV string( dimension ) )->children(
+    member = CONV string( parent ) hierarchy = CONV string( hierarchy ) ).
+   LOOP AT ids INTO DATA(id). APPEND CONV uj_dim_member( id ) TO members. ENDLOOP.
+  CATCH zcx_bn INTO DATA(error).
+   RAISE EXCEPTION TYPE zcx_bn_engine EXPORTING code = error->code detail = error->detail.
+  ENDTRY.
+ ENDMETHOD.
  METHOD zif_bpc_validation_reader~offset_period.
   result = context->offset_period( member = member offset_by = offset_by ).
  ENDMETHOD.

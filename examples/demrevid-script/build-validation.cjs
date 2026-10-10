@@ -8,9 +8,15 @@ definition.title='DEMREVID003 - Script original comparison';
 definition.explanation='Nonposting validation of complete native results. Synthetic fixtures exercise specific business paths; they do not establish customer-data equivalence.';
 definition.inputs.push({name:'FIXTURE_CASE',type:'string',value:'standard'});
 const old=JSON.parse(fs.readFileSync(path.join(root,'examples/demrevid-stepwise/validation.draft.json'),'utf8'));
-definition.cells.forEach(c=>{const original=Script.unpack(c.source);if(original.language!=='script')throw Error('Operational ABAP cell '+c.id);const text=original.text.replace(/^(script version 2(?: compact)?)\n/,'$1\ndataset validation_fixture = "fixtures" named "FIXTURE_INPUT"\nfixture validation_fixture model "DEMREVID"\n');c.source=Script.compile(text);c.dependencies.push('fixtures');});
-definition.cells.unshift(old.cells.find(c=>c.id==='fixtures'));
+const requiredMetadata={CATEGORY:[],TIME:[],MATCONN:[],MAT_GROUP_ID:[],PRODUCT_TYPE:['PRODUCT_TYPE_ACCESS'],AUDITTRAIL:['DEMREVID_INPUT','DEMREVID_OUTPUT'],DEMREVID_KFS:['DEMREVID004']};
+const capture=`DATA bundles TYPE zcl_bn_bpc=>tt_dimension_fixtures.\n`+Object.entries(requiredMetadata).map(([name,roots],i)=>`DATA(metadata_${i}) = io->bpc_dimension( '${name}' ).\nAPPEND metadata_${i}->capture_dimension( snapshot_id = io->snapshot_identifier( )${roots.length?'\n hierarchy_reads = VALUE #( '+roots.map(member=>`( hierarchy = 'PARENTH1' member = '${member}' )`).join('\n')+' )':''} ) TO bundles.\n`).join('')+`DATA(packets) = zcl_bn_bpc=>pack_dimensions( bundles ).\n`;
+const metadataHook=`DATA(metadata_ref) = io->read_dataset( dependency = 'fixtures' name = 'FIXTURE_METADATA' ).\nFIELD-SYMBOLS <metadata> TYPE STANDARD TABLE. ASSIGN metadata_ref->* TO <metadata>.\n`;
+definition.cells.forEach(c=>{const original=Script.unpack(c.source);if(original.language!=='script')throw Error('Operational ABAP cell '+c.id);const text=original.text.replace(/^(script version 2(?: compact)?)\n/,'$1\ndataset validation_fixture = "fixtures" named "FIXTURE_INPUT"\ndataset validation_metadata = "fixtures" named "FIXTURE_METADATA"\nfixture validation_fixture model "DEMREVID" metadata validation_metadata\n');c.source=Script.compile(text);c.dependencies.push('fixtures');});
+const fixtures={...old.cells.find(c=>c.id==='fixtures')};
+fixtures.source=fixtures.source.replace('io->enable_fixtures( VALUE #( ( environment = io->environment model = io->model rows = fixture_ref ) ) ).',capture+`io->enable_fixtures( fixtures = VALUE #( ( environment = io->environment model = io->model rows = fixture_ref ) )\n dimensions = bundles freeze_metadata = abap_true ).\nio->publish_dataset( name = 'FIXTURE_METADATA' rows = packets ).`);
+definition.cells.unshift(fixtures);
 const comparison={...old.cells.find(c=>c.id==='compare')};
+comparison.source=comparison.source.replace('io->enable_fixtures( VALUE #( ( environment = io->environment model = io->model rows = complete_fixture ) ) ).',metadataHook+`io->enable_fixtures( fixtures = VALUE #( ( environment = io->environment model = io->model rows = complete_fixture ) )\n metadata = <metadata> freeze_metadata = abap_true ).`);
 comparison.explanation='Compare every native dimension and exact seven-decimal amounts. Nonempty outputs required. Original code is used only as a test oracle.';
 // Preserve duplicate multiplicity, but canonicalize both outputs for positional comparison.
 // Original and Script native table descriptors share the same 21 fields/order.
@@ -47,7 +53,10 @@ DATA(adapter) = NEW zcl_bn_bpc( environment = CONV string( io->environment )
 DATA(source) = adapter->read_data( filters = filters max_rows = CONV i( io->input( 'READ_LIMIT' ) ) ).
 FIELD-SYMBOLS <source> TYPE STANDARD TABLE. ASSIGN source->* TO <source>.
 IF <source> IS INITIAL. RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'EMPTY_COMPARISON' detail = 'Live input is empty'. ENDIF.
-io->enable_fixtures( VALUE #( ( environment = io->environment model = io->model rows = source ) ) ).
+${capture}
+io->enable_fixtures( fixtures = VALUE #( ( environment = io->environment model = io->model rows = source ) )
+ dimensions = bundles freeze_metadata = abap_true ).
+io->publish_dataset( name = 'FIXTURE_METADATA' rows = packets ).
 io->publish_dataset( name = 'FIXTURE_INPUT' rows = <source> ).
 io->message( |Complete authorized live input retained: { lines( <source> ) } records| ).`;
 fs.writeFileSync(path.join(__dirname,'live-validation.draft.json'),JSON.stringify(live,null,2)+'\n');

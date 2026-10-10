@@ -1,0 +1,260 @@
+{
+  "at": "2026-10-10T04:01:28.217Z",
+  "financialPosting": false,
+  "customerEquivalent": false,
+  "cases": [
+    {
+      "scenario": "standard",
+      "suppress": true,
+      "runId": "E82AEA36D1571FE1B18BE90CEE448C71",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "24",
+        "NOTEBOOK_ROWS": "24",
+        "UNCHANGED": "24",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "25",
+        "NOTEBOOK_ROWS": "25",
+        "UNCHANGED": "25",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      }
+    },
+    {
+      "scenario": "standard",
+      "suppress": false,
+      "runId": "E82AEA36D1571FE1B18BEBDF45704C72",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "25",
+        "NOTEBOOK_ROWS": "25",
+        "UNCHANGED": "25",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "26",
+        "NOTEBOOK_ROWS": "26",
+        "UNCHANGED": "26",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      }
+    },
+    {
+      "scenario": "fallback",
+      "suppress": false,
+      "runId": "E82AEA36D1571FE1B18BEEAC27914C73",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "19",
+        "NOTEBOOK_ROWS": "19",
+        "UNCHANGED": "19",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "20",
+        "NOTEBOOK_ROWS": "20",
+        "UNCHANGED": "20",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      }
+    },
+    {
+      "scenario": "rounding",
+      "suppress": false,
+      "runId": "E82AEA36D1571FE1B18BF1C464044C79",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "25",
+        "NOTEBOOK_ROWS": "25",
+        "UNCHANGED": "25",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "26",
+        "NOTEBOOK_ROWS": "26",
+        "UNCHANGED": "26",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      }
+    },
+    {
+      "scenario": "negative",
+      "suppress": false,
+      "runId": "E82AEA36D1571FE1B18BF4E6688C0C7E",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "25",
+        "NOTEBOOK_ROWS": "25",
+        "UNCHANGED": "25",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "26",
+        "NOTEBOOK_ROWS": "26",
+        "UNCHANGED": "26",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      }
+    },
+    {
+      "scenario": "carry",
+      "suppress": false,
+      "runId": "E82AEA36D1571FE1B18BF78B0E6ECC82",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "27",
+        "NOTEBOOK_ROWS": "27",
+        "UNCHANGED": "27",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "28",
+        "NOTEBOOK_ROWS": "28",
+        "UNCHANGED": "28",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      }
+    },
+    {
+      "scenario": "carry",
+      "suppress": true,
+      "runId": "E82AEA36D1571FE1B18BFA823FC80C8A",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "26",
+        "NOTEBOOK_ROWS": "26",
+        "UNCHANGED": "26",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "27",
+        "NOTEBOOK_ROWS": "27",
+        "UNCHANGED": "27",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      }
+    },
+    {
+      "scenario": "hsns",
+      "suppress": false,
+      "runId": "E82AEA36D1571FE1B18BFD2AB8A68C90",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "42",
+        "NOTEBOOK_ROWS": "42",
+        "UNCHANGED": "42",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "43",
+        "NOTEBOOK_ROWS": "43",
+        "UNCHANGED": "43",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      }
+    },
+    {
+      "scenario": "hsns",
+      "suppress": true,
+      "runId": "E82AEA36D1571FE1B18C010D88138C99",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "39",
+        "NOTEBOOK_ROWS": "39",
+        "UNCHANGED": "39",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "40",
+        "NOTEBOOK_ROWS": "40",
+        "UNCHANGED": "40",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      }
+    }
+  ],
+  "notebookId": "E82AEA36D1571FE1B18B9CB6F0A40BFF"
+}
