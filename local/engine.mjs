@@ -50,6 +50,30 @@ export class Engine {
       this.persist();
     }
   }
+  organization(user) {
+    const value=copy(this.db.organizations?.[user] || {revision:0,folders:[],memberships:[]});
+    value.memberships=value.memberships.filter(m=>this.db.notebooks[m.notebookId] && !this.db.notebooks[m.notebookId].deletedAt);
+    return value;
+  }
+  saveOrganization(body,user) {
+    const old=this.organization(user),next=copy(body);
+    if(next.expectedRevision!==old.revision) fail(409,'CONFLICT','Folders changed; reload organization');
+    next.folders ||= [];next.memberships ||= [];
+    if(next.folders.length>200||next.memberships.length>10000) fail(400,'FOLDER_LIMIT','Folder organization exceeds limits');
+    const ids=new Set(),names=new Set(),notebooks=new Set();
+    for(const f of next.folders){
+      if(!/^[A-Za-z0-9_-]{1,64}$/.test(f.id)||typeof f.name!=='string'||!f.name.trim()||f.name.length>80||/[\x00-\x1f\x7f]/.test(f.name)) fail(400,'FOLDER','Invalid folder');
+      const name=f.name.trim().replace(/ +/g,' ').toUpperCase();
+      if(ids.has(f.id)||names.has(name)) fail(400,'FOLDER','Duplicate folder ID or name');ids.add(f.id);names.add(name);
+    }
+    for(const f of old.folders) if(!ids.has(f.id)&&old.memberships.some(m=>m.folderId===f.id)) fail(409,'FOLDER_NOT_EMPTY','Move notebooks out before removing a folder');
+    for(const m of next.memberships){
+      if(!ids.has(m.folderId)||notebooks.has(m.notebookId)) fail(400,'FOLDER','Invalid membership');
+      this.owned('notebooks',m.notebookId,user);notebooks.add(m.notebookId);
+    }
+    delete next.expectedRevision;next.revision=old.revision+1;
+    this.db.organizations ||= {};this.db.organizations[user]=next;this.persist();return copy(next);
+  }
   persist() {
     if (!this.file) return;
     mkdirSync(dirname(this.file), {recursive: true});

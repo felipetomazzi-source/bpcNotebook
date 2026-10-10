@@ -108,3 +108,7 @@ Result previews use the standard `sap.ui.table.Table` grid, with resizable/reord
 The standalone bootstrap enables SAPUI5's standard application cache buster. The component manifest loads its stylesheet, avoiding an additional unversioned CSS request. After an abapGit import, refresh metadata for this repository using `node tools/refresh-ui-cache.cjs --codex-env` with `BPC_ADT_TOOL_ROOT` configured. This calls `/sap/bc/ui5_ui5/sap/zbpc_notebook/do-update-meta-data` and verifies the cache-busted component resource. It does not invalidate other applications or change hosting.
 
 SAP documents [bootstrap cache-buster configuration](https://help.sap.com/docs/SAPUI5/7d0efeaa9ccd4731afb386284cfdc3a9/c1c3e2f70066465dbb794c866b933ed5.html) and [per-repository metadata refresh](https://help.sap.com/docs/SAPUI5/b2f662dd9d7a4ec680056733050b4d34/4cfe7eff3001447a9d4b0abeaba95166.html). Embedded mode continues to use the hub's core; the hub should load the component using its standard UI5 application cache-buster integration.
+
+## Notebook folders
+
+The left workspace supports private one-level folders, rename, move/unfile, collapse/expand and search across folders. Existing notebooks remain Unfiled until moved. Folder organization does not change source, notebook revisions, runs or handler bindings. See [folder usage and persistence](docs/notebook-folders.md).
