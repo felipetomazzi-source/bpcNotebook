@@ -188,8 +188,10 @@ CLASS zcl_bn_service IMPLEMENTATION.
       IF strlen( cell-explanation ) > 4000.
         RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'EXPLANATION' detail = 'Stage explanation exceeds 4000 characters'.
       ENDIF.
+      DATA(max_source) = COND i( WHEN find( val = cell-source
+        sub = '* BPC Notebook Script v2 compact' && cl_abap_char_utilities=>newline ) = 0 THEN 120000 ELSE 60000 ).
       FIND REGEX '^[A-Za-z][A-Za-z0-9_-]{0,29}$' IN cell-id.
-      IF sy-subrc <> 0 OR line_exists( seen[ table_line = cell-id ] ) OR strlen( cell-source ) > 60000.
+      IF sy-subrc <> 0 OR line_exists( seen[ table_line = cell-id ] ) OR strlen( cell-source ) > max_source.
         RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'CELL' detail = 'Invalid or duplicate cell ID, or source too long'.
       ENDIF.
       DATA unique TYPE zcl_bn_types=>tt_ids.

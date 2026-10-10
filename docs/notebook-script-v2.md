@@ -1,5 +1,7 @@
 # Notebook Script v2: generic native working tables
 
+For large method cells and explicit defaults/scalar adapters, see [compact Script](notebook-script-compact.md). Its opt-in `script version 2 compact` header supports up to 120,000 generated characters; ordinary cells retain 60,000.
+
 Generic runtime implemented and verified in NPL/client001 using nonposting native checks. See `docs/evidence/native-script-v2.json` for the source commit, run IDs, checks and read diagnostics, and `docs/evidence/bpc-deployment.json` for actual SAP serialization comparison. Allocation conversion/equivalence is a separate calculation task. Begin each new v2 cell with `script version 2`. Existing v1 source/envelopes remain unchanged. Script is transpiled to ABAP on save and compiled by SAP before persisting. Author text, Unicode and line mapping remain in the saved envelope.
 
 ## Full tables and dependencies

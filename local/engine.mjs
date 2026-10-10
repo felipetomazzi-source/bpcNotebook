@@ -103,7 +103,8 @@ export class Engine {
     for (const c of n.cells) {
       if (c.explanation !== undefined && (typeof c.explanation !== 'string' || c.explanation.length > 4000)) fail(400, 'EXPLANATION', 'Stage explanation exceeds 4000 characters');
       if (!/^[a-zA-Z][a-zA-Z0-9_-]{0,29}$/.test(c.id) || seen.has(c.id)) fail(400, 'CELL_ID', 'Cell IDs must be unique identifiers');
-      if (typeof c.source !== 'string' || c.source.length > 60000) fail(400, 'SOURCE', 'Source must be text (max 60 KB)');
+      const sourceLimit = typeof c.source === 'string' && c.source.startsWith('* BPC Notebook Script v2 compact\n') ? 120000 : 60000;
+      if (typeof c.source !== 'string' || c.source.length > sourceLimit) fail(400, 'SOURCE', `Source must be text (max ${sourceLimit} characters)`);
       if (typeof c.title !== 'string' || c.title.length > 120) fail(400, 'CELL_TITLE', 'Cell title is required');
       if (!Array.isArray(c.dependencies) || new Set(c.dependencies).size !== c.dependencies.length || c.dependencies.some(d => !seen.has(d)))
         fail(400, 'DEPENDENCY_ORDER', 'Dependencies must be unique and precede their consumer');
