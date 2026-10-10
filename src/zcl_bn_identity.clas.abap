@@ -57,6 +57,10 @@ CLASS zcl_bn_identity IMPLEMENTATION.
   ENDMETHOD.
   METHOD assign.
     zcl_bn_service=>authorize( '02' ).
+    DATA(notebook_revision) = zcl_bn_store=>lock_notebook( notebook-id ).
+    IF notebook_revision <> notebook-revision.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'CONFLICT' detail = 'Identity assignment requires the current saved notebook revision' status = 409.
+    ENDIF.
     zcl_bn_service=>get_notebook( notebook-id ).
     FIND REGEX '^[A-Z][A-Z0-9_]{0,29}$' IN technical_name.
     IF sy-subrc <> 0.
