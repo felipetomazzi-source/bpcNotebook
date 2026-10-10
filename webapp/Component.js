@@ -909,11 +909,11 @@ sap.ui.define(
           // Aliases are resolved from the authored declaration, never from hardcoded dimension lists.
           var pattern = new RegExp("^\\s*dimension\\s+" + model + "\\s*=\\s*([A-Za-z_][A-Za-z0-9_]*)(?:-([A-Za-z_][A-Za-z0-9_]*))?\\s*(?:#.*)?$","m");
           var alias = text.match(pattern);
-          var modelAlias = text.match(new RegExp("^\\s*model\\s+" + model + "\\s*=\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*(?:#.*)?$","m"));
+          var modelAlias = text.match(new RegExp("^\\s*(?:reference\\s+)?model\\s+" + model + "\\s*=\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*(?:#.*)?$","m"));
           if (alias) { model = alias[2] ? alias[1] : n.model; dimension = alias[2] || alias[1]; }
           else if (modelAlias) { model = modelAlias[1]; if (names.length > 2) { dimension = names[1]; } }
           else if (names.length > 2) { dimension = names[1]; }
-          var contextAlias = text.match(new RegExp("^\\s*model\\s+" + model + "\\s*=\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*(?:#.*)?$","m"));
+          var contextAlias = text.match(new RegExp("^\\s*(?:reference\\s+)?model\\s+" + model + "\\s*=\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*(?:#.*)?$","m"));
           if (contextAlias) { model = contextAlias[1]; }
           if (dimension) {
             var base = alias ? names[0] + "-" : names[0] + "-" + dimension + "-";
@@ -923,6 +923,12 @@ sap.ui.define(
         }
         var words = ["dimension","members","model","data","where","limit","let","for","in","if","else","end","show","as",
           "table","append","key","amount","read","emit","message","input","member","range","selection","number","text","count","concat","true","false"];
+        words = words.concat(["script version 2","dataset","publish","reference","copy","empty","row","native","group","include","exclude","all",
+          "sort","stable","unstable","asc","desc","deduplicate","adjacent","extend","cast","project","fields","columns","index","many","unique",
+          "lookup","match","find","policy","first","last","missing","initial","error","search","linear","binary","filter","changes","against","legacy",
+          "result","kind","replacement","delta","compare","ordered","checkpoint","start","finish","inputs","outputs","assert","divide","using","float",
+          "onzero","keep","delete","break","continue","clear","fixture","properties","signed","decimal","integer","boolean","upper","lower","abs",
+          "found","is_in","matches","slice","offset","children","hierarchies","round"]);
         var result = words.map(function (word) { return {caption:word,value:word,meta:"script",score:50}; });
         return this.scriptMetadata("models","").then(function (items) { return result.concat(choices(items,"","model")); });
       },
@@ -937,8 +943,12 @@ sap.ui.define(
           {token:"comment",regex:"#.*$"},
           {token:"string",regex:'"(?:[^"\\\\]|\\\\.)*"'},
           {token:"constant.numeric",regex:"\\b[0-9]+(?:\\.[0-9]+)?\\b"},
-          {token:"keyword",regex:"\\b(?:dimension|members|model|data|where|limit|let|for|in|if|else|end|show|as|table|append|key|amount|read|emit|message|and|or|not)\\b"},
-          {token:"support.function",regex:"\\b(?:input|member|range|selection|number|text|count|concat)\\b"},
+          {token:"keyword",regex:"\\b(?:dimension|members|model|data|where|limit|let|for|in|if|else|end|show|as|table|append|key|amount|read|emit|message|and|or|not|" +
+            "script|version|dataset|publish|reference|copy|empty|row|native|group|include|exclude|all|sort|stable|unstable|asc|desc|deduplicate|adjacent|extend|cast|" +
+            "project|fields|columns|index|many|unique|lookup|match|find|policy|first|last|missing|error|search|linear|binary|filter|changes|against|legacy|result|kind|" +
+            "replacement|delta|compare|ordered|checkpoint|start|finish|inputs|outputs|assert|divide|using|onzero|keep|delete|break|continue|clear|fixture|properties)\\b"},
+          {token:"support.function",regex:"\\b(?:input|member|range|selection|number|text|count|concat|signed|decimal|float|integer|upper|lower|abs|initial|found|" +
+            "is_in|matches|slice|offset|children|hierarchies|round)\\b"},
           {token:"constant.language",regex:"\\b(?:true|false)\\b"},
           {token:"support.type",regex:"\\b[A-Z][A-Z0-9_]*(?:-[A-Z][A-Z0-9_]*)*\\b"}
         ]});
