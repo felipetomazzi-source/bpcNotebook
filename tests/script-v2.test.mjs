@@ -21,6 +21,17 @@ append rows row r
 copy original = rows
 compare ordered = original with original as "DUPLICATE_COMPARE" ordered
 assert ordered.original_rows == 3 and ordered.unchanged == 3 and ordered.changed == 0 message "Ordered duplicate comparison"
+copy orderedDifferent = original
+for orderedRow in orderedDifferent
+  orderedRow.SIGNEDDATA = orderedRow.SIGNEDDATA + signed("0.0000001")
+end
+compare orderedChanges = original with orderedDifferent as "ORDERED_CHANGED" ordered
+assert orderedChanges.changed == 3 and orderedChanges.added == 0 and orderedChanges.missing == 0 message "Exact duplicate differences"
+empty orderedShort = original
+append orderedShort row r
+compare orderedMissing = original with orderedShort as "ORDERED_MISSING" ordered
+compare orderedAdded = orderedShort with original as "ORDERED_ADDED" ordered
+assert orderedMissing.missing == 2 and orderedAdded.added == 2 message "Positional row coverage"
 group sums = rows include ["CATEGORY", "TIME"]
 assert count(sums) == 1 message "Group count"
 for total in sums
@@ -118,6 +129,12 @@ test('v2 uses explicit numeric and financial boundary contracts',()=>{
  assert.match(abap,/signed_boundary/);assert.match(abap,/kind = `delta`/);
  assert.match(Script.compile('let x = 1'),/CONV decfloat34/);
  assert.match(Script.compile('script version 2\nlet x = 1'),/CONV uj_signeddata/);
+});
+test('v2 dynamic lists and row property access retain native metadata calls',()=>{
+ const source='script version 2\nreference model refs = DEMREVID\ndimension d = refs-CATEGORY\nmembers rows = d ["Actual"]\nfor row in rows\nlet description = d-EVDESCRIPTION(row.ID)\nrow.ID = "Actual"\nlet prior = offset("period", -1)\ndata facts = refs where TIME = [prior] limit 10\nend';
+ const abap=Script.compile(source);
+ assert.match(abap,/member = CONV string/);assert.match(abap,/io->reference_model/);
+ assert.equal(Script.unpack(abap).text,source);
 });
 test('v2 rejects ambiguous index, sort, mutations and implicit financial publication',()=>{
  const prefix='script version 2\ntable rows columns TIME member, SIGNEDDATA signed\n';
