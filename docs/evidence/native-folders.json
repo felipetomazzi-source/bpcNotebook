@@ -1,0 +1,20 @@
+{
+  "at": "2026-10-10T02:18:00.370Z",
+  "passed": true,
+  "notebookId": "E82AEA36D1571FE1B18A1A006F2F8A97",
+  "checks": [
+    "create",
+    "move",
+    "rename",
+    "reload",
+    "stale revision",
+    "nonempty removal rejected",
+    "unknown or unowned notebook rejected",
+    "duplicate name rejected",
+    "unfile",
+    "empty removal",
+    "notebook source/revision/history unchanged"
+  ],
+  "financialPosting": false,
+  "globalSourceUploads": false
+}

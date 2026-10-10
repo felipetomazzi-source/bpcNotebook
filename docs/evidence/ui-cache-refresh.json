@@ -1,11 +1,11 @@
 {
-  "at": "2026-10-09T08:01:33.174Z",
+  "at": "2026-10-10T02:17:58.426Z",
   "application": "ZBPC_NOTEBOOK",
   "action": "Per-repository do-update-meta-data",
   "before": {
-    "tokenUi5RepositoryScope": "EA665B88CC401ACB13CA105F14DF253E~5",
+    "tokenUi5RepositoryScope": "5E2BDCF5CA4BF346520356AD33326ED3~5",
     "Component-preload.js": "20261008200659",
-    "Component.js": "20261009184217",
+    "Component.js": "20261010150925",
     "css/style.css": "20261009115817",
     "index.html": "20261009183632",
     "manifest.json": "20261009121944",
@@ -13,9 +13,9 @@
     "model/Script.js": "20261008235606"
   },
   "after": {
-    "tokenUi5RepositoryScope": "FAF75ECA3FADEF89D5E6C951F68444DE~5",
+    "tokenUi5RepositoryScope": "DB578B851E57F4F3BD69EE0072EB3E33~5",
     "Component-preload.js": "20261008200659",
-    "Component.js": "20261009210030",
+    "Component.js": "20261010151751",
     "css/style.css": "20261009115817",
     "index.html": "20261009183632",
     "manifest.json": "20261009121944",
@@ -23,11 +23,11 @@
     "model/Script.js": "20261008235606"
   },
   "cacheBustedComponent": {
-    "token": "20261009210030",
+    "token": "20261010151751",
     "status": 200,
-    "modified": "Fri, 09 Oct 2026 20:00:30 GMT",
+    "modified": "Sat, 10 Oct 2026 14:17:51 GMT",
     "cache": "max-age=31536000, public",
-    "sha256": "bd761e38618672d42d0b7ecbebc84c048e1ee2d7293677bd19147c522d4b4ac9"
+    "sha256": "d303ab6b18f3a929353037c252456f80ef0636319a261e5768455af16f3cccda"
   },
   "passed": true
 }
