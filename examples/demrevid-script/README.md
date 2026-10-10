@@ -2,7 +2,7 @@
 
 Branch: `codex/SSNG-3218-fixture-validation`.
 
-The saved DEV notebook is **DEMREVID003 - Script allocation**, ID `E82AEA36D1571FE1B18BD135480E4C5E`, in environment `CH_PLANNING`, model `DEMREVID`. It has 21 Script cells and all 21 have passed SAP syntax validation. It is a simulation: it publishes complete working datasets and bounded inspection tables, with no financial posting or Script Logic allocation binding.
+The saved DEV notebook is **DEMREVID003 - Script allocation**, ID `E82AEA36D1571FE1B18BD135480E4C5E`, revision 2, in environment `CH_PLANNING`, model `DEMREVID`. All 21 Script cells passed SAP syntax validation and completed a real `Actual` / `2026.006` run. That operational run produced 20,482 replacement records and 2,513 legacy change-set records; its complete datasets and stage outputs are retained in the application. It is a simulation, with no financial posting or Script Logic allocation binding.
 
 ## Try the calculation
 
@@ -13,6 +13,8 @@ The saved DEV notebook is **DEMREVID003 - Script allocation**, ID `E82AEA36D1571
 5. In the final reconciliation stage, inspect `FINAL_REPLACEMENT` and `FINAL_DELTA`. The latter preserves legacy `CT_DATA` change-set semantics: changed records carry replacement amounts, and disappeared old records carry zero clears. It is not a table of arithmetic new-minus-old differences.
 
 Do not bind this notebook to posting until full nonempty comparisons, authorization checks and the intended caller transaction have been accepted. Current calculation evidence is in `native-evidence.json` and `live-evidence.json`; generic runtime evidence is separate in `docs/evidence/native-script-compact.json`.
+
+`PREVIEW_ROWS` controls automatic dataset previews. Explicit Script `show` tables use the platform's 5,000-row cap. Their total source counts remain visible. Neither preview supplies downstream calculations. For multiple suppression groups, the advanced input definition can use a string for `FFLASMATGROUPS` with the original comma-separated flag values; the Script preserves the original independent sorting/deduplication and positional pairing of the ID and flag ranges.
 
 The operational definition contains 21 visible Notebook Script stages. Complete native SAP working tables and retained metadata connect the stages; browser previews never supply calculation inputs. The business rules are in `cells/*.bns`, generated from the reviewed rules in `build.cjs`. There is no call to the model-specific allocation engine in the operational cells.
 
@@ -37,4 +39,8 @@ The harness validates every cell before executing. `--resume-run=<run ID>` resum
 
 `save-notebook.cjs` creates the operational notebook or updates only its recorded ID with an optimistic revision check. It validates all 21 cells after saving. Existing ABAP demonstration notebooks and user drafts are preserved.
 
-Current validation limitations: fact fixtures are retained across cells, but the original's dimension helpers still need a metadata fixture seam to guarantee identical retained property/hierarchy inputs. Live comparisons without that seam are provisional. Restricted-user authorization and caller posting/rollback acceptance remain separate requirements.
+The comparison harness now retains complete fact tables and 14 authorized dimension bundles, with explicit hierarchy resolutions, under one capture identifier. Every Script stage and the original validation reader use those retained inputs. Missing metadata fails instead of falling back to live values. Captures are sequential, rather than one database-wide transaction, and should be coordinated with master-data maintenance. See `docs/metadata-fixtures.md` for the contract and retry restrictions.
+
+The original's optional metadata reader is deployed through `codex/SSNG-3218-notebook-metadata-validation` in the Chorus ABAP repository. Its normal business path and `ZCL_BPC_DEMREVID_CALC_003` business source remain unchanged. That DEV branch retains the previously deployed NPL baseline, including its existing temporary BW enrichment workaround; review that baseline separately before any customer transport. `original-metadata-deployment.json` records source readback.
+
+Before any posting migration, restricted-user authorization and caller posting/rollback acceptance remain required. The original's old-output read scope includes `TIME_NA`; the notebook's strict posting scope must explicitly account for any legacy clears there. No production LGF or posting handler has been replaced.
