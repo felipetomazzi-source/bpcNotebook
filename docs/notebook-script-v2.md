@@ -127,13 +127,14 @@ result delta as "BPC_RESULT" kind delta
 ```text
 fixture completeInputs model "DEMREVID"
 compare counts = original with notebook as "EXACT_COMPARISON"
+compare changes = originalDelta with notebookDelta as "ORDERED_DELTA" ordered
 assert counts.changed == 0 message "Changed native records"
 checkpoint "material ratios" start inputs ["BASE_REVENUES"] outputs ["RATIOS"]
 publish ratios as "RATIOS"
 checkpoint "material ratios" finish inputs ["BASE_REVENUES"] outputs ["RATIOS"]
 ```
 
-Fixture mode supplies complete native in-memory model input tables without financial writes, with model/schema/member/authorization/filter checks and no silent fallback to live reads. Publish fixtures as full datasets and pass them to both implementations within the existing immutable fixture contract. Enable fixture mode in each consuming context. `compare` compares every dimension and exact native SIGNEDDATA inside SAP and emits full counts plus bounded difference previews. It rejects duplicate keys; raw duplicate-bearing legacy change sets require an ordered exact table comparator/oracle instead. Read diagnostics remain supplied by the generic adapters, including effective filters/scopes/security/full count.
+Fixture mode supplies complete native in-memory model input tables without financial writes, with model/schema/member/authorization/filter checks and no silent fallback to live reads. Enable fixture mode in the first executed cell and in every subsequent context, including pure comparison cells; publish the fixtures as full datasets and pass them to both implementations within the existing immutable fixture contract. `compare` compares every dimension and exact native SIGNEDDATA inside SAP and emits full counts plus bounded difference previews. Its default key comparison rejects duplicates. The explicit `ordered` mode compares complete native rows at each position, retaining duplicate multiplicity and order, with positional changed/added/missing counts and at most 100 preview rows carrying original/notebook labels and positions. It is appropriate for the legacy replacement-valued change set. It does not claim a key-based alignment when record order differs. Read diagnostics remain supplied by the generic adapters, including effective filters/scopes/security/full count.
 
 Working tables stay on SAP. WORK_ROWS, read limits, deadlines and DATASET_BYTES fail explicitly, never truncate calculation inputs. Per-operation working-table/index memory guards are estimates, not a total live-heap accounting mechanism; published/consumed dataset budgets remain cumulative. A failed cell cannot publish a completed partial dataset. Large workload budgets must be set explicitly and validated with representative data.
 

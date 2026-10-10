@@ -4,6 +4,9 @@ CLASS zcl_bn_table DEFINITION PUBLIC FINAL CREATE PUBLIC.
            tt_columns TYPE STANDARD TABLE OF ty_column WITH DEFAULT KEY.
     CLASS-METHODS make IMPORTING io TYPE REF TO zcl_bn_context columns TYPE tt_columns RETURNING VALUE(result) TYPE REF TO data RAISING zcx_bn.
     CLASS-METHODS signed_boundary IMPORTING rows TYPE ANY TABLE RAISING zcx_bn.
+    CLASS-METHODS compare_ordered IMPORTING io TYPE REF TO zcl_bn_context name TYPE string
+      original TYPE STANDARD TABLE notebook TYPE STANDARD TABLE preview_rows TYPE i DEFAULT 100
+      RETURNING VALUE(summary) TYPE zcl_bn_context=>ty_comparison RAISING zcx_bn.
     CLASS-METHODS append_row IMPORTING io TYPE REF TO zcl_bn_context row TYPE any CHANGING target TYPE STANDARD TABLE RAISING zcx_bn.
     CLASS-METHODS shape IMPORTING rows TYPE ANY TABLE RETURNING VALUE(result) TYPE REF TO cl_abap_structdescr RAISING zcx_bn.
     CLASS-METHODS keys IMPORTING rows TYPE ANY TABLE names TYPE zcl_bn_types=>tt_ids RAISING zcx_bn.
@@ -26,6 +29,44 @@ CLASS zcl_bn_table DEFINITION PUBLIC FINAL CREATE PUBLIC.
     CLASS-METHODS compatible IMPORTING left TYPE ANY TABLE right TYPE ANY TABLE RAISING zcx_bn.
 ENDCLASS.
 CLASS zcl_bn_table IMPLEMENTATION.
+  METHOD compare_ordered.
+    compatible( left = original right = notebook ). check( io = io rows = original ). check( io = io rows = notebook ).
+    IF preview_rows < 0 OR preview_rows > 5000.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'SCRIPT_COMPARE' detail = 'Ordered comparison preview must be 0-5000 rows'.
+    ENDIF.
+    summary-name = name. summary-original_rows = lines( original ). summary-notebook_rows = lines( notebook ).
+    DATA(empty) = copy( io = io rows = original empty = abap_true ).
+    FIELD-SYMBOLS <empty> TYPE STANDARD TABLE. ASSIGN empty->* TO <empty>.
+    DATA(diff) = extend( io = io rows = <empty> columns = VALUE #(
+      ( name = 'BN_DIFF_POSITION' kind = 'integer' ) ( name = 'BN_DIFF_SOURCE' kind = 'text' ) ) ).
+    FIELD-SYMBOLS <diff> TYPE STANDARD TABLE. ASSIGN diff->* TO <diff>.
+    FIELD-SYMBOLS: <left> TYPE any, <right> TYPE any.
+    DATA(records) = 0.
+    DO nmax( val1 = lines( original ) val2 = lines( notebook ) ) TIMES.
+      DATA(position) = sy-index. IF position MOD 1000 = 0. io->check_budget( ). ENDIF.
+      UNASSIGN: <left>, <right>.
+      READ TABLE original INDEX position ASSIGNING <left>.
+      READ TABLE notebook INDEX position ASSIGNING <right>.
+      IF <left> IS ASSIGNED AND <right> IS ASSIGNED.
+        IF <left> = <right>. summary-unchanged = summary-unchanged + 1. CONTINUE. ENDIF.
+        summary-changed = summary-changed + 1. records = records + 2.
+      ELSEIF <left> IS ASSIGNED. summary-missing = summary-missing + 1. records = records + 1.
+      ELSE. summary-added = summary-added + 1. records = records + 1. ENDIF.
+      DO 2 TIMES.
+        DATA(side) = sy-index.
+        IF lines( <diff> ) >= preview_rows. EXIT. ENDIF.
+        IF ( side = 1 AND <left> IS NOT ASSIGNED ) OR ( side = 2 AND <right> IS NOT ASSIGNED ). CONTINUE. ENDIF.
+        APPEND INITIAL LINE TO <diff> ASSIGNING FIELD-SYMBOL(<out>).
+        IF side = 1. MOVE-CORRESPONDING <left> TO <out>. ELSE. MOVE-CORRESPONDING <right> TO <out>. ENDIF.
+        ASSIGN COMPONENT 'BN_DIFF_POSITION' OF STRUCTURE <out> TO FIELD-SYMBOL(<ordinal>). <ordinal> = position.
+        ASSIGN COMPONENT 'BN_DIFF_SOURCE' OF STRUCTURE <out> TO FIELD-SYMBOL(<source>).
+        <source> = COND string( WHEN side = 1 THEN 'original' ELSE 'notebook' ).
+      ENDDO.
+    ENDDO.
+    io->emit_table( name = name && '/ORDERED_DIFF' rows = <diff> total_count = records ).
+    DATA summaries TYPE STANDARD TABLE OF zcl_bn_context=>ty_comparison WITH EMPTY KEY.
+    APPEND summary TO summaries. io->emit_table( name = name && '/SUMMARY' rows = summaries ).
+  ENDMETHOD.
   METHOD signed_boundary.
     DATA(structure) = shape( rows ). DATA(components) = structure->get_components( ).
     READ TABLE components INTO DATA(amount) WITH KEY name = 'SIGNEDDATA'.

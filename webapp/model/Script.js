@@ -103,9 +103,15 @@ sap.ui.define([], function () {
       else if (token.value === "[" ) {
         var entries = [];
         while (peek() !== "]") {
-          var entry = take();
-          if (entry.type !== "text") { failure(line, "Member lists contain quoted IDs"); }
-          entries.push("( CONV string( " + literal(entry.value) + " ) )");
+          if(v2){
+            var entryValue=expression();
+            if(["string","field"].indexOf(entryValue.kind)<0){failure(line,"Member lists require text/member values");}
+            entries.push("( CONV string( " + entryValue.code + " ) )");
+          }else{
+            var entry = take();
+            if (entry.type !== "text") { failure(line, "Member lists contain quoted IDs"); }
+            entries.push("( CONV string( " + literal(entry.value) + " ) )");
+          }
           if (peek() !== ",") { break; } take(",");
         }
         take("]"); left = {kind:"ids", code:"VALUE zcl_bn_types=>tt_ids( " + entries.join(" ") + " )"};
@@ -248,6 +254,15 @@ sap.ui.define([], function () {
       if (!parts.length) { return; }
       emit("* @bn-line " + line);
       var command = name(), id, value, item;
+      if(v2 && symbols[command] && (peek()==="." || peek()==="=")){
+        item=lookup(command);
+        if(peek()==="."){take(".");item=field(lookup(command,"row"),name());}
+        take("=");value=expression();
+        if(["field","number","string","boolean"].indexOf(item.kind)<0 || ["number","string","boolean","field"].indexOf(value.kind)<0){failure(line,"Assign scalar values only");}
+        if(item.kind!=="field" && item.kind!==value.kind){failure(line,"Assignment changes the variable type");}
+        emit(item.code + " = " + value.code + ".");
+        if(at!==parts.length){failure(line,"Unexpected " + peek());}return;
+      }
       if (command === "script" && v2) {
         take("version");take("2"); if(index !== text.split(/\r\n|\n|\r/).findIndex(function (s){return s.trim();})){failure(line,"Version header must come first");}
       } else if (v2 && command === "dataset") {
@@ -288,7 +303,8 @@ sap.ui.define([], function () {
       } else if(v2 && command==="deduplicate"){
         item=lookup(name(),"table");mutation(item);take("adjacent");take("by");var fields=fieldNames();if(!fields.length){failure(line,"Deduplication requires keys");}
         emit("zcl_bn_table=>keys( rows = " + item.code + " names = " + idCode(fields) + " ).");
-        emit("DELETE ADJACENT DUPLICATES FROM " + item.code + " COMPARING " + fields.join(" ") + ".");
+        var comparing=fields.map(function(n){var keyName=fresh();emit("DATA(" + keyName + ") = CONV string( " + literal(n) + " ).");return "(" + keyName + ")";});
+        emit("DELETE ADJACENT DUPLICATES FROM " + item.code + " COMPARING " + comparing.join(" ") + ".");
       } else if(v2 && (command==="extend" || command==="cast")){
         id=name();take("=");item=lookup(name(),"table");take("with");var cs=columns();
         tableResult(id,"zcl_bn_table=>extend( io = io rows = " + item.code + " columns = " + cs + " replace = " + (command==="cast"?"abap_true":"abap_false") + " )");
@@ -332,7 +348,8 @@ sap.ui.define([], function () {
         emit("io->allocation_result( name = " + literal(label.value) + " rows = " + item.code + " kind = " + literal(kind) + " ).");
       } else if(v2 && command==="compare"){
         id=name();take("=");var original=lookup(name(),"table");take("with");var port=lookup(name(),"table");take("as");label=take();if(label.type!=="text"){failure(line,"Comparison name must be quoted");}
-        item=declare(id,"row");emit("DATA(" + item.code + ") = io->compare_results( name = " + literal(label.value) + " original = " + original.code + " notebook = " + port.code + " ).");
+        var ordered=peek()==="ordered";if(ordered){take("ordered");}
+        item=declare(id,"row");emit("DATA(" + item.code + ") = " + (ordered?"zcl_bn_table=>compare_ordered( io = io ":"io->compare_results( ") + "name = " + literal(label.value) + " original = " + original.code + " notebook = " + port.code + " ).");
       } else if(v2 && command==="checkpoint"){
         label=take();var state=name();if(label.type!=="text"||!["start","finish"].includes(state)){failure(line,"Checkpoint requires quoted name and start/finish");}
         var inputs=[],outputs=[];if(peek()==="inputs"){take("inputs");inputs=fieldNames();}if(peek()==="outputs"){take("outputs");outputs=fieldNames();}
