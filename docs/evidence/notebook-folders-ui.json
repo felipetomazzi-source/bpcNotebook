@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-10T02:22:56.518929+00:00",
+  "passed": true,
+  "mode": "Embedded bpcIO, Chrome, separate disposable tab1260451959",
+  "protectedUserTab": "1260451832, untouched",
+  "checks": [
+    "existing23 notebooks Unfiled",
+    "new folder",
+    "rename preserves Unicode É and ·",
+    "collapse and expand",
+    "move own zero-cell test notebook",
+    "nonempty folder removal disabled",
+    "search finds notebook in collapsed folder and displays folder/model",
+    "notebook revision remains1",
+    "unfile",
+    "empty folder removal",
+    "archive only own test notebook",
+    "Unfiled count restored23"
+  ],
+  "screenshot": "notebook-folders-ui.png",
+  "preexistingNotebooksMoved": false,
+  "financialPosting": false,
+  "cleanupComplete": true
+}
