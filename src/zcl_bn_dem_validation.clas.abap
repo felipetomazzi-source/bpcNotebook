@@ -19,7 +19,8 @@ CLASS zcl_bn_dem_validation IMPLEMENTATION.
   TRY.
    rows = context->bpc_dimension( CONV string( dimension ) )->member_data( ).
   CATCH zcx_bn INTO DATA(error).
-   RAISE EXCEPTION TYPE zcx_bn_engine EXPORTING code = error->code detail = error->detail.
+   RAISE EXCEPTION TYPE zcx_bn_engine EXPORTING code = error->code
+    detail = |{ dimension }: { error->detail }|.
   ENDTRY.
  ENDMETHOD.
  METHOD zif_bpc_validation_metadata~children.
