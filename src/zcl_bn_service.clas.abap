@@ -1022,6 +1022,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
         ENDIF.
         CLEAR dataset.
         /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( output_json ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = dataset ).
+        dataset-tables = zcl_bn_context=>bounded_previews( dataset-tables ).
         IF dataset-tables IS NOT INITIAL.
           DATA selected_table TYPE zcl_bn_context=>ty_table.
           IF table_name IS INITIAL.
@@ -1040,12 +1041,16 @@ CLASS zcl_bn_service IMPLEMENTATION.
           TYPES: BEGIN OF ty_table_info,
                    name TYPE string, row_count TYPE i, total_count TYPE i,
                    truncated TYPE abap_bool, elapsed_us TYPE i,
+                   values_truncated TYPE abap_bool, truncated_values TYPE i, byte_limit_reached TYPE abap_bool,
+                   value_character_limit TYPE i, preview_byte_limit TYPE i, preview_bytes TYPE i,
                  END OF ty_table_info,
                  tt_table_info TYPE STANDARD TABLE OF ty_table_info WITH DEFAULT KEY,
                  BEGIN OF ty_table_page,
                    run_id TYPE string, cell_id TYPE string, revision TYPE i,
                    total TYPE i, source_total TYPE i, offset TYPE i, limit TYPE i,
                    truncated TYPE abap_bool, table_name TYPE string,
+                   values_truncated TYPE abap_bool, truncated_values TYPE i, byte_limit_reached TYPE abap_bool,
+                   value_character_limit TYPE i, preview_byte_limit TYPE i, preview_bytes TYPE i,
                    tables TYPE tt_table_info, partial TYPE abap_bool, checkpoints TYPE zcl_bn_types=>tt_checkpoints,
                    schema TYPE zcl_bn_context=>tt_schema,
                    rows TYPE zcl_bn_context=>tt_table_rows,
@@ -1054,7 +1059,10 @@ CLASS zcl_bn_service IMPLEMENTATION.
             run_id = run_id cell_id = cell_id revision = revision offset = offset limit = page_size
             partial = partial_preview checkpoints = dataset-checkpoints
             total = selected_table-row_count source_total = selected_table-total_count
-            truncated = selected_table-truncated table_name = selected_table-name schema = selected_table-schema ).
+            truncated = selected_table-truncated table_name = selected_table-name schema = selected_table-schema
+            values_truncated = selected_table-values_truncated truncated_values = selected_table-truncated_values
+            byte_limit_reached = selected_table-byte_limit_reached value_character_limit = selected_table-value_character_limit
+            preview_byte_limit = selected_table-preview_byte_limit preview_bytes = selected_table-preview_bytes ).
           LOOP AT dataset-tables INTO DATA(output_table).
             APPEND CORRESPONDING #( output_table ) TO table_page-tables.
           ENDLOOP.
@@ -1067,16 +1075,24 @@ CLASS zcl_bn_service IMPLEMENTATION.
         TYPES: BEGIN OF ty_page,
                  run_id TYPE string, cell_id TYPE string, revision TYPE i,
                  total TYPE i, offset TYPE i, limit TYPE i,
+                 values_truncated TYPE abap_bool, truncated_values TYPE i,
+                 value_character_limit TYPE i, preview_byte_limit TYPE i, preview_bytes TYPE i,
                  schema TYPE tt_schema,
                  rows TYPE zcl_bn_context=>tt_rows,
                END OF ty_page.
         DATA page TYPE ty_page.
         page-run_id = run_id. page-cell_id = cell_id. page-revision = revision.
         page-total = dataset-row_count. page-offset = offset. page-limit = page_size.
+        page-value_character_limit = 4096. page-preview_byte_limit = 8388608.
         page-schema = dataset-schema.
         LOOP AT dataset-rows INTO DATA(row) FROM offset + 1 TO offset + page_size.
+          IF strlen( row-key ) > page-value_character_limit.
+            row-key = zcl_bn_context=>preview_value( row-key ). page-truncated_values = page-truncated_values + 1.
+          ENDIF.
           APPEND row TO page-rows.
         ENDLOOP.
+        page-values_truncated = xsdbool( page-truncated_values > 0 ).
+        page-preview_bytes = xstrlen( cl_abap_codepage=>convert_to( source = zcl_bn_types=>json( page ) codepage = 'UTF-8' ) ) + 256.
         json = zcl_bn_types=>json( page ).
       WHEN OTHERS.
         RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'ROUTE' detail = 'Unknown endpoint or method' status = 404.

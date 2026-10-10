@@ -15,9 +15,13 @@ CLASS zcl_bn_context DEFINITION PUBLIC FINAL CREATE PUBLIC.
            BEGIN OF ty_table,
              name TYPE string, schema TYPE tt_schema, rows TYPE tt_table_rows,
              row_count TYPE i, total_count TYPE i, truncated TYPE abap_bool,
+             values_truncated TYPE abap_bool, truncated_values TYPE i, byte_limit_reached TYPE abap_bool,
+             value_character_limit TYPE i, preview_byte_limit TYPE i, preview_bytes TYPE i,
              elapsed_us TYPE i,
            END OF ty_table,
            tt_tables TYPE STANDARD TABLE OF ty_table WITH DEFAULT KEY.
+    CLASS-METHODS bounded_previews IMPORTING source TYPE tt_tables RETURNING VALUE(result) TYPE tt_tables RAISING zcx_bn.
+    CLASS-METHODS preview_value IMPORTING value TYPE string RETURNING VALUE(result) TYPE string RAISING zcx_bn.
     TYPES: BEGIN OF ty_live_output,
              cell_id TYPE string, rows TYPE tt_rows,
            END OF ty_live_output,
@@ -123,6 +127,7 @@ CLASS zcl_bn_context DEFINITION PUBLIC FINAL CREATE PUBLIC.
     DATA mv_started TYPE timestampl.
     DATA mv_cancel_polled TYPE timestampl.
     DATA mv_cancel_revision TYPE i.
+    DATA mv_preview_bytes TYPE i.
     DATA mv_seconds TYPE i VALUE 600.
     DATA mv_step_started TYPE i.
     DATA mv_active_step TYPE string.
@@ -530,7 +535,8 @@ CLASS zcl_bn_context IMPLEMENTATION.
         RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'TABLE_TYPE' detail = 'Expected a table of flat structures'.
     ENDTRY.
     DATA(table) = VALUE ty_table( name = name row_count = nmin( val1 = lines( rows ) val2 = 5000 )
-      total_count = COND #( WHEN total_count < 0 THEN lines( rows ) ELSE total_count ) elapsed_us = elapsed_us ).
+      total_count = COND #( WHEN total_count < 0 THEN lines( rows ) ELSE total_count ) elapsed_us = elapsed_us
+      value_character_limit = 4096 preview_byte_limit = 8388608 ).
     IF table-total_count < lines( rows ).
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'TABLE_COUNT' detail = 'Total count cannot be smaller than supplied rows'.
     ENDIF.
@@ -557,18 +563,109 @@ CLASS zcl_bn_context IMPLEMENTATION.
     ENDIF.
     FIELD-SYMBOLS <row> TYPE any.
     FIELD-SYMBOLS <value> TYPE any.
+    DATA row_bytes TYPE i.
+    DATA table_bytes TYPE i.
+    TRY.
+      table_bytes = xstrlen( cl_abap_codepage=>convert_to( source = zcl_bn_types=>json( table ) codepage = 'UTF-8' ) ) + 256.
+    CATCH cx_root INTO DATA(encoding_error).
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'PREVIEW_ENCODING' detail = encoding_error->get_text( ).
+    ENDTRY.
+    IF mv_preview_bytes + table_bytes > table-preview_byte_limit.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'PREVIEW_BUDGET' detail = 'Preview schemas exceed the eight MiB display budget'.
+    ENDIF.
     DATA index TYPE i.
     LOOP AT rows ASSIGNING <row>.
       index = index + 1.
       IF index > 5000. EXIT. ENDIF.
       DATA(outrow) = VALUE ty_table_row( ).
+      DATA shortened TYPE i. CLEAR shortened.
       LOOP AT components INTO component.
         ASSIGN COMPONENT component-name OF STRUCTURE <row> TO <value>.
-        APPEND |{ <value> }| TO outrow-values.
+        DATA(text) = |{ <value> }|.
+        IF strlen( text ) > table-value_character_limit.
+          text = preview_value( text ). shortened = shortened + 1.
+        ENDIF.
+        APPEND text TO outrow-values.
       ENDLOOP.
+      TRY.
+        row_bytes = xstrlen( cl_abap_codepage=>convert_to( source = zcl_bn_types=>json( outrow ) codepage = 'UTF-8' ) ) + 1.
+      CATCH cx_root INTO encoding_error.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'PREVIEW_ENCODING' detail = encoding_error->get_text( ).
+      ENDTRY.
+      IF mv_preview_bytes + table_bytes + row_bytes > table-preview_byte_limit.
+        table-byte_limit_reached = abap_true. EXIT.
+      ENDIF.
       APPEND outrow TO table-rows.
+      table_bytes = table_bytes + row_bytes.
+      table-truncated_values = table-truncated_values + shortened.
+      IF index MOD 100 = 0. check_budget( ). ENDIF.
     ENDLOOP.
+    table-row_count = lines( table-rows ). table-truncated = xsdbool( table-total_count > table-row_count ).
+    table-values_truncated = xsdbool( table-truncated_values > 0 ). table-preview_bytes = table_bytes.
+    mv_preview_bytes = mv_preview_bytes + table_bytes.
     APPEND table TO tables.
+  ENDMETHOD.
+  METHOD preview_value.
+    result = value.
+    IF strlen( value ) <= 4096. RETURN. ENDIF.
+    DATA(prefix_length) = 4095.
+    " Do not end a display excerpt inside a UTF-16 surrogate pair.
+    DO.
+      DATA(excerpt) = substring( val = value len = prefix_length ).
+      TRY.
+        DATA(encoded) = cl_abap_codepage=>convert_to( source = excerpt codepage = 'UTF-8' ).
+        EXIT.
+      CATCH cx_sy_conversion_codepage.
+        prefix_length = prefix_length - 1.
+        IF prefix_length < 0.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'PREVIEW_ENCODING' detail = 'Display text cannot be encoded as UTF-8'.
+        ENDIF.
+    ENDTRY.
+    ENDDO.
+    result = excerpt && '…'.
+  ENDMETHOD.
+  METHOD bounded_previews.
+    " Compatibility boundary for old immutable documents, never rewrite their payload.
+    DATA total_bytes TYPE i.
+    IF lines( source ) > 200.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'PREVIEW_BUDGET' detail = 'Maximum 200 display tables'.
+    ENDIF.
+    LOOP AT source INTO DATA(original).
+      DATA(table) = original. CLEAR table-rows.
+      table-value_character_limit = 4096. table-preview_byte_limit = 8388608.
+      table-total_count = nmax( val1 = original-total_count val2 = lines( original-rows ) ).
+      table-row_count = 0. table-preview_bytes = 0.
+      DATA table_bytes TYPE i. DATA row_bytes TYPE i.
+      TRY.
+        table_bytes = xstrlen( cl_abap_codepage=>convert_to( source = zcl_bn_types=>json( table ) codepage = 'UTF-8' ) ) + 256.
+      CATCH cx_root INTO DATA(encoding_error).
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'PREVIEW_ENCODING' detail = encoding_error->get_text( ).
+      ENDTRY.
+      IF total_bytes + table_bytes > table-preview_byte_limit.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'PREVIEW_BUDGET' detail = 'Preview schemas exceed the eight MiB display budget'.
+      ENDIF.
+      LOOP AT original-rows INTO DATA(row) TO 5000.
+        DATA(shortened) = 0.
+        LOOP AT row-values ASSIGNING FIELD-SYMBOL(<value>).
+          IF strlen( <value> ) > table-value_character_limit.
+            <value> = preview_value( <value> ). shortened = shortened + 1.
+          ENDIF.
+        ENDLOOP.
+        TRY.
+          row_bytes = xstrlen( cl_abap_codepage=>convert_to( source = zcl_bn_types=>json( row ) codepage = 'UTF-8' ) ) + 1.
+        CATCH cx_root INTO encoding_error.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'PREVIEW_ENCODING' detail = encoding_error->get_text( ).
+        ENDTRY.
+        IF total_bytes + table_bytes + row_bytes > table-preview_byte_limit.
+          table-byte_limit_reached = abap_true. EXIT.
+        ENDIF.
+        APPEND row TO table-rows. table_bytes = table_bytes + row_bytes.
+        table-truncated_values = table-truncated_values + shortened.
+      ENDLOOP.
+      table-row_count = lines( table-rows ). table-truncated = xsdbool( table-total_count > table-row_count ).
+      table-values_truncated = xsdbool( table-truncated_values > 0 ). table-preview_bytes = table_bytes.
+      total_bytes = total_bytes + table_bytes. APPEND table TO result.
+    ENDLOOP.
   ENDMETHOD.
   METHOD compare_results.
     IF name IS INITIAL OR preview_rows < 1 OR preview_rows > 5000.
@@ -830,6 +927,9 @@ CLASS zcl_bn_context IMPLEMENTATION.
        lines( tables ) + lines( context->tables ) > 200 OR lines( reads ) + lines( context->reads ) > 50.
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'RESOURCE_BUDGET' detail = 'Fixture output snapshot mismatch or diagnostic budget exceeded'.
     ENDIF.
+    IF strlen( prefix ) > 64 OR mv_preview_bytes + context->mv_preview_bytes > 8388608.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'PREVIEW_BUDGET' detail = 'Combined fixture previews exceed the eight MiB display budget'.
+    ENDIF.
     DATA preview_values TYPE i.
     LOOP AT tables INTO DATA(existing_table).
       preview_values = preview_values + existing_table-row_count * lines( existing_table-schema ).
@@ -847,6 +947,7 @@ CLASS zcl_bn_context IMPLEMENTATION.
     LOOP AT context->tables INTO table.
       table-name = prefix && '/' && table-name. APPEND table TO tables.
     ENDLOOP.
+    mv_preview_bytes = mv_preview_bytes + context->mv_preview_bytes.
     LOOP AT context->reads INTO DATA(read).
       read-id = prefix && '/' && read-id. APPEND read TO reads.
     ENDLOOP.
