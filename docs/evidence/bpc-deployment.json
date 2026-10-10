@@ -1,9 +1,9 @@
 {
-  "at": "2026-10-10T02:55:18.870Z",
+  "at": "2026-10-10T02:58:37.911Z",
   "repoId": "000000000008",
   "package": "ZBPC_NOTEBOOK",
   "transport": "NPLK900126",
-  "commit": "3d4a39511bfc7b40c0493557fd58f677f4d21278",
+  "commit": "4cb5e20f3d731d902d0a51f9a1e68733828a0f94",
   "method": "Full online abapGit repository serialization (refresh + get_files_local) after network pull, compared byte-for-byte with committed Git blobs",
   "files": [
     {
@@ -380,8 +380,8 @@
     },
     {
       "filename": "src/zbpc_notebook.wapa.model_-script.js",
-      "bytes": 127231,
-      "sapSha256": "2a507b311e7668165b4699d33c138230bc34808b4554341460c130256aeb063c",
+      "bytes": 127487,
+      "sapSha256": "dd4d01bb9e13d6c8464e22c0e31a171ee2c51ad44d39a5e0963f37f31fb33bbc",
       "equal": true
     },
     {
