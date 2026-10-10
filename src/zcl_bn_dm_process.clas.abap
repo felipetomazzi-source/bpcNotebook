@@ -27,9 +27,11 @@ CLASS zcl_bn_dm_process IMPLEMENTATION.
   METHOD if_rspc_execute~execute.
     CLEAR: e_instance, e_state, e_eventno, e_hold.
     e_state = 'R'.
-    CALL FUNCTION 'RSSM_UNIQUE_ID' IMPORTING e_uni_idc25 = e_instance.
+    DATA instance TYPE sysuuid_25.
     DATA config TYPE REF TO cl_ujd_config.
     TRY.
+        CALL FUNCTION 'RSSM_UNIQUE_ID' IMPORTING e_uni_idc25 = instance.
+        e_instance = instance.
         IF i_simulate IS NOT INITIAL.
           RAISE EXCEPTION TYPE cx_uj_input_error EXPORTING object = 'Notebook' key = 'Process-chain simulation is not supported'.
         ENDIF.
