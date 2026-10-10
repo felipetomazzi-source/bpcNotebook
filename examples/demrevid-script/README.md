@@ -59,3 +59,5 @@ The original's optional metadata reader is deployed through `codex/SSNG-3218-not
 Before any posting migration, restricted-user authorization and caller posting/rollback acceptance remain required. The original's old-output read scope includes `TIME_NA`; the notebook's strict posting scope must explicitly account for any legacy clears there. No production LGF or posting handler has been replaced.
 
 Display values are now capped at 4,096 characters and cell previews at eight MiB, including historical outputs. This keeps metadata packet previews manageable while preserving complete native datasets and exact financial amounts. See `docs/preview-bounds.md` for the display contract.
+
+Technical name: `DEMREVID003_ALLOCATION`. Description: `DEMREVID003 demand revenue allocation`. These are assigned to the existing UUID through the identity sidecar; saved calculation revision 2 and historical executions are unchanged. The technical name is unique within the exact SAP client/environment/model and remains immutable. Future package integration must resolve it with the selected context and an explicit approved revision; assigning the name does not enable posting.
