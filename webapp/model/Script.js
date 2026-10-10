@@ -315,7 +315,7 @@ sap.ui.define([], function () {
       }
       if (command === "script" && v2) {
         take("version");take("2");if(compact){take("compact");}
-        if(index !== text.split(/\r\n|\n|\r/).findIndex(function (s){return s.trim();})){failure(line,"Version header must come first");}
+        if(index !== text.split(/\r\n|\n|\r/).findIndex(function (s){return s.trim() && !/^[ \t]*(?:#|\/\/)/.test(s);})){failure(line,"Version header must come first");}
       } else if(v2 && command==="defaults"){
         item=lookup(name(),"table");take("with");var settings=[],seen=[];
         do{var fieldName=name().toUpperCase(),defaultValue=take();
