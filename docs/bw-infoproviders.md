@@ -43,6 +43,14 @@ the database-call duration and aggregation work.
 
 ## Compatibility and validation status
 
+The feature and SAP 752 repair have now been deployed to NPL/client 001 via
+the existing abapGit branch. The two feature classes activated, twelve native
+unit tests passed, and the deployed Script resource includes the new statement.
+Full serialization matches 75/76 committed files; the sole difference is a
+trailing XML blank line removed by SAP. See [current deployment evidence and
+the earlier local validation](bw-validation.md). No live provider type has been
+certified; the earlier pre-deployment status below is retained for context.
+
 The selected interface is SAP's released BW Data Manager interface. Classic
 InfoCubes, classic DSOs and MultiProviders are the intended initial provider
 scope, subject to the installed RSDRI interface and its provider restrictions.

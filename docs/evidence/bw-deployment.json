@@ -1,0 +1,168 @@
+{
+  "at": "2026-10-10T08:06:44.635Z",
+  "origin": "https://bpc.kwickast.co.nz",
+  "client": "001",
+  "repo": "000000000008",
+  "branch": "refs/heads/codex/SSNG-3218-fixture-validation",
+  "package": "ZBPC_NOTEBOOK",
+  "commit": "1de85d0118f3041c0e47ecfe884fe80a775106a3",
+  "contextAlreadyDeployed": true,
+  "bwAlreadyDeployed": false,
+  "transport": "NPLK900126",
+  "transportState": [
+    {
+      "TRKORR": "NPLK900126",
+      "TRSTATUS": "D",
+      "TRFUNCTION": "K"
+    }
+  ],
+  "pullAttempted": true,
+  "pullStartedAt": "2026-10-10T08:06:45.585Z",
+  "pullReturned": true,
+  "pullResult": [],
+  "pullFinishedAt": "2026-10-10T08:06:48.170Z",
+  "ZCL_BN_BW": {
+    "sourceMatches": true,
+    "syntax": []
+  },
+  "ZCL_BN_CONTEXT": {
+    "sourceMatches": true,
+    "syntax": []
+  },
+  "activation": {
+    "messages": [],
+    "success": true,
+    "inactive": []
+  },
+  "tests": [
+    {
+      "name": "LTC_BW",
+      "riskLevel": "harmless",
+      "methods": [
+        {
+          "name": "DENIED_READ",
+          "alerts": []
+        },
+        {
+          "name": "DIRECT_FIXTURE_GUARD",
+          "alerts": []
+        },
+        {
+          "name": "EMPTY_READ",
+          "alerts": []
+        },
+        {
+          "name": "EXACT_LIMIT",
+          "alerts": []
+        },
+        {
+          "name": "FIXTURE_GUARD",
+          "alerts": []
+        },
+        {
+          "name": "INVALID_FIELDS",
+          "alerts": []
+        },
+        {
+          "name": "INVALID_FILTER",
+          "alerts": []
+        },
+        {
+          "name": "INVALID_REQUEST",
+          "alerts": []
+        },
+        {
+          "name": "LOGIC_GUARD",
+          "alerts": []
+        },
+        {
+          "name": "OVERFLOW",
+          "alerts": []
+        },
+        {
+          "name": "PARTIAL_READ",
+          "alerts": []
+        },
+        {
+          "name": "SPLIT_READ",
+          "alerts": []
+        }
+      ],
+      "alerts": []
+    }
+  ],
+  "serialization": {
+    "files": 76,
+    "passed": false,
+    "missing": [],
+    "differences": [
+      "src/zcl_bn_bw.clas.xml"
+    ]
+  },
+  "scriptResource": {
+    "status": 200,
+    "hasBwData": true,
+    "hasBwContextCall": true
+  },
+  "providerMetadata": {
+    "columns": [
+      {
+        "name": "INFOCUBE",
+        "type": "C",
+        "description": "INFOCUBE",
+        "keyAttribute": false,
+        "colType": "",
+        "isKeyFigure": false,
+        "length": 0
+      },
+      {
+        "name": "OBJVERS",
+        "type": "C",
+        "description": "OBJVERS",
+        "keyAttribute": false,
+        "colType": "",
+        "isKeyFigure": false,
+        "length": 0
+      },
+      {
+        "name": "CUBETYPE",
+        "type": "C",
+        "description": "CUBETYPE",
+        "keyAttribute": false,
+        "colType": "",
+        "isKeyFigure": false,
+        "length": 0
+      }
+    ],
+    "values": [
+      {
+        "INFOCUBE": "/CPMB/A9INS7X",
+        "OBJVERS": "A",
+        "CUBETYPE": "B"
+      },
+      {
+        "INFOCUBE": "/CPMB/A9ITXMH",
+        "OBJVERS": "A",
+        "CUBETYPE": "B"
+      },
+      {
+        "INFOCUBE": "/CPMB/A9IV1JA",
+        "OBJVERS": "A",
+        "CUBETYPE": "B"
+      },
+      {
+        "INFOCUBE": "/CPMB/A9IWG6R",
+        "OBJVERS": "A",
+        "CUBETYPE": "B"
+      },
+      {
+        "INFOCUBE": "/CPMB/A9MNS7X",
+        "OBJVERS": "A",
+        "CUBETYPE": "M"
+      }
+    ]
+  },
+  "liveProviderReads": 0,
+  "liveProviderTypesVerified": [],
+  "verifiedAt": "2026-10-10T08:09:10.363Z"
+}

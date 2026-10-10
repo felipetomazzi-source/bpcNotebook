@@ -29,7 +29,7 @@ Select ZBPC_NOTEBOOK when creating a package. The package script controls:
 - REPLACEPARAM: INPUT_<name>/HIERARCHY_<name> pairs; TAB and EQU are different single-character separators.
 - WRITE=OFF and EXECUTION=PREVIEW are internal and cannot be changed by package overrides.
 
-Use examples/data-manager/notebook-preview.txt as the DEV fixture example. BN_DM_VERIFY / revision 1 identifies the currently verified fixture, not a business allocation. New fixtures or intentional rebindings may increment that revision; update the package explicitly. Different packages can use the same chain with different reviewed bindings.
+Use examples/data-manager/notebook-preview.txt as the DEV fixture example. When submitting through the native package API, use the exact prompt NAME including percent markers (for this example: %SELECTION% and %BNFACTORVALUE%). Plain names leave percent markers around the substituted value and can also replace substrings inside parameter keys. BN_DM_VERIFY / revision 1 identifies the currently verified fixture, not a business allocation. New fixtures or intentional rebindings may increment that revision; update the package explicitly. Different packages can use the same chain with different reviewed bindings.
 
 The native SAP runtime may still contain owner-private handler/notebook restrictions and trusted DEV enablement. Production execution and cross-user approved publication are separate work. Business posting requires its own reviewed BPC transaction/writeback adapter; there is no posting implementation in this task.
 
@@ -57,10 +57,12 @@ node tools/check-data-manager.cjs --notebook=<saved CATEGORY/TIME notebook>
 
 The contract check creates a private two-cell nonposting fixture and reviewed handler. It changes the latest notebook source after binding to prove the pinned version is used, then checks native selection, typed/Unicode overrides, complete dependency outputs, rollback removing staged records, invalid overrides, empty scope and stale handler revision. Its live fixture remains available for the package test. It reads metadata from the seed and does not execute or alter its business cells.
 
+The live DEV package is CH_PLANNING / DEMREVID / Calculations / BN_NOTEBOOK_PREVIEW. The verified run completed MODIFY, ZBPC_NOTEBOOK_RUN and CLEAR with status 1 / SUCCESS. It executed the reviewed notebook revision 1 while the latest draft was revision 2. Its second cell returned Data Manager preview / amount 4 for factor 2.
+
 Evidence:
 - docs/evidence/data-manager-deployment.json: SAP syntax/activation and explicit chain installation.
 - docs/evidence/data-manager-contract.json: native contract assertions and fixture identity.
-- docs/evidence/data-manager-package.json: actual Data Manager submission/status/log evidence (when completed).
+- docs/evidence/data-manager-package.json: actual Data Manager submission/status/log, pinned run and two-cell output verification.
+- docs/evidence/data-manager-source.json: six native source/metadata blobs match committed Git bytes; all three classes have clean native syntax and package ZBPC_NOTEBOOK / request NPLK900128.
 
 No existing business LGF, business package or /CPMB chain is modified.
-

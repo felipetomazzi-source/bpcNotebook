@@ -1,6 +1,35 @@
 # BW feature validation — 10 October 2026
 
-No SAP system was contacted. No activation, deployment, transport, commit/push,
+## Subsequent authorized NPL deployment
+
+The sections below describe the earlier local validation. After explicit user
+approval, `ff7965c` and its approved SAP 752 compatibility repair `1de85d0` were
+pushed to the existing `codex/SSNG-3218-fixture-validation` branch and pulled
+through NPL abapGit repository `000000000008`, package `ZBPC_NOTEBOOK`, request
+`NPLK900126`. Target checks confirmed `https://bpc.kwickast.co.nz`, NPL/client
+001, logical system `NPLCLNT001`, client category C and SAP_BW 752 SP04.
+
+`ZCL_BN_BW` and `ZCL_BN_CONTEXT` match the deployed repair's source, pass SAP
+syntax checks and activated with no errors/inactive objects. All twelve
+harmless/short BW ABAP Unit tests passed on SAP. The deployed Script resource
+returns HTTP 200 and includes `bwdata` and `io->bw_data`. Read-only checks
+confirmed the supplied RSDRI parameters and required DDIC objects.
+
+Actual full abapGit serialization returned all 76 files: 75 match deployed
+Git commit `1de85d0` byte-for-byte. The sole difference is the extra final
+blank line in `src/zcl_bn_bw.clas.xml`, which SAP removes. It has no semantic
+class-content difference. The consolidation into main removes that extra blank line and performs a fresh
+full SAP serialization comparison. Activation and native unit tests passed.
+
+Five bounded `RSDCUBE` metadata rows establish that cube and MultiProvider
+configurations exist. No provider fact data was read and no actual provider
+type is live-certified. Unit denial tests use a seam; real user authorization
+denial and end/split/cap behavior remain integration checks for a reviewed
+small provider fixture. See [the deployment receipt](evidence/bw-deployment.json).
+
+## Earlier local-only snapshot
+
+At this earlier stage, no SAP system was contacted. No activation, deployment, transport, commit/push,
 production extraction or cross-system BW copy was performed.
 
 ## Baseline comparison
