@@ -17,7 +17,7 @@ sap.ui.define([], function () {
     var result = [], i = 0;
     while (i < text.length) {
       if (/\s/.test(text[i])) { i++; continue; }
-      if (text[i] === "#") { break; }
+      if (text[i] === "#" || text.slice(i,i+2) === "//") { break; }
       var rest = text.slice(i), match;
       if (text[i] === '"') {
         match = rest.match(/^"(?:[^"\\]|\\.)*"/);
@@ -39,8 +39,11 @@ sap.ui.define([], function () {
   }
   function compile(text) {
     text = String(text);
-    var v2 = /^\s*script version 2(?: compact)?(?:\r\n|\n|\r|$)/.test(text);
-    var compact = /^\s*script version 2 compact(?:\r\n|\n|\r|$)/.test(text);
+    var header = text.split(/\r\n|\n|\r/).filter(function (line) {
+      return line.trim() && !/^[ \t]*(?:#|\/\/)/.test(line);
+    })[0] || "";
+    var v2 = /^\s*script version 2(?: compact)?(?:[ \t]*(?:#|\/\/).*|[ \t]*)$/.test(header);
+    var compact = /^\s*script version 2 compact(?:[ \t]*(?:#|\/\/).*|[ \t]*)$/.test(header);
     var sourceMarker=compact?markerCompact:(v2?marker2:marker);
     var body = [], symbols = Object.create(null), blocks = [], serial = 0, line = 1, parts, at;
     var keyConstants=Object.create(null),prelude=[];
