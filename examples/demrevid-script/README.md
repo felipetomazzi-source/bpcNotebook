@@ -14,6 +14,19 @@ The saved DEV notebook is **DEMREVID003 - Script allocation**, ID `E82AEA36D1571
 
 Do not bind this notebook to posting until full nonempty comparisons, authorization checks and the intended caller transaction have been accepted. Current calculation evidence is in `native-evidence.json` and `live-evidence.json`; generic runtime evidence is separate in `docs/evidence/native-script-compact.json`.
 
+## Verified calculation results
+
+All nine nonempty controlled cases passed with identical retained facts and dimension metadata: standard suppression on/off, fallback, rounding, negative revenues, connection carry-forward on/off and HSNS on/off. Comparison includes all 20 dimensions, duplicate multiplicity and exact native seven-decimal amounts, for both replacement tables and legacy change sets, including disappeared-record clears.
+
+The complete live input for `Actual` / `2026.006` contained 44,110 records. Both original-versus-Script comparisons passed with zero added, missing or changed records:
+
+| Suppression | Replacement records | Legacy change-set records |
+| --- | ---: | ---: |
+| On | 20,482 | 2,513 |
+| Off | 20,496 | 2,529 |
+
+`live-evidence.json` also records the automatic read summary and effective output/reference period diagnostics. These results establish the tested selection and controlled paths; they are not acceptance of every customer category/period, a restricted-user scenario or financial posting.
+
 `PREVIEW_ROWS` controls automatic dataset previews. Explicit Script `show` tables use the platform's 5,000-row cap. Their total source counts remain visible. Neither preview supplies downstream calculations. For multiple suppression groups, the advanced input definition can use a string for `FFLASMATGROUPS` with the original comma-separated flag values; the Script preserves the original independent sorting/deduplication and positional pairing of the ID and flag ranges.
 
 The operational definition contains 21 visible Notebook Script stages. Complete native SAP working tables and retained metadata connect the stages; browser previews never supply calculation inputs. The business rules are in `cells/*.bns`, generated from the reviewed rules in `build.cjs`. There is no call to the model-specific allocation engine in the operational cells.
