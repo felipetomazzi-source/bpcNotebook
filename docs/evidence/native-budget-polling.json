@@ -1,0 +1,49 @@
+{
+  "at": "2026-10-10T04:03:11.203Z",
+  "financialPosting": false,
+  "cases": [
+    {
+      "name": "50000 budget checks with large snapshot",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "messages": [
+        {
+          "cellId": "probe",
+          "severity": "Information",
+          "text": "BUDGET_CHECKS:50000:ELAPSED_US:534486"
+        }
+      ],
+      "runId": "E82AEA36D1571FE1B18BF04AC1D6AC79"
+    },
+    {
+      "name": "deadline checked during polling interval",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "messages": [
+        {
+          "cellId": "probe",
+          "severity": "Information",
+          "text": "DEADLINE_CHECK_OK"
+        }
+      ],
+      "runId": "E82AEA36D1571FE1B18BF13B817CEC79"
+    },
+    {
+      "name": "cooperative in-cell cancellation",
+      "state": "cancelled",
+      "error": {
+        "code": "CANCELLED",
+        "message": "Cancellation requested at a calculation boundary"
+      },
+      "cancellationElapsedMs": 691,
+      "runId": "E82AEA36D1571FE1B18BF17744F2CC79"
+    }
+  ],
+  "passed": true
+}
