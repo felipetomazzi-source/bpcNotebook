@@ -142,6 +142,7 @@ sap.ui.define(
           ],
         }).addStyleClass("sidebar");
         this.title = new m.Title({ text: "Your next calculation starts here", level: "H1", titleStyle: "H2", wrapping: true }).addStyleClass("notebookTitle");
+        this.identityDescription = new m.Text({text:"",wrapping:true});
         this.meta = new m.Text({ text: "A workspace for ideas, calculations, and results you can trust." }).addStyleClass("notebookMeta");
         this.inputs = new m.HBox({ wrap: "Wrap" }).addStyleClass("inputs");
         this.cells = new m.VBox().addStyleClass("cells");
@@ -268,6 +269,7 @@ sap.ui.define(
                 self.renderNotebook(); self.mark();
               }); },
             }),
+            new m.Button({text:"Notebook identity",icon:"sap-icon://edit",press:function () { self.editIdentity(); }}),
             new m.Button({text:"Delete notebook",icon:"sap-icon://delete",press:function () { self.deleteNotebook(self.notebook); }}),
             new m.Button({text:"Script Logic",icon:"sap-icon://source-code",press:function () { self.logicHandler(); }}),
             new m.Button({text:"BPC code", icon:"sap-icon://source-code", press:function () { self.codeAssistant(); }}),
@@ -293,7 +295,7 @@ sap.ui.define(
         this.setupHelp = new m.VBox();
         var main = this.workspace = new m.VBox({
           width: "100%",
-          items: [this.title, this.meta, toolbar, this.stageTabs, this.setupHelp, this.inputs, this.cells, this.resultBox],
+          items: [this.title, this.identityDescription, this.meta, toolbar, this.stageTabs, this.setupHelp, this.inputs, this.cells, this.resultBox],
         }).addStyleClass("main");
         main.setLayoutData(new m.FlexItemData({ growFactor: 1, baseSize: "0" }));
         var banner = new m.MessageStrip({
@@ -358,7 +360,7 @@ sap.ui.define(
       renderNotebookList: function () {
           var self = this, query = (this.notebookSearch ? this.notebookSearch.getValue() : "").trim().toLocaleLowerCase();
           var list = (this._notebookHeaders || []).filter(function (n) {
-            return [n.title, n.explanation, n.model, n.environment, n.id].join(" ").toLocaleLowerCase().indexOf(query) !== -1;
+            return [n.technicalName, n.description, n.title, n.explanation, n.model, n.environment, n.id].join(" ").toLocaleLowerCase().indexOf(query) !== -1;
           }).slice().sort(function (a, b) {
             return (a.model || "").localeCompare(b.model || "") || (a.environment || "").localeCompare(b.environment || "") ||
               (a.title || "").localeCompare(b.title || "") || a.id.localeCompare(b.id);
@@ -394,7 +396,7 @@ sap.ui.define(
               self.list.addItem(new m.CustomListItem({tooltip:n.title + " · " + folder.name,content:[
                 new m.HBox({alignItems:"Center",items:[
                   new sap.ui.core.Icon({src:"sap-icon://document-text"}).addStyleClass("sapUiSmallMarginEnd"),
-                  new m.VBox({width:"100%",items:[new m.Text({text:n.title,wrapping:true}),new m.ObjectStatus({text:"Revision " + n.revision})]}),
+                  new m.VBox({width:"100%",items:[new m.Text({text:n.technicalName || n.title,wrapping:true}),new m.Text({text:n.description || "Technical name not assigned",wrapping:true}),new m.ObjectStatus({text:"Revision " + n.revision})]}),
                   new m.Button({icon:"sap-icon://open-folder",type:"Transparent",tooltip:"Move " + n.title + " to folder",press:function () { self.moveFolderDialog(n,membership[n.id] || ""); }}),
                   new m.Button({icon:"sap-icon://delete",type:"Transparent",tooltip:"Delete " + n.title,press:function () { self.deleteNotebook(n); }})
                 ]}).addStyleClass("sapUiSmallMargin")
@@ -483,6 +485,7 @@ sap.ui.define(
         this.resetReview(); this.notebook = null; this.scriptNotebook = null; this.scriptDrafts = {}; this.dirty = false;
         this.cells.destroyItems(); this.stageTabs.destroyItems(); this.setupHelp.destroyItems();
         this.datasetInfo.setText(""); this.selectedStage = "__setup"; this.stageNotebook = null;
+        if (this.identityDescription) { this.identityDescription.setText(""); }
         this.inputs.destroyItems(); this.title.setText("Select a notebook or create one"); this.meta.setText("");
       },
       deleteNotebook: function (notebook) {
@@ -513,11 +516,53 @@ sap.ui.define(
             self.renderNotebook();
             self.refresh();
           })
-          .catch(function (error) { if (self.navigationToken === token) { self.error(error); } })
+          .catch(function (error) { if (self.navigationToken === token) { self.error(error); } throw error; })
           .finally(function () { if (self.navigationToken === token) { self.workspace.setBusy(false); } }); }
-        if (this.getEmbedded() || (isDemo && !Api.local)) {
-          this.chooseContext(function (ctx) { data.environment = ctx.environment; data.model = ctx.model; create(data); });
-        } else { create(data); }
+        function identify() { self.identityDialog(null,function (identity) {
+          data.technicalName=identity.technicalName; data.description=identity.description;
+          if (!isDemo) { data.title=identity.technicalName; }
+          return create(data);
+        }); }
+        if (!Api.local) {
+          this.chooseContext(function (ctx) { data.environment = ctx.environment; data.model = ctx.model; identify(); });
+        } else { identify(); }
+      },
+      renderIdentity: function () {
+        var n=this.notebook;
+        this.title.setText(n.technicalName || n.title);
+        if (this.identityDescription) { this.identityDescription.setText(n.description || "Technical name not assigned — use Notebook identity to assign one."); }
+      },
+      identityDialog: function (notebook,accept) {
+        var self=this, name=new m.Input({value:notebook && notebook.technicalName || "",maxLength:30,width:"100%",editable:!(notebook && notebook.technicalName)}),
+          description=new m.Input({value:notebook && notebook.description || "",maxLength:240,width:"100%"}),
+          error=new m.MessageStrip({text:"",type:"Error",visible:false});
+        var dialog=new m.Dialog({title:notebook ? "Notebook identity" : "Create notebook",contentWidth:"32rem",content:[
+          new m.VBox({items:[new m.Label({text:"Technical name",required:true,labelFor:name}),name,
+            new m.Text({text:"1–30 uppercase letters, digits or underscores; start with a letter. Unique within the environment and model. Assigned names stay fixed.",wrapping:true}),
+            new m.Label({text:"Description",required:true,labelFor:description}),description,error]}).addStyleClass("sapUiContentPadding")],
+          beginButton:new m.Button({text:notebook ? "Save identity" : "Create",type:"Emphasized",press:function () {
+            var value={technicalName:name.getValue(),description:description.getValue()};
+            if (!/^[A-Z][A-Z0-9_]{0,29}$/.test(value.technicalName) || !value.description.trim() || /[\x00-\x1f\x7f]/.test(value.description)) {
+              error.setText("Enter a valid uppercase technical name and a single-line description."); error.setVisible(true); return;
+            }
+            dialog.setBusy(true);
+            Promise.resolve().then(function () { return accept(value); }).then(function () { dialog.close(); }).catch(function (e) {
+              error.setText(e.message || "Identity could not be saved"); error.setVisible(true);
+            }).finally(function () { dialog.setBusy(false); });
+          }}),endButton:new m.Button({text:"Cancel",press:function () { dialog.close(); }}),afterClose:function () { dialog.destroy(); }});
+        dialog.open();
+      },
+      editIdentity: function () {
+        var self=this,n=this.notebook;
+        if (!n) { return; }
+        this.identityDialog(n,function (identity) {
+          return Api.request("/notebook-identity","POST",{notebookId:n.id,expectedRevision:n.revision,
+            expectedIdentityRevision:n.identityRevision || 0,technicalName:identity.technicalName,description:identity.description}).then(function (saved) {
+              if (self.notebook !== n) { return; }
+              n.technicalName=saved.technicalName; n.description=saved.description; n.identityRevision=saved.identityRevision;
+              self.renderIdentity(); self.refresh(); MessageToast.show("Notebook identity saved");
+            });
+        });
       },
       open: function (id, confirmed) {
         var self = this;
@@ -570,7 +615,7 @@ sap.ui.define(
         if (this.scriptNotebook !== n.id) { this.scriptDrafts = {}; this.scriptNotebook = n.id;
           if (this.stageNotebook !== n.id) { this.selectedStage = "__setup"; this.stageNotebook = n.id; } }
         this.dirty = false;
-        this.title.setText(n.title);
+        this.renderIdentity();
         this.meta.setText(
           "Revision " + n.revision + " · " + n.cells.length + " cells · " + n.author + " · " + displayTime(n.savedAt),
         );
