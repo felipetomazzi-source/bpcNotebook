@@ -127,9 +127,15 @@ deduplicate range37 adjacent by ["ID"]
 copy eligible = group32
 for eligible_row in eligible
 if eligible_row.FFLAS == "FFLASID"
+if count(range37) == 0
+if initial(eligible_row.LFC_WIN_SUPPLIER)
+delete eligible_row
+end
+else
 find found40 = range37 where ID = eligible_row.LFC_WIN_SUPPLIER search linear missing initial
 if not found(found40)
 delete eligible_row
+end
 end
 end
 end
