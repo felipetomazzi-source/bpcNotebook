@@ -1077,7 +1077,7 @@ class lcl_original_demrevid implementation.
     env = new zcl_bpc_ch_planning( ).
     product_type_dim = new #( env ).
     mat_group_id_dim = new #( env ).
-    matconn_dim = new #( env ).
+    matconn_dim = new #( environment = env ).
 
     " Base DEMREVID data set (Time/Category filtered), used to derive the INPUT/OUTPUT/NEW views below.
     data(demrevid_data) =

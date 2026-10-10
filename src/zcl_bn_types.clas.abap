@@ -23,14 +23,14 @@ CLASS zcl_bn_types DEFINITION PUBLIC FINAL CREATE PUBLIC.
     TYPES: BEGIN OF ty_cell,
              id TYPE string, title TYPE string, source TYPE string,
              dependencies TYPE tt_ids, source_version TYPE i,
-             checksum TYPE string, output TYPE ty_ref,
+             checksum TYPE string, output TYPE ty_ref, explanation TYPE string,
            END OF ty_cell,
            tt_cells TYPE STANDARD TABLE OF ty_cell WITH DEFAULT KEY.
     TYPES: BEGIN OF ty_notebook,
              id TYPE string, title TYPE string, revision TYPE i,
              environment TYPE string, model TYPE string,
              author TYPE string, saved_at TYPE string,
-             checksum TYPE string, inputs TYPE tt_inputs, cells TYPE tt_cells,
+             checksum TYPE string, inputs TYPE tt_inputs, cells TYPE tt_cells, explanation TYPE string,
            END OF ty_notebook,
            tt_notebooks TYPE STANDARD TABLE OF ty_notebook WITH DEFAULT KEY.
     TYPES: BEGIN OF ty_message,
@@ -72,6 +72,9 @@ CLASS zcl_bn_types DEFINITION PUBLIC FINAL CREATE PUBLIC.
              error TYPE ty_error,
            END OF ty_run,
            tt_runs TYPE STANDARD TABLE OF ty_run WITH DEFAULT KEY.
+    CLASS-METHODS native_json IMPORTING text TYPE string RETURNING VALUE(result) TYPE string.
+    CLASS-METHODS validate_text IMPORTING text TYPE string RAISING zcx_bn.
+    CLASS-METHODS request_json IMPORTING text TYPE string RETURNING VALUE(result) TYPE string RAISING zcx_bn.
     CLASS-METHODS json IMPORTING data TYPE any RETURNING VALUE(result) TYPE string.
     CLASS-METHODS hash IMPORTING text TYPE string RETURNING VALUE(result) TYPE string RAISING zcx_bn.
     CLASS-METHODS timestamp RETURNING VALUE(result) TYPE string.
@@ -79,12 +82,111 @@ CLASS zcl_bn_types DEFINITION PUBLIC FINAL CREATE PUBLIC.
     CLASS-METHODS normalize_inputs IMPORTING inputs TYPE tt_inputs RETURNING VALUE(result) TYPE tt_inputs.
 ENDCLASS.
 CLASS zcl_bn_types IMPLEMENTATION.
+  METHOD native_json.
+    result = text.
+    FIND '\r' IN text.
+    IF sy-subrc <> 0. RETURN. ENDIF.
+    " Only the legacy decoder's private input: it does not decode standalone \r.
+    " Leave doubled backslashes/literal text untouched; outgoing wire JSON stays valid.
+    DATA pieces TYPE STANDARD TABLE OF string WITH EMPTY KEY.
+    DATA offset TYPE i.
+    WHILE offset < strlen( text ).
+      DATA(character) = substring( val = text off = offset len = 1 ).
+      IF character = '\' AND offset + 1 < strlen( text ).
+        DATA(next) = substring( val = text off = offset + 1 len = 1 ).
+        IF next = 'r'.
+          APPEND substring( val = cl_abap_char_utilities=>cr_lf off = 0 len = 1 ) TO pieces.
+        ELSE.
+          APPEND substring( val = text off = offset len = 2 ) TO pieces.
+        ENDIF.
+        offset = offset + 2. CONTINUE.
+      ENDIF.
+      APPEND character TO pieces. offset = offset + 1.
+    ENDWHILE.
+    result = concat_lines_of( table = pieces ).
+  ENDMETHOD.
+  METHOD validate_text.
+    DATA(remaining) = replace( val = text sub = cl_abap_char_utilities=>newline with = '' occ = 0 ).
+    remaining = replace( val = remaining sub = cl_abap_char_utilities=>horizontal_tab with = '' occ = 0 ).
+    remaining = replace( val = remaining sub = substring( val = cl_abap_char_utilities=>cr_lf off = 0 len = 1 ) with = '' occ = 0 ).
+    FIND REGEX '[[:cntrl:]]' IN remaining.
+    IF sy-subrc = 0.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'TEXT_CONTROL'
+        detail = 'Text permits CR, LF and tab; other control characters are unsupported and cannot be saved'.
+    ENDIF.
+  ENDMETHOD.
+  METHOD request_json.
+    result = text.
+    FIND '\u' IN text.
+    IF sy-subrc <> 0. RETURN. ENDIF.
+    " Legacy /UI2 does not decode Unicode escapes. Never accept then corrupt text.
+    DATA pieces TYPE STANDARD TABLE OF string WITH EMPTY KEY.
+    DATA offset TYPE i.
+    WHILE offset < strlen( text ).
+      DATA(character) = substring( val = text off = offset len = 1 ).
+      IF character = '\' AND offset + 1 < strlen( text ).
+        DATA(next) = substring( val = text off = offset + 1 len = 1 ).
+        IF next = 'u'.
+          IF offset + 6 > strlen( text ).
+            RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'JSON_UNICODE' detail = 'Incomplete Unicode escape'.
+          ENDIF.
+          DATA(code) = to_upper( substring( val = text off = offset + 2 len = 4 ) ).
+          CASE code.
+            WHEN '0009'. APPEND '\t' TO pieces.
+            WHEN '000A'. APPEND '\n' TO pieces.
+            WHEN '000D'. APPEND '\r' TO pieces.
+            WHEN OTHERS.
+              RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'JSON_UNICODE'
+                detail = 'Send Unicode text as UTF-8, not Unicode escape tokens; only escaped CR, LF and tab are supported'.
+          ENDCASE.
+          offset = offset + 6. CONTINUE.
+        ENDIF.
+        APPEND substring( val = text off = offset len = 2 ) TO pieces.
+        offset = offset + 2. CONTINUE.
+      ENDIF.
+      APPEND character TO pieces. offset = offset + 1.
+    ENDWHILE.
+    result = concat_lines_of( table = pieces ).
+  ENDMETHOD.
   METHOD json.
     result = /ui2/cl_json=>serialize( data = data
       pretty_name = /ui2/cl_json=>pretty_mode-camel_case ).
+    " Some installed /UI2 serializers leave raw CR/control characters inside strings.
+    " Preserve existing JSON/hash bytes unless a raw control requires repair.
+    FIND REGEX '[[:cntrl:]]' IN result.
+    IF sy-subrc = 0.
+      TYPES: BEGIN OF ty_control, character TYPE string, escaped TYPE string, END OF ty_control.
+      DATA controls TYPE HASHED TABLE OF ty_control WITH UNIQUE KEY character.
+      DO 32 TIMES.
+        DATA hex TYPE x LENGTH 2.
+        hex = sy-index - 1.
+        DATA(control_escape) = COND string( WHEN hex = '0009' THEN '\t' WHEN hex = '000A' THEN '\n'
+          WHEN hex = '000D' THEN '\r' ELSE '\u' && |{ hex }| ).
+        INSERT VALUE #( character = cl_abap_conv_in_ce=>uccp( hex ) escaped = control_escape ) INTO TABLE controls.
+      ENDDO.
+      DATA pieces TYPE STANDARD TABLE OF string WITH EMPTY KEY.
+      DATA in_string TYPE abap_bool.
+      DATA escaped TYPE abap_bool.
+      DO strlen( result ) TIMES.
+        DATA(offset) = sy-index - 1.
+        DATA(character) = substring( val = result off = offset len = 1 ).
+        IF character = '"' AND escaped = abap_false. in_string = xsdbool( in_string = abap_false ). ENDIF.
+        READ TABLE controls INTO DATA(control) WITH TABLE KEY character = character.
+        APPEND COND #( WHEN in_string = abap_true AND sy-subrc = 0 THEN control-escaped ELSE character ) TO pieces.
+        IF character = '\' AND in_string = abap_true AND escaped = abap_false.
+          escaped = abap_true.
+        ELSE.
+          escaped = abap_false.
+        ENDIF.
+      ENDDO.
+      result = concat_lines_of( table = pieces ).
+    ENDIF.
     " Preserve checksums for snapshots saved before reference/checkpoint fields existed.
     REPLACE ALL OCCURRENCES OF ',"purpose":"","lookbackFrom":"","lookbackSteps":0,"fiscalLinks":[]' IN result WITH ''.
     REPLACE ALL OCCURRENCES OF ',"checkpoints":[]' IN result WITH ''.
+    REPLACE ALL OCCURRENCES OF ',"explanation":""' IN result WITH ''.
+    REPLACE ALL OCCURRENCES OF ',"artifacts":[]' IN result WITH ''.
+    REPLACE ALL OCCURRENCES OF ',"datasetReads":[]' IN result WITH ''.
   ENDMETHOD.
   METHOD hash.
     TRY.

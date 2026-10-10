@@ -1,0 +1,209 @@
+{
+  "at": "2026-10-10T04:19:52.155Z",
+  "financialPosting": false,
+  "customerEquivalent": false,
+  "cases": [
+    {
+      "scenario": "live",
+      "suppress": true,
+      "runId": "E82AEA36D1571FE1B18C3C4579996CCD",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "20482",
+        "NOTEBOOK_ROWS": "20482",
+        "UNCHANGED": "20482",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "2513",
+        "NOTEBOOK_ROWS": "2513",
+        "UNCHANGED": "2513",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "readDiagnostics": [
+        {
+          "table": "READ_1/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "44110",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        },
+        {
+          "table": "READ_1/FILTERS_AND_PERIODS",
+          "rows": [
+            {
+              "purpose": "effective filter",
+              "dimension": "CATEGORY",
+              "member": "Actual"
+            },
+            {
+              "purpose": "effective filter",
+              "dimension": "TIME",
+              "member": "2026.005"
+            },
+            {
+              "purpose": "effective filter",
+              "dimension": "TIME",
+              "member": "2026.006"
+            },
+            {
+              "purpose": "effective filter",
+              "dimension": "TIME",
+              "member": "2026.007"
+            },
+            {
+              "purpose": "effective filter",
+              "dimension": "TIME",
+              "member": "TIME_NA"
+            },
+            {
+              "purpose": "output period",
+              "dimension": "TIME",
+              "member": "2026.006"
+            },
+            {
+              "purpose": "declared reference period",
+              "dimension": "TIME",
+              "member": "2026.005"
+            },
+            {
+              "purpose": "declared reference period",
+              "dimension": "TIME",
+              "member": "2026.007"
+            },
+            {
+              "purpose": "declared reference period",
+              "dimension": "TIME",
+              "member": "TIME_NA"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": "live",
+      "suppress": false,
+      "runId": "E82AEA36D1571FE1B18C5367DE978CF9",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "20496",
+        "NOTEBOOK_ROWS": "20496",
+        "UNCHANGED": "20496",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "2529",
+        "NOTEBOOK_ROWS": "2529",
+        "UNCHANGED": "2529",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "readDiagnostics": [
+        {
+          "table": "READ_1/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "44110",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        },
+        {
+          "table": "READ_1/FILTERS_AND_PERIODS",
+          "rows": [
+            {
+              "purpose": "effective filter",
+              "dimension": "CATEGORY",
+              "member": "Actual"
+            },
+            {
+              "purpose": "effective filter",
+              "dimension": "TIME",
+              "member": "2026.005"
+            },
+            {
+              "purpose": "effective filter",
+              "dimension": "TIME",
+              "member": "2026.006"
+            },
+            {
+              "purpose": "effective filter",
+              "dimension": "TIME",
+              "member": "2026.007"
+            },
+            {
+              "purpose": "effective filter",
+              "dimension": "TIME",
+              "member": "TIME_NA"
+            },
+            {
+              "purpose": "output period",
+              "dimension": "TIME",
+              "member": "2026.006"
+            },
+            {
+              "purpose": "declared reference period",
+              "dimension": "TIME",
+              "member": "2026.005"
+            },
+            {
+              "purpose": "declared reference period",
+              "dimension": "TIME",
+              "member": "2026.007"
+            },
+            {
+              "purpose": "declared reference period",
+              "dimension": "TIME",
+              "member": "TIME_NA"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "notebookId": "E82AEA36D1571FE1B18BAD387FC08C0D",
+  "frozenMetadata": true,
+  "originalCodeCommit": "17f37dd",
+  "notebookRuntimeCommit": "095dd80",
+  "category": "Actual",
+  "outputPeriod": "2026.006",
+  "signedScale": 7,
+  "passed": true
+}

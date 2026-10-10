@@ -1,0 +1,78 @@
+{
+  "at": "2026-10-09T06:08:34.375Z",
+  "result": [
+    {
+      "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_compiler/includes/testclasses#type=CLAS%2FOCL;name=LTCL_COMPILER",
+      "adtcore:type": "CLAS/OL",
+      "adtcore:name": "LTCL_COMPILER",
+      "uriType": "semantic",
+      "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_compiler/includes/testclasses#type=CLAS%2FOCL;name=LTCL_COMPILER",
+      "durationCategory": "short",
+      "riskLevel": "harmless",
+      "alerts": [],
+      "testmethods": [
+        {
+          "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_compiler/includes/testclasses#type=CLAS%2FOLD;name=LTCL_COMPILER%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20CRLF_COMPILATION",
+          "adtcore:type": "CLAS/OLI",
+          "adtcore:name": "CRLF_COMPILATION",
+          "executionTime": 0,
+          "uriType": "semantic",
+          "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_compiler/includes/testclasses#type=CLAS%2FOLD;name=LTCL_COMPILER%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20CRLF_COMPILATION",
+          "unit": "s",
+          "alerts": []
+        },
+        {
+          "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_compiler/includes/testclasses#type=CLAS%2FOLD;name=LTCL_COMPILER%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20JSON_CONTROLS",
+          "adtcore:type": "CLAS/OLI",
+          "adtcore:name": "JSON_CONTROLS",
+          "executionTime": 0,
+          "uriType": "semantic",
+          "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_compiler/includes/testclasses#type=CLAS%2FOLD;name=LTCL_COMPILER%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20JSON_CONTROLS",
+          "unit": "s",
+          "alerts": []
+        },
+        {
+          "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_compiler/includes/testclasses#type=CLAS%2FOLD;name=LTCL_COMPILER%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20SYNTAX_LINE_MAPPING",
+          "adtcore:type": "CLAS/OLI",
+          "adtcore:name": "SYNTAX_LINE_MAPPING",
+          "executionTime": 0,
+          "uriType": "semantic",
+          "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_compiler/includes/testclasses#type=CLAS%2FOLD;name=LTCL_COMPILER%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20SYNTAX_LINE_MAPPING",
+          "unit": "s",
+          "alerts": []
+        },
+        {
+          "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_compiler/includes/testclasses#type=CLAS%2FOLD;name=LTCL_COMPILER%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20TEXT_CONTROLS",
+          "adtcore:type": "CLAS/OLI",
+          "adtcore:name": "TEXT_CONTROLS",
+          "executionTime": 0,
+          "uriType": "semantic",
+          "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_compiler/includes/testclasses#type=CLAS%2FOLD;name=LTCL_COMPILER%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20TEXT_CONTROLS",
+          "unit": "s",
+          "alerts": []
+        },
+        {
+          "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_compiler/includes/testclasses#type=CLAS%2FOLD;name=LTCL_COMPILER%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20TYPED_JSON_INPUTS",
+          "adtcore:type": "CLAS/OLI",
+          "adtcore:name": "TYPED_JSON_INPUTS",
+          "executionTime": 0,
+          "uriType": "semantic",
+          "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_compiler/includes/testclasses#type=CLAS%2FOLD;name=LTCL_COMPILER%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20TYPED_JSON_INPUTS",
+          "unit": "s",
+          "alerts": []
+        },
+        {
+          "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_compiler/includes/testclasses#type=CLAS%2FOLD;name=LTCL_COMPILER%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20WRAPPER_AND_OUTPUT",
+          "adtcore:type": "CLAS/OLI",
+          "adtcore:name": "WRAPPER_AND_OUTPUT",
+          "executionTime": 0.02,
+          "uriType": "semantic",
+          "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_compiler/includes/testclasses#type=CLAS%2FOLD;name=LTCL_COMPILER%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20WRAPPER_AND_OUTPUT",
+          "unit": "s",
+          "alerts": []
+        }
+      ]
+    }
+  ],
+  "passed": true
+}

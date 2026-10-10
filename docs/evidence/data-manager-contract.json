@@ -1,0 +1,19 @@
+{
+  "at": "2026-10-10T05:09:59.349Z",
+  "notebookId": "E82AEA36D1571FE1B18D1AAC47A60DFB",
+  "notebookRevision": 1,
+  "handler": {
+    "name": "BN_DM_VERIFY",
+    "revision": 1,
+    "notebookId": "E82AEA36D1571FE1B18D1AAC47A60DFB",
+    "notebookRevision": 1,
+    "environment": "CH_PLANNING",
+    "model": "DEMREVID",
+    "checksum": "F2E0F255CBCD33CF70DB217AF05BF0827D5306FDDA7A4FE576F806BE54CD232D",
+    "executionMode": "preview"
+  },
+  "environment": "CH_PLANNING",
+  "model": "DEMREVID",
+  "selection": "@@@SAVE@@@@@@EXPAND@@@|DIMENSION:CATEGORY|Actual|DIMENSION:TIME|2026.006|",
+  "proof": "BNCHECK|selection, typed Unicode inputs, two cells, revision pin, caller rollback\n\nBNCHECK|posting attempt, duplicate and malformed overrides, empty selection/scope, stale revision rejected\n\n"
+}

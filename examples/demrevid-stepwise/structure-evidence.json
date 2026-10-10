@@ -1,0 +1,9 @@
+{
+  "at": "2026-10-09T05:40:03.703Z",
+  "cells": 21,
+  "containsAllocationEngineCall": false,
+  "financialPosting": false,
+  "allExplanations": true,
+  "dependenciesEarlier": true,
+  "note": "Structural inspection only; native equivalence evidence is separate."
+}

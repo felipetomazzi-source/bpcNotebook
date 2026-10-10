@@ -1,0 +1,283 @@
+{
+  "kind": "complete native multi-cell original comparison",
+  "notebookId": "E82AEA36D1571FD1B0F40B2F42FC568E",
+  "at": "2026-10-09T07:54:37.925Z",
+  "customerEquivalent": false,
+  "cases": [
+    {
+      "scenario": "standard",
+      "suppress": true,
+      "runId": "E82AEA36D1571FD1B0F6D5FC03A4D924",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "24",
+        "NOTEBOOK_ROWS": "24",
+        "UNCHANGED": "24",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "25",
+        "NOTEBOOK_ROWS": "25",
+        "UNCHANGED": "25",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "zeroClears": 3
+    },
+    {
+      "scenario": "standard",
+      "suppress": false,
+      "runId": "E82AEA36D1571FD1B0F6D87728621926",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "25",
+        "NOTEBOOK_ROWS": "25",
+        "UNCHANGED": "25",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "26",
+        "NOTEBOOK_ROWS": "26",
+        "UNCHANGED": "26",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "zeroClears": 3
+    },
+    {
+      "scenario": "fallback",
+      "suppress": false,
+      "runId": "E82AEA36D1571FD1B0F6DAE66216D926",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "19",
+        "NOTEBOOK_ROWS": "19",
+        "UNCHANGED": "19",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "20",
+        "NOTEBOOK_ROWS": "20",
+        "UNCHANGED": "20",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "zeroClears": 3
+    },
+    {
+      "scenario": "rounding",
+      "suppress": false,
+      "runId": "E82AEA36D1571FD1B0F6DD7579465929",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "25",
+        "NOTEBOOK_ROWS": "25",
+        "UNCHANGED": "25",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "26",
+        "NOTEBOOK_ROWS": "26",
+        "UNCHANGED": "26",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "zeroClears": 3
+    },
+    {
+      "scenario": "negative",
+      "suppress": false,
+      "runId": "E82AEA36D1571FD1B0F6DFFD012E5929",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "25",
+        "NOTEBOOK_ROWS": "25",
+        "UNCHANGED": "25",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "26",
+        "NOTEBOOK_ROWS": "26",
+        "UNCHANGED": "26",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "zeroClears": 3
+    },
+    {
+      "scenario": "carry",
+      "suppress": false,
+      "runId": "E82AEA36D1571FD1B0F6E287F658592C",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "27",
+        "NOTEBOOK_ROWS": "27",
+        "UNCHANGED": "27",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "28",
+        "NOTEBOOK_ROWS": "28",
+        "UNCHANGED": "28",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "zeroClears": 3
+    },
+    {
+      "scenario": "carry",
+      "suppress": true,
+      "runId": "E82AEA36D1571FD1B0F6E4E82EFAD92F",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "26",
+        "NOTEBOOK_ROWS": "26",
+        "UNCHANGED": "26",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "27",
+        "NOTEBOOK_ROWS": "27",
+        "UNCHANGED": "27",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "zeroClears": 3
+    },
+    {
+      "scenario": "hsns",
+      "suppress": false,
+      "runId": "E82AEA36D1571FD1B0F6E7718468D92F",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "42",
+        "NOTEBOOK_ROWS": "42",
+        "UNCHANGED": "42",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "43",
+        "NOTEBOOK_ROWS": "43",
+        "UNCHANGED": "43",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "zeroClears": 6
+    },
+    {
+      "scenario": "hsns",
+      "suppress": true,
+      "runId": "E82AEA36D1571FD1B0F6E9E70E619931",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "39",
+        "NOTEBOOK_ROWS": "39",
+        "UNCHANGED": "39",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "40",
+        "NOTEBOOK_ROWS": "40",
+        "UNCHANGED": "40",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "zeroClears": 5
+    }
+  ],
+  "readRetries": [
+    {
+      "endpoint": "/run?id=E82AEA36D1571FD1B0F6E7718468D92F",
+      "attempt": 1,
+      "at": "2026-10-09T07:58:47.712Z"
+    },
+    {
+      "endpoint": "/run?id=E82AEA36D1571FD1B0F6E9E70E619931",
+      "attempt": 1,
+      "at": "2026-10-09T07:59:30.519Z"
+    }
+  ],
+  "sourceCommit": "8ee59af",
+  "operationalNotebookRevision": 3
+}

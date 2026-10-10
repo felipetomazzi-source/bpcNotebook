@@ -15,9 +15,13 @@ CLASS zcl_bn_context DEFINITION PUBLIC FINAL CREATE PUBLIC.
            BEGIN OF ty_table,
              name TYPE string, schema TYPE tt_schema, rows TYPE tt_table_rows,
              row_count TYPE i, total_count TYPE i, truncated TYPE abap_bool,
+             values_truncated TYPE abap_bool, truncated_values TYPE i, byte_limit_reached TYPE abap_bool,
+             value_character_limit TYPE i, preview_byte_limit TYPE i, preview_bytes TYPE i,
              elapsed_us TYPE i,
            END OF ty_table,
            tt_tables TYPE STANDARD TABLE OF ty_table WITH DEFAULT KEY.
+    CLASS-METHODS bounded_previews IMPORTING source TYPE tt_tables RETURNING VALUE(result) TYPE tt_tables RAISING zcx_bn.
+    CLASS-METHODS preview_value IMPORTING value TYPE string RETURNING VALUE(result) TYPE string RAISING zcx_bn.
     TYPES: BEGIN OF ty_live_output,
              cell_id TYPE string, rows TYPE tt_rows,
            END OF ty_live_output,
@@ -43,14 +47,32 @@ CLASS zcl_bn_context DEFINITION PUBLIC FINAL CREATE PUBLIC.
     DATA fixture_mode TYPE abap_bool READ-ONLY.
     METHODS compare_results IMPORTING name TYPE string original TYPE ANY TABLE notebook TYPE ANY TABLE
       preview_rows TYPE i DEFAULT 100 RETURNING VALUE(summary) TYPE ty_comparison RAISING zcx_bn.
-    METHODS enable_fixtures IMPORTING fixtures TYPE tt_fixtures RAISING zcx_bn.
+    METHODS enable_fixtures IMPORTING fixtures TYPE tt_fixtures
+      dimensions TYPE zcl_bn_bpc=>tt_dimension_fixtures OPTIONAL
+      metadata TYPE ANY TABLE OPTIONAL
+      freeze_metadata TYPE abap_bool DEFAULT abap_false RAISING zcx_bn.
+    METHODS snapshot_identifier RETURNING VALUE(result) TYPE string RAISING zcx_bn.
+    DATA metadata_fixture_mode TYPE abap_bool READ-ONLY.
+    METHODS fixture_dimension IMPORTING model_name TYPE string dimension TYPE string
+      RETURNING VALUE(result) TYPE zcl_bn_bpc=>ty_dimension_fixture RAISING zcx_bn.
+    METHODS fixture_copy IMPORTING cell_id TYPE string
+      RETURNING VALUE(result) TYPE REF TO zcl_bn_context RAISING zcx_bn.
+    METHODS include_fixture_outputs IMPORTING context TYPE REF TO zcl_bn_context prefix TYPE string RAISING zcx_bn.
     METHODS fixture_read IMPORTING environment TYPE string model TYPE string filters TYPE zcl_bn_bpc=>tt_filters
       max_rows TYPE i RETURNING VALUE(result) TYPE REF TO data RAISING zcx_bn.
     METHODS record_read IMPORTING diagnostic TYPE ty_read RAISING zcx_bn.
     METHODS checkpoint IMPORTING name TYPE string state TYPE string
       inputs TYPE zcl_bn_types=>tt_ids OPTIONAL outputs TYPE zcl_bn_types=>tt_ids OPTIONAL RAISING zcx_bn.
-    METHODS check_budget RAISING zcx_bn.
+    METHODS check_budget IMPORTING force_poll TYPE abap_bool DEFAULT abap_false RAISING zcx_bn.
+    METHODS check_data_snapshot RAISING zcx_bn.
     METHODS check_rows IMPORTING count TYPE i RAISING zcx_bn.
+    METHODS check_working_bytes IMPORTING count TYPE int8 RAISING zcx_bn.
+    DATA artifacts TYPE zcl_bn_dataset=>tt_headers READ-ONLY.
+    DATA dataset_reads TYPE zcl_bn_dataset=>tt_access READ-ONLY.
+    METHODS publish_dataset IMPORTING name TYPE string rows TYPE ANY TABLE RAISING zcx_bn.
+    METHODS read_dataset IMPORTING dependency TYPE string name TYPE string
+      RETURNING VALUE(rows) TYPE REF TO data RAISING zcx_bn.
+    METHODS dataset_packets RETURNING VALUE(packets) TYPE zcl_bn_dataset=>tt_packets.
     DATA tables TYPE tt_tables READ-ONLY.
     METHODS emit_table IMPORTING name TYPE string rows TYPE ANY TABLE
       total_count TYPE i DEFAULT -1 elapsed_us TYPE i DEFAULT 0 RAISING zcx_bn.
@@ -61,11 +83,17 @@ CLASS zcl_bn_context DEFINITION PUBLIC FINAL CREATE PUBLIC.
     METHODS constructor IMPORTING inputs TYPE zcl_bn_types=>tt_inputs
       bindings TYPE zcl_bn_types=>tt_bindings dependencies TYPE zcl_bn_types=>tt_ids cell_id TYPE string
       environment TYPE string DEFAULT '' model TYPE string DEFAULT ''
-      run_id TYPE string DEFAULT ''
+      run_id TYPE string DEFAULT '' notebook_id TYPE string DEFAULT ''
+      live_datasets TYPE zcl_bn_dataset=>tt_live OPTIONAL
+      fixture_required TYPE abap_bool DEFAULT abap_false
       live_outputs TYPE tt_live_outputs OPTIONAL scope TYPE ujk_t_cv OPTIONAL
       logic_parameters TYPE ujk_t_script_logic_hashtable OPTIONAL logic_call TYPE abap_bool DEFAULT abap_false.
     METHODS bpc_dimension IMPORTING name TYPE string model_name TYPE string DEFAULT ''
       RETURNING VALUE(adapter) TYPE REF TO zcl_bn_bpc RAISING zcx_bn.
+    METHODS check_bw_context RAISING zcx_bn.
+    METHODS bw_data IMPORTING provider TYPE string fields TYPE zcl_bn_bw=>tt_fields
+      filters TYPE zcl_bn_bpc=>tt_filters max_rows TYPE i
+      RETURNING VALUE(result) TYPE REF TO data RAISING zcx_bn.
     METHODS bpc_model IMPORTING name TYPE string DEFAULT ''
       RETURNING VALUE(adapter) TYPE REF TO zcl_bn_bpc RAISING zcx_bn.
     METHODS reference_model IMPORTING name TYPE string DEFAULT ''
@@ -89,9 +117,21 @@ CLASS zcl_bn_context DEFINITION PUBLIC FINAL CREATE PUBLIC.
     METHODS emit IMPORTING rows TYPE tt_rows RAISING zcx_bn.
     METHODS message IMPORTING text TYPE string.
   PRIVATE SECTION.
+    DATA mt_packets TYPE zcl_bn_dataset=>tt_packets.
+    DATA mt_live_datasets TYPE zcl_bn_dataset=>tt_live.
+    DATA mv_notebook_id TYPE string.
+    DATA mv_fixture_required TYPE abap_bool.
+    DATA mv_dataset_rows TYPE i.
+    DATA mv_dataset_bytes TYPE i.
+    METHODS reserve_dataset IMPORTING row_count TYPE i byte_count TYPE i RAISING zcx_bn.
+    METHODS dataset_budget RETURNING VALUE(maximum) TYPE i RAISING zcx_bn.
     DATA mt_fixtures TYPE tt_fixtures.
+    DATA mt_dimension_fixtures TYPE zcl_bn_bpc=>tt_dimension_fixtures.
     DATA mv_run_id TYPE string.
     DATA mv_started TYPE timestampl.
+    DATA mv_cancel_polled TYPE timestampl.
+    DATA mv_cancel_revision TYPE i.
+    DATA mv_preview_bytes TYPE i.
     DATA mv_seconds TYPE i VALUE 600.
     DATA mv_step_started TYPE i.
     DATA mv_active_step TYPE string.
@@ -107,7 +147,9 @@ CLASS zcl_bn_context DEFINITION PUBLIC FINAL CREATE PUBLIC.
 ENDCLASS.
 CLASS zcl_bn_context IMPLEMENTATION.
   METHOD constructor.
-    mv_run_id = run_id. GET TIME STAMP FIELD mv_started.
+    mv_run_id = run_id. mv_notebook_id = notebook_id. mt_live_datasets = live_datasets.
+    mv_fixture_required = fixture_required.
+    GET TIME STAMP FIELD mv_started.
     READ TABLE inputs INTO DATA(budget) WITH KEY name = 'RUN_SECONDS'.
     IF sy-subrc = 0. mv_seconds = budget-value. ENDIF.
     me->environment = environment. me->model = model.
@@ -120,14 +162,22 @@ CLASS zcl_bn_context IMPLEMENTATION.
     IF mv_seconds < 1 OR mv_seconds > 7200 OR cl_abap_tstmp=>subtract( tstmp1 = stamp tstmp2 = mv_started ) > mv_seconds.
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'TIMEOUT' detail = 'Calculation resource deadline exceeded'.
     ENDIF.
-    IF mv_run_id IS NOT INITIAL AND zcl_bn_store=>current( kind = 'R' id = mv_run_id ) > 0.
-      DATA json TYPE string. json = zcl_bn_store=>read( kind = 'R' id = mv_run_id ).
+    IF mv_run_id IS INITIAL. RETURN. ENDIF.
+    IF force_poll = abap_false AND mv_cancel_polled IS NOT INITIAL AND
+       cl_abap_tstmp=>subtract( tstmp1 = stamp tstmp2 = mv_cancel_polled ) < '0.5'.
+      RETURN.
+    ENDIF.
+    DATA(revision) = zcl_bn_store=>current( kind = 'R' id = mv_run_id ).
+    IF revision > 0 AND revision <> mv_cancel_revision.
+      DATA json TYPE string. json = zcl_bn_store=>read( kind = 'R' id = mv_run_id revision = revision ).
       DATA run TYPE zcl_bn_types=>ty_run.
-      /ui2/cl_json=>deserialize( EXPORTING json = json pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = run ).
+      /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( json ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = run ).
       IF run-cancel_requested = abap_true.
         RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'CANCELLED' detail = 'Cancellation requested at a calculation boundary'.
       ENDIF.
+      mv_cancel_revision = revision.
     ENDIF.
+    mv_cancel_polled = stamp.
   ENDMETHOD.
   METHOD check_rows.
     DATA maximum TYPE i VALUE 1000000.
@@ -145,7 +195,7 @@ CLASS zcl_bn_context IMPLEMENTATION.
     IF count MOD 1000 = 0. check_budget( ). ENDIF.
   ENDMETHOD.
   METHOD checkpoint.
-    check_budget( ).
+    check_budget( force_poll = abap_true ).
     IF state = 'running'.
       IF mv_active_step IS NOT INITIAL OR line_exists( checkpoints[ name = name ] ).
         RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'CHECKPOINT' detail = 'Overlapping or duplicate step'.
@@ -167,12 +217,23 @@ CLASS zcl_bn_context IMPLEMENTATION.
   ENDMETHOD.
   METHOD bpc_dimension.
     check_logic_model( model_name ).
+    " Stored member properties are calculation reference inputs, not historical values.
+    IF metadata_fixture_mode <> abap_true. check_data_snapshot( ). ENDIF.
     adapter = NEW zcl_bn_bpc( environment = CONV #( environment )
       model = COND #( WHEN model_name IS INITIAL THEN CONV string( model ) ELSE model_name )
       dimension = name inputs = mt_inputs scope = mt_scope diagnostics = me ).
     IF name IS INITIAL.
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_DIMENSION' detail = 'Choose a dimension name'.
     ENDIF.
+  ENDMETHOD.
+  METHOD check_bw_context.
+    IF mv_logic_call = abap_true OR fixture_mode = abap_true OR mv_fixture_required = abap_true.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BW_CONTEXT'
+        detail = 'BW reads are unavailable in Script Logic and fixture executions'.
+    ENDIF.
+  ENDMETHOD.
+  METHOD bw_data.
+    result = zcl_bn_bw=>read_data( io = me provider = provider fields = fields filters = filters max_rows = max_rows ).
   ENDMETHOD.
   METHOD bpc_model.
     check_logic_model( name ).
@@ -254,7 +315,7 @@ CLASS zcl_bn_context IMPLEMENTATION.
     IF result_rows IS BOUND OR name IS INITIAL OR ( kind <> 'replacement' AND kind <> 'delta' ).
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'RESULT_CONTRACT' detail = 'Publish one explicitly named replacement or delta result'.
     ENDIF.
-    check_budget( ). check_rows( lines( rows ) ).
+    check_budget( force_poll = abap_true ). check_rows( lines( rows ) ).
     zcl_bn_bpc=>describe_table( table = REF #( rows ) source = 'allocation' ).
     DATA(descr) = CAST cl_abap_tabledescr( cl_abap_tabledescr=>describe_by_data( rows ) ).
     CREATE DATA result_rows TYPE HANDLE descr.
@@ -319,8 +380,154 @@ CLASS zcl_bn_context IMPLEMENTATION.
              rows TYPE tt_rows,
            END OF ty_dataset.
     DATA dataset TYPE ty_dataset.
-    /ui2/cl_json=>deserialize( EXPORTING json = json pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = dataset ).
+    /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( json ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = dataset ).
     rows = dataset-rows.
+  ENDMETHOD.
+  METHOD check_data_snapshot.
+    IF metadata_fixture_mode = abap_true AND fixture_mode = abap_true. RETURN. ENDIF.
+    IF mv_fixture_required = abap_true AND fixture_mode <> abap_true.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MODE' detail = 'Enable the retained fixtures before any model read in this validation stage'.
+    ENDIF.
+    LOOP AT mt_bindings INTO DATA(binding) WHERE run_id <> mv_run_id.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATA_SNAPSHOT'
+        detail = 'A cell reusing prior-run datasets cannot read fresh model facts; run through the read stages instead'.
+    ENDLOOP.
+  ENDMETHOD.
+  METHOD dataset_budget.
+    maximum = 67108864.
+    READ TABLE mt_inputs INTO DATA(limit) WITH KEY name = 'DATASET_BYTES'.
+    IF sy-subrc = 0.
+      DATA(value) = CONV decfloat34( limit-value ).
+      IF limit-type <> 'number' OR value < 1 OR value > 268435456 OR value <> trunc( value ).
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'RESOURCE_BUDGET' detail = 'DATASET_BYTES must be an integer from 1 to 268435456'.
+      ENDIF.
+      maximum = CONV i( value ).
+    ENDIF.
+  ENDMETHOD.
+  METHOD check_working_bytes.
+    check_budget( ).
+    IF count < 0 OR count > dataset_budget( ).
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_BUDGET' detail = 'Script working table exceeds DATASET_BYTES; calculation was not truncated'.
+    ENDIF.
+  ENDMETHOD.
+  METHOD reserve_dataset.
+    check_budget( ).
+    DATA(maximum) = dataset_budget( ).
+    check_rows( mv_dataset_rows + row_count ).
+    IF byte_count < 0 OR row_count < 0 OR mv_dataset_bytes + byte_count > maximum.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_BUDGET' detail = 'Full working datasets exceed DATASET_BYTES; nothing was truncated'.
+    ENDIF.
+    mv_dataset_rows = mv_dataset_rows + row_count. mv_dataset_bytes = mv_dataset_bytes + byte_count.
+  ENDMETHOD.
+  METHOD dataset_packets.
+    packets = mt_packets.
+  ENDMETHOD.
+  METHOD publish_dataset.
+    IF line_exists( artifacts[ name = name ] ) OR lines( artifacts ) >= 100.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_NAME' detail = 'Publish each dataset once per cell; maximum 100 datasets'.
+    ENDIF.
+    check_budget( force_poll = abap_true ). check_rows( mv_dataset_rows + lines( rows ) ).
+    DATA(packet) = zcl_bn_dataset=>freeze( name = name rows = rows max_bytes = dataset_budget( ) - mv_dataset_bytes ).
+    reserve_dataset( row_count = packet-row_count byte_count = nmax( val1 = packet-byte_count val2 = packet-memory_bytes ) ).
+    IF environment IS NOT INITIAL.
+      zcl_bn_bpc=>validate_working( environment = CONV #( environment ) model = CONV #( model ) rows = rows ).
+    ENDIF.
+    " The binary packet, not the caller's mutable reference, is the publication.
+    DATA preview_max TYPE i VALUE 200.
+    READ TABLE mt_inputs INTO DATA(preview) WITH KEY name = 'PREVIEW_ROWS'.
+    IF sy-subrc = 0. preview_max = preview-value. ENDIF.
+    IF preview_max < 1 OR preview_max > 5000.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'RESOURCE_BUDGET' detail = 'PREVIEW_ROWS must be from 1 to 5000'.
+    ENDIF.
+    DATA(preview_type) = CAST cl_abap_tabledescr( cl_abap_typedescr=>describe_by_data( rows ) ).
+    DATA(preview_standard) = cl_abap_tabledescr=>create( p_line_type = preview_type->get_table_line_type( ) ).
+    DATA preview_rows TYPE REF TO data.
+    CREATE DATA preview_rows TYPE HANDLE preview_standard.
+    FIELD-SYMBOLS <preview> TYPE STANDARD TABLE.
+    ASSIGN preview_rows->* TO <preview>.
+    LOOP AT rows ASSIGNING FIELD-SYMBOL(<row>).
+      IF lines( <preview> ) >= preview_max. EXIT. ENDIF.
+      APPEND <row> TO <preview>.
+    ENDLOOP.
+    emit_table( name = |DATASET/{ name }| rows = <preview> total_count = packet-row_count ).
+    APPEND packet TO mt_packets. APPEND CORRESPONDING #( packet ) TO artifacts.
+  ENDMETHOD.
+  METHOD read_dataset.
+    check_budget( ).
+    IF NOT line_exists( mt_dependencies[ table_line = dependency ] ).
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DEPENDENCY' detail = 'Declare the producing cell as a dependency'.
+    ENDIF.
+    READ TABLE mt_bindings INTO DATA(binding) WITH KEY cell_id = dependency.
+    IF sy-subrc <> 0.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DEPENDENCY' detail = 'Producing cell has no completed bound dataset'.
+    ENDIF.
+    DATA packet TYPE zcl_bn_dataset=>ty_packet.
+    READ TABLE mt_live_datasets INTO DATA(live) WITH KEY cell_id = dependency.
+    IF sy-subrc = 0.
+      READ TABLE live-packets INTO packet WITH KEY name = name.
+      IF sy-subrc <> 0.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_MISSING' detail = 'Producer did not publish the named dataset'.
+      ENDIF.
+    ELSE.
+      TYPES: BEGIN OF ty_bound,
+               notebook_id TYPE string, run_id TYPE string, cell_id TYPE string, revision TYPE i,
+               fingerprint TYPE string, fixture_mode TYPE abap_bool, retention_until TYPE timestampl,
+               artifacts TYPE zcl_bn_dataset=>tt_headers,
+             END OF ty_bound.
+      DATA bound TYPE ty_bound.
+      IF mv_notebook_id IS INITIAL.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_BINDING' detail = 'Persisted dataset access requires a notebook execution context'.
+      ENDIF.
+      DATA(json) = zcl_bn_store=>read( kind = 'D' id = |{ binding-run_id }:{ dependency }| revision = binding-revision ).
+      /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( json ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = bound ).
+      IF bound-notebook_id <> mv_notebook_id OR bound-run_id <> binding-run_id OR bound-cell_id <> dependency OR
+         bound-revision <> binding-revision.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_BINDING' detail = 'Producer does not match the frozen notebook dependency'.
+      ENDIF.
+      IF bound-fixture_mode = abap_true AND ( mv_fixture_required <> abap_true OR binding-run_id <> mv_run_id ).
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MODE' detail = 'Fixture artifacts can be consumed only inside their original validation run'.
+      ENDIF.
+      DATA stamp TYPE timestampl. GET TIME STAMP FIELD stamp.
+      IF bound-retention_until < stamp.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_EXPIRED' detail = 'Working dataset retention expired; execute its producer again'.
+      ENDIF.
+      READ TABLE bound-artifacts INTO DATA(header) WITH KEY name = name.
+      IF sy-subrc <> 0.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_MISSING' detail = 'Named dataset is not a published producer output'.
+      ENDIF.
+      DATA(key) = zcl_bn_dataset=>storage_id( run_id = binding-run_id cell_id = dependency name = name ).
+      DATA(saved_json) = zcl_bn_store=>read( kind = 'W' id = key revision = 1 ).
+      DATA saved TYPE zcl_bn_dataset=>ty_saved.
+      /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( saved_json ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = saved ).
+      IF saved-notebook_id <> mv_notebook_id OR saved-run_id <> binding-run_id OR saved-cell_id <> dependency OR
+         saved-revision <> binding-revision OR saved-fingerprint <> bound-fingerprint OR
+         CORRESPONDING zcl_bn_dataset=>ty_header( saved-packet ) <> header.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_INTEGRITY' detail = 'Native artifact does not match the frozen producer'.
+      ENDIF.
+      DATA(producer_json) = zcl_bn_store=>read( kind = 'R' id = binding-run_id ).
+      DATA producer TYPE zcl_bn_types=>ty_run.
+      /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( producer_json ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = producer ).
+      READ TABLE producer-snapshot-cells INTO DATA(producing_cell) WITH KEY id = dependency.
+      IF sy-subrc <> 0 OR producer-notebook_id <> mv_notebook_id OR NOT line_exists( producer-results[ cell_id = dependency ] ) OR
+         producing_cell-source_version <> saved-source_version OR producing_cell-checksum <> saved-source_checksum.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'SOURCE_INTEGRITY' detail = 'Artifact is not a completed frozen producer result'.
+      ENDIF.
+      SELECT SINGLE source, checksum FROM zbn_src INTO (@DATA(source), @DATA(source_checksum))
+        WHERE notebook_id = @mv_notebook_id AND cell_id = @dependency AND version = @saved-source_version.
+      IF sy-subrc <> 0 OR source_checksum <> saved-source_checksum OR zcl_bn_types=>hash( source ) <> source_checksum.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'SOURCE_INTEGRITY' detail = 'Published native artifact source binding is missing'.
+      ENDIF.
+      packet = saved-packet.
+    ENDIF.
+    reserve_dataset( row_count = packet-row_count byte_count = nmax( val1 = packet-byte_count val2 = packet-memory_bytes ) ).
+    rows = zcl_bn_dataset=>thaw( packet ).
+    FIELD-SYMBOLS <rows> TYPE STANDARD TABLE. ASSIGN rows->* TO <rows>.
+    IF environment IS NOT INITIAL.
+      zcl_bn_bpc=>validate_working( environment = CONV #( environment ) model = CONV #( model ) rows = <rows> ).
+    ENDIF.
+    APPEND VALUE #( dependency = dependency name = name run_id = binding-run_id revision = binding-revision
+      row_count = packet-row_count byte_count = packet-byte_count checksum = packet-checksum ) TO dataset_reads.
+    check_budget( ).
   ENDMETHOD.
   METHOD emit.
     IF lines( rows ) > 10000.
@@ -341,7 +548,8 @@ CLASS zcl_bn_context IMPLEMENTATION.
         RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'TABLE_TYPE' detail = 'Expected a table of flat structures'.
     ENDTRY.
     DATA(table) = VALUE ty_table( name = name row_count = nmin( val1 = lines( rows ) val2 = 5000 )
-      total_count = COND #( WHEN total_count < 0 THEN lines( rows ) ELSE total_count ) elapsed_us = elapsed_us ).
+      total_count = COND #( WHEN total_count < 0 THEN lines( rows ) ELSE total_count ) elapsed_us = elapsed_us
+      value_character_limit = 4096 preview_byte_limit = 8388608 ).
     IF table-total_count < lines( rows ).
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'TABLE_COUNT' detail = 'Total count cannot be smaller than supplied rows'.
     ENDIF.
@@ -368,18 +576,109 @@ CLASS zcl_bn_context IMPLEMENTATION.
     ENDIF.
     FIELD-SYMBOLS <row> TYPE any.
     FIELD-SYMBOLS <value> TYPE any.
+    DATA row_bytes TYPE i.
+    DATA table_bytes TYPE i.
+    TRY.
+      table_bytes = xstrlen( cl_abap_codepage=>convert_to( source = zcl_bn_types=>json( table ) codepage = 'UTF-8' ) ) + 256.
+    CATCH cx_root INTO DATA(encoding_error).
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'PREVIEW_ENCODING' detail = encoding_error->get_text( ).
+    ENDTRY.
+    IF mv_preview_bytes + table_bytes > table-preview_byte_limit.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'PREVIEW_BUDGET' detail = 'Preview schemas exceed the eight MiB display budget'.
+    ENDIF.
     DATA index TYPE i.
     LOOP AT rows ASSIGNING <row>.
       index = index + 1.
       IF index > 5000. EXIT. ENDIF.
       DATA(outrow) = VALUE ty_table_row( ).
+      DATA shortened TYPE i. CLEAR shortened.
       LOOP AT components INTO component.
         ASSIGN COMPONENT component-name OF STRUCTURE <row> TO <value>.
-        APPEND |{ <value> }| TO outrow-values.
+        DATA(text) = |{ <value> }|.
+        IF strlen( text ) > table-value_character_limit.
+          text = preview_value( text ). shortened = shortened + 1.
+        ENDIF.
+        APPEND text TO outrow-values.
       ENDLOOP.
+      TRY.
+        row_bytes = xstrlen( cl_abap_codepage=>convert_to( source = zcl_bn_types=>json( outrow ) codepage = 'UTF-8' ) ) + 1.
+      CATCH cx_root INTO encoding_error.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'PREVIEW_ENCODING' detail = encoding_error->get_text( ).
+      ENDTRY.
+      IF mv_preview_bytes + table_bytes + row_bytes > table-preview_byte_limit.
+        table-byte_limit_reached = abap_true. EXIT.
+      ENDIF.
       APPEND outrow TO table-rows.
+      table_bytes = table_bytes + row_bytes.
+      table-truncated_values = table-truncated_values + shortened.
+      IF index MOD 100 = 0. check_budget( ). ENDIF.
     ENDLOOP.
+    table-row_count = lines( table-rows ). table-truncated = xsdbool( table-total_count > table-row_count ).
+    table-values_truncated = xsdbool( table-truncated_values > 0 ). table-preview_bytes = table_bytes.
+    mv_preview_bytes = mv_preview_bytes + table_bytes.
     APPEND table TO tables.
+  ENDMETHOD.
+  METHOD preview_value.
+    result = value.
+    IF strlen( value ) <= 4096. RETURN. ENDIF.
+    DATA(prefix_length) = 4095.
+    " Do not end a display excerpt inside a UTF-16 surrogate pair.
+    DO.
+      DATA(excerpt) = substring( val = value len = prefix_length ).
+      TRY.
+        DATA(encoded) = cl_abap_codepage=>convert_to( source = excerpt codepage = 'UTF-8' ).
+        EXIT.
+      CATCH cx_sy_conversion_codepage.
+        prefix_length = prefix_length - 1.
+        IF prefix_length < 0.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'PREVIEW_ENCODING' detail = 'Display text cannot be encoded as UTF-8'.
+        ENDIF.
+    ENDTRY.
+    ENDDO.
+    result = excerpt && '…'.
+  ENDMETHOD.
+  METHOD bounded_previews.
+    " Compatibility boundary for old immutable documents, never rewrite their payload.
+    DATA total_bytes TYPE i.
+    IF lines( source ) > 200.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'PREVIEW_BUDGET' detail = 'Maximum 200 display tables'.
+    ENDIF.
+    LOOP AT source INTO DATA(original).
+      DATA(table) = original. CLEAR table-rows.
+      table-value_character_limit = 4096. table-preview_byte_limit = 8388608.
+      table-total_count = nmax( val1 = original-total_count val2 = lines( original-rows ) ).
+      table-row_count = 0. table-preview_bytes = 0.
+      DATA table_bytes TYPE i. DATA row_bytes TYPE i.
+      TRY.
+        table_bytes = xstrlen( cl_abap_codepage=>convert_to( source = zcl_bn_types=>json( table ) codepage = 'UTF-8' ) ) + 256.
+      CATCH cx_root INTO DATA(encoding_error).
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'PREVIEW_ENCODING' detail = encoding_error->get_text( ).
+      ENDTRY.
+      IF total_bytes + table_bytes > table-preview_byte_limit.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'PREVIEW_BUDGET' detail = 'Preview schemas exceed the eight MiB display budget'.
+      ENDIF.
+      LOOP AT original-rows INTO DATA(row) TO 5000.
+        DATA(shortened) = 0.
+        LOOP AT row-values ASSIGNING FIELD-SYMBOL(<value>).
+          IF strlen( <value> ) > table-value_character_limit.
+            <value> = preview_value( <value> ). shortened = shortened + 1.
+          ENDIF.
+        ENDLOOP.
+        TRY.
+          row_bytes = xstrlen( cl_abap_codepage=>convert_to( source = zcl_bn_types=>json( row ) codepage = 'UTF-8' ) ) + 1.
+        CATCH cx_root INTO encoding_error.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'PREVIEW_ENCODING' detail = encoding_error->get_text( ).
+        ENDTRY.
+        IF total_bytes + table_bytes + row_bytes > table-preview_byte_limit.
+          table-byte_limit_reached = abap_true. EXIT.
+        ENDIF.
+        APPEND row TO table-rows. table_bytes = table_bytes + row_bytes.
+        table-truncated_values = table-truncated_values + shortened.
+      ENDLOOP.
+      table-row_count = lines( table-rows ). table-truncated = xsdbool( table-total_count > table-row_count ).
+      table-values_truncated = xsdbool( table-truncated_values > 0 ). table-preview_bytes = table_bytes.
+      total_bytes = total_bytes + table_bytes. APPEND table TO result.
+    ENDLOOP.
   ENDMETHOD.
   METHOD compare_results.
     IF name IS INITIAL OR preview_rows < 1 OR preview_rows > 5000.
@@ -529,7 +828,59 @@ CLASS zcl_bn_context IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MODE'
         detail = 'Fixtures require a fresh DEV preview context, 1 to 10 model tables, and cannot be enabled in Script Logic'.
     ENDIF.
-    check_budget( ).
+    check_budget( force_poll = abap_true ).
+    DATA bundles TYPE zcl_bn_bpc=>tt_dimension_fixtures. bundles = dimensions.
+    IF metadata IS SUPPLIED.
+      IF dimensions IS NOT INITIAL.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_METADATA' detail = 'Choose bundles or retained packets, not both'.
+      ENDIF.
+      DATA expected_packets TYPE zcl_bn_bpc=>tt_dimension_packets.
+      DATA(actual_schema) = zcl_bn_bpc=>describe_table( table = REF #( metadata ) source = 'fixture' ).
+      DATA(expected_schema) = zcl_bn_bpc=>describe_table( table = REF #( expected_packets ) source = 'fixture' ).
+      IF actual_schema <> expected_schema.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_METADATA' detail = 'Metadata must use the native flat dimension packet schema'.
+      ENDIF.
+      expected_packets = CORRESPONDING #( metadata ).
+      bundles = zcl_bn_bpc=>unpack_dimensions( packets = expected_packets max_bytes = dataset_budget( ) ).
+    ENDIF.
+    DATA dimension_copies TYPE zcl_bn_bpc=>tt_dimension_fixtures.
+    IF bundles IS NOT INITIAL OR freeze_metadata = abap_true.
+      IF bundles IS INITIAL OR lines( bundles ) > 50.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_METADATA' detail = 'Frozen metadata requires 1 to 50 dimension bundles'.
+      ENDIF.
+      DATA snapshot_id TYPE string.
+      DATA metadata_bytes TYPE int8.
+      LOOP AT bundles INTO DATA(dimension).
+        IF dimension-environment <> environment OR NOT line_exists( fixtures[ model = dimension-model ] ) OR
+           line_exists( dimension_copies[ model = dimension-model dimension = dimension-dimension ] ).
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_METADATA' detail = 'Unique dimension bundles must belong to fixture models'.
+        ENDIF.
+        IF snapshot_id IS INITIAL. snapshot_id = dimension-snapshot_id. ENDIF.
+        IF dimension-snapshot_id <> snapshot_id.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_METADATA' detail = 'All metadata bundles require the same capture identifier'.
+        ENDIF.
+        IF mv_run_id IS INITIAL.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_METADATA' detail = 'Metadata fixtures require a persisted preview run'.
+        ENDIF.
+        IF snapshot_id <> mv_run_id AND dataset_reads IS INITIAL.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATA_SNAPSHOT' detail = 'Historical metadata requires retained dependency datasets'.
+        ENDIF.
+        LOOP AT dataset_reads INTO DATA(retained_read) WHERE run_id <> snapshot_id.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATA_SNAPSHOT' detail = 'Fact and metadata fixture datasets must share the capture run'.
+        ENDLOOP.
+        LOOP AT mt_bindings INTO DATA(retained_binding) WHERE run_id <> snapshot_id.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATA_SNAPSHOT' detail = 'Mixed run bindings cannot enable frozen metadata'.
+        ENDLOOP.
+        DATA(dimension_copy) = zcl_bn_bpc=>copy_dimension( dimension ).
+        FIELD-SYMBOLS <dimension_rows> TYPE STANDARD TABLE. ASSIGN dimension_copy-rows->* TO <dimension_rows>.
+        check_rows( lines( <dimension_rows> ) ).
+        DATA(packet) = zcl_bn_dataset=>freeze( name = 'METADATA' rows = <dimension_rows> max_bytes = dataset_budget( ) ).
+        metadata_bytes = metadata_bytes + packet-memory_bytes + strlen( packet-content ) * cl_abap_char_utilities=>charsize +
+          strlen( zcl_bn_types=>json( dimension_copy-children ) ) * cl_abap_char_utilities=>charsize.
+        check_working_bytes( metadata_bytes ).
+        APPEND dimension_copy TO dimension_copies.
+      ENDLOOP.
+    ENDIF.
     DATA copies TYPE tt_fixtures.
     LOOP AT fixtures INTO DATA(fixture).
       IF fixture-rows IS NOT BOUND OR fixture-environment <> environment OR fixture-model IS INITIAL
@@ -550,8 +901,76 @@ CLASS zcl_bn_context IMPLEMENTATION.
       APPEND copy TO copies.
       check_budget( ).
     ENDLOOP.
-    mt_fixtures = copies. fixture_mode = abap_true.
+    mt_fixtures = copies. fixture_mode = abap_true. mt_dimension_fixtures = dimension_copies.
+    metadata_fixture_mode = xsdbool( dimension_copies IS NOT INITIAL ).
     message( 'FIXTURE MODE: in-memory inputs only; no live model reads or allocation result publication' ).
+  ENDMETHOD.
+  METHOD fixture_copy.
+    IF fixture_mode <> abap_true OR mv_logic_call = abap_true OR cell_id IS INITIAL.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MODE' detail = 'Copy requires an enabled fixture context and cell name'.
+    ENDIF.
+    result = NEW zcl_bn_context( inputs = mt_inputs bindings = VALUE #( ) dependencies = VALUE #( )
+      cell_id = cell_id environment = CONV #( environment ) model = CONV #( model ) run_id = mv_run_id
+      scope = mt_scope logic_parameters = mt_logic_parameters ).
+    result->mv_started = mv_started.
+    result->enable_fixtures( fixtures = mt_fixtures dimensions = mt_dimension_fixtures freeze_metadata = metadata_fixture_mode ).
+  ENDMETHOD.
+  METHOD snapshot_identifier.
+    IF mv_run_id IS INITIAL OR mv_logic_call = abap_true.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MODE' detail = 'Metadata capture identifier requires a persisted DEV preview run'.
+    ENDIF.
+    result = mv_run_id.
+  ENDMETHOD.
+  METHOD fixture_dimension.
+    IF metadata_fixture_mode <> abap_true OR fixture_mode <> abap_true.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MODE' detail = 'Frozen dimension access requires metadata fixture mode'.
+    ENDIF.
+    READ TABLE mt_dimension_fixtures INTO DATA(fixture) WITH KEY model = model_name dimension = dimension.
+    IF sy-subrc <> 0.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MISSING' detail = 'Dimension was not captured; live enrichment prohibited'.
+    ENDIF.
+    result = zcl_bn_bpc=>copy_dimension( fixture ).
+  ENDMETHOD.
+  METHOD include_fixture_outputs.
+    IF fixture_mode <> abap_true OR context IS NOT BOUND OR prefix IS INITIAL OR
+       context->fixture_mode <> abap_true OR context->environment <> environment OR context->model <> model.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MODE' detail = 'Matching fixture contexts and a diagnostic prefix required'.
+    ENDIF.
+    IF zcl_bn_types=>json( context->mt_inputs ) <> zcl_bn_types=>json( mt_inputs ) OR
+       lines( tables ) + lines( context->tables ) > 200 OR lines( reads ) + lines( context->reads ) > 50.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'RESOURCE_BUDGET' detail = 'Fixture output snapshot mismatch or diagnostic budget exceeded'.
+    ENDIF.
+    IF strlen( prefix ) > 64 OR mv_preview_bytes + context->mv_preview_bytes > 8388608.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'PREVIEW_BUDGET' detail = 'Combined fixture previews exceed the eight MiB display budget'.
+    ENDIF.
+    DATA preview_values TYPE i.
+    LOOP AT tables INTO DATA(existing_table).
+      preview_values = preview_values + existing_table-row_count * lines( existing_table-schema ).
+    ENDLOOP.
+    LOOP AT context->tables INTO DATA(table).
+      preview_values = preview_values + table-row_count * lines( table-schema ).
+      IF preview_values > 1000000.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'RESOURCE_BUDGET' detail = 'Combined fixture previews exceed the display budget'.
+      ENDIF.
+      table-name = prefix && '/' && table-name.
+      IF line_exists( tables[ name = table-name ] ).
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'TABLE_NAME' detail = 'Fixture diagnostic names must be unique'.
+      ENDIF.
+    ENDLOOP.
+    LOOP AT context->tables INTO table.
+      table-name = prefix && '/' && table-name. APPEND table TO tables.
+    ENDLOOP.
+    mv_preview_bytes = mv_preview_bytes + context->mv_preview_bytes.
+    LOOP AT context->reads INTO DATA(read).
+      read-id = prefix && '/' && read-id. APPEND read TO reads.
+    ENDLOOP.
+    LOOP AT context->messages INTO DATA(message).
+      message-cell_id = mv_cell_id. message-text = prefix && ': ' && message-text. APPEND message TO messages.
+    ENDLOOP.
+    LOOP AT context->checkpoints INTO DATA(step).
+      step-name = prefix && '/' && step-name. APPEND step TO checkpoints.
+    ENDLOOP.
+    check_budget( ).
   ENDMETHOD.
   METHOD fixture_read.
     IF fixture_mode <> abap_true.

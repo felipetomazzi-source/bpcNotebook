@@ -29,7 +29,7 @@ CLASS zcl_bn_logic IMPLEMENTATION.
   METHOD binding.
     zcl_bn_service=>authorize( '03' ).
     DATA(payload) = zcl_bn_store=>read( kind = 'L' id = handler_name( name ) ).
-    /ui2/cl_json=>deserialize( EXPORTING json = payload pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = result ).
+    /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( payload ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = result ).
   ENDMETHOD.
   METHOD register.
     zcl_bn_service=>authorize( '02' ).
@@ -133,7 +133,7 @@ CLASS zcl_bn_logic IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'LOGIC_INTEGRITY' detail = 'Pinned handler notebook checksum mismatch'.
     ENDIF.
     DATA notebook TYPE zcl_bn_types=>ty_notebook.
-    /ui2/cl_json=>deserialize( EXPORTING json = payload pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = notebook ).
+    /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( payload ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = notebook ).
     DATA normalized TYPE ujk_t_script_logic_hashtable.
     LOOP AT parameters INTO DATA(parameter).
       parameter-hashkey = to_upper( parameter-hashkey ).

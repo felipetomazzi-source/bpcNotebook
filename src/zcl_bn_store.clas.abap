@@ -42,14 +42,24 @@ CLASS zcl_bn_store IMPLEMENTATION.
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'NOT_FOUND' detail = 'Resource not found' status = 404.
     ENDIF.
-    DATA rev TYPE i.
-    rev = COND #( WHEN revision = 0 THEN head-revision ELSE revision ).
-    SELECT SINGLE * FROM zbn_doc INTO @DATA(doc)
-      WHERE kind = @kind AND id = @id AND revision = @rev.
-    IF sy-subrc <> 0 OR zcl_bn_types=>hash( doc-payload ) <> doc-checksum.
-      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'INTEGRITY' detail = 'Document missing or checksum mismatch' status = 409.
+    " Choose the current pointer and payload in one database statement.
+    " Historical revisions remain explicit and owner checks apply to both paths.
+    SELECT SINGLE d~payload, d~checksum FROM zbn_head AS h
+      INNER JOIN zbn_doc AS d ON d~kind = h~kind AND d~id = h~id
+      WHERE h~kind = @kind AND h~id = @id AND h~owner = @sy-uname
+        AND ( ( @revision = 0 AND d~revision = h~revision ) OR
+              ( @revision > 0 AND d~revision = @revision ) )
+      INTO (@DATA(doc_payload), @DATA(doc_checksum)).
+    IF sy-subrc <> 0.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'INTEGRITY'
+        detail = 'Immutable document missing at requested revision' status = 409.
     ENDIF.
-    payload = doc-payload.
+    DATA(actual_checksum) = zcl_bn_types=>hash( doc_payload ).
+    IF actual_checksum <> doc_checksum.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'INTEGRITY'
+        detail = 'Immutable document checksum mismatch' status = 409.
+    ENDIF.
+    payload = doc_payload.
   ENDMETHOD.
   METHOD write.
     IF strlen( id ) > 64 OR id IS INITIAL.

@@ -1,0 +1,22 @@
+script version 2 compact
+// DEMREVID003 business-rule notes
+// Final result and change-set
+// Compare complete new output with existing output. Preserve replacement-valued changes and zero clears for
+// disappeared records. No financial posting.
+// Complete working tables stay in SAP; displayed previews are not calculation inputs.
+
+// Read the complete NEW_DATA working table retained by step_20.
+dataset new_data = "step_20" named "NEW_DATA"
+// Read the complete OUTPUT_DATA working table retained by step_01.
+dataset output_data = "step_01" named "OUTPUT_DATA"
+// Keep the complete newly calculated output separate from the existing output read at initialization.
+copy final_replacement = new_data
+// Build the legacy CT_DATA change set: changed records contain replacement amounts; disappeared records receive zero clears.
+changes final_delta = final_replacement against output_data mode legacy
+// Retain complete native datasets for downstream stages; publication here does not post financial data.
+publish final_replacement as "FINAL_REPLACEMENT"
+publish final_delta as "FINAL_DELTA"
+// Display a bounded sample for review; source totals and complete SAP working datasets remain separate.
+show final_replacement as "FINAL_REPLACEMENT"
+show final_delta as "FINAL_DELTA"
+message "Simulation only: no financial posting."

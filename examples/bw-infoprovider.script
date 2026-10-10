@@ -1,0 +1,5 @@
+script version 2
+# Replace provider, InfoObjects, DDIC elements and internal values with reviewed local BW metadata.
+# Currency is part of the grouping so amounts in different currencies are not summed together.
+bwdata facts = "ZSALES" fields characteristic "0CALMONTH" as MONTH type "/BI0/OICALMONTH", characteristic "0CURRENCY" as CURRENCY type "/BI0/OICURRENCY", keyfigure "0AMOUNT" as AMOUNT type "/BI0/OIAMOUNT" where "0CALMONTH" = ["202601"] limit 1000
+show facts as "BW_SALES"

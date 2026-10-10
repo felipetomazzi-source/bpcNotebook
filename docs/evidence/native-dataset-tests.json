@@ -1,0 +1,88 @@
+{
+  "at": "2026-10-09T06:08:34.635Z",
+  "result": [
+    {
+      "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dataset/includes/testclasses#type=CLAS%2FOCL;name=LTCL_DATASET",
+      "adtcore:type": "CLAS/OL",
+      "adtcore:name": "LTCL_DATASET",
+      "uriType": "semantic",
+      "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dataset/includes/testclasses#type=CLAS%2FOCL;name=LTCL_DATASET",
+      "durationCategory": "short",
+      "riskLevel": "harmless",
+      "alerts": [],
+      "testmethods": [
+        {
+          "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dataset/includes/testclasses#type=CLAS%2FOLD;name=LTCL_DATASET%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20CHECKSUMS_AND_BUDGETS",
+          "adtcore:type": "CLAS/OLI",
+          "adtcore:name": "CHECKSUMS_AND_BUDGETS",
+          "executionTime": 0,
+          "uriType": "semantic",
+          "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dataset/includes/testclasses#type=CLAS%2FOLD;name=LTCL_DATASET%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20CHECKSUMS_AND_BUDGETS",
+          "unit": "s",
+          "alerts": []
+        },
+        {
+          "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dataset/includes/testclasses#type=CLAS%2FOLD;name=LTCL_DATASET%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20CONTEXT_HANDOFF",
+          "adtcore:type": "CLAS/OLI",
+          "adtcore:name": "CONTEXT_HANDOFF",
+          "executionTime": 0,
+          "uriType": "semantic",
+          "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dataset/includes/testclasses#type=CLAS%2FOLD;name=LTCL_DATASET%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20CONTEXT_HANDOFF",
+          "unit": "s",
+          "alerts": []
+        },
+        {
+          "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dataset/includes/testclasses#type=CLAS%2FOLD;name=LTCL_DATASET%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20DATA_READ_POLICY",
+          "adtcore:type": "CLAS/OLI",
+          "adtcore:name": "DATA_READ_POLICY",
+          "executionTime": 0,
+          "uriType": "semantic",
+          "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dataset/includes/testclasses#type=CLAS%2FOLD;name=LTCL_DATASET%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20DATA_READ_POLICY",
+          "unit": "s",
+          "alerts": []
+        },
+        {
+          "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dataset/includes/testclasses#type=CLAS%2FOLD;name=LTCL_DATASET%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20EMPTY_SCHEMA",
+          "adtcore:type": "CLAS/OLI",
+          "adtcore:name": "EMPTY_SCHEMA",
+          "executionTime": 0,
+          "uriType": "semantic",
+          "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dataset/includes/testclasses#type=CLAS%2FOLD;name=LTCL_DATASET%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20EMPTY_SCHEMA",
+          "unit": "s",
+          "alerts": []
+        },
+        {
+          "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dataset/includes/testclasses#type=CLAS%2FOLD;name=LTCL_DATASET%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20NATIVE_ROUND_TRIP",
+          "adtcore:type": "CLAS/OLI",
+          "adtcore:name": "NATIVE_ROUND_TRIP",
+          "executionTime": 0.03,
+          "uriType": "semantic",
+          "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dataset/includes/testclasses#type=CLAS%2FOLD;name=LTCL_DATASET%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20NATIVE_ROUND_TRIP",
+          "unit": "s",
+          "alerts": []
+        },
+        {
+          "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dataset/includes/testclasses#type=CLAS%2FOLD;name=LTCL_DATASET%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20PRIVATE_COPIES",
+          "adtcore:type": "CLAS/OLI",
+          "adtcore:name": "PRIVATE_COPIES",
+          "executionTime": 0,
+          "uriType": "semantic",
+          "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dataset/includes/testclasses#type=CLAS%2FOLD;name=LTCL_DATASET%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20PRIVATE_COPIES",
+          "unit": "s",
+          "alerts": []
+        },
+        {
+          "adtcore:uri": "/sap/bc/adt/oo/classes/zcl_bn_dataset/includes/testclasses#type=CLAS%2FOLD;name=LTCL_DATASET%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20UNSUPPORTED_SHAPES",
+          "adtcore:type": "CLAS/OLI",
+          "adtcore:name": "UNSUPPORTED_SHAPES",
+          "executionTime": 0,
+          "uriType": "semantic",
+          "navigationUri": "/sap/bc/adt/oo/classes/zcl_bn_dataset/includes/testclasses#type=CLAS%2FOLD;name=LTCL_DATASET%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20UNSUPPORTED_SHAPES",
+          "unit": "s",
+          "alerts": []
+        }
+      ]
+    }
+  ],
+  "passed": true
+}

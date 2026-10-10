@@ -1,0 +1,121 @@
+script version 2 compact
+// DEMREVID003 business-rule notes
+// Assign reporting dimensions
+// Apply product-type overwrite, product revenue group, account connection-region mapping, L1/L2 mapping,
+// material remap, material group and regulatory service. Material-group revenue group overrides
+// product-type revenue group only when populated. Preserve the exact original lookup order.
+// Check: Trace a material/account with both specific and default mappings. Verify the winning mapping and
+// any unchanged default.
+// Complete working tables stay in SAP; displayed previews are not calculation inputs.
+
+// Read the complete SAP_REVENUES working table retained by step_01.
+dataset sap_revenues = "step_01" named "SAP_REVENUES"
+// Read the complete NEW_DATA working table retained by step_01.
+dataset new_data = "step_01" named "NEW_DATA"
+// Read the complete INPUT_DATA working table retained by step_01.
+dataset input_data = "step_01" named "INPUT_DATA"
+// Read the complete CONN_REG_SPLIT working table retained by step_01.
+dataset conn_reg_split = "step_01" named "CONN_REG_SPLIT"
+// Read the complete L1_L2_MAPPING working table retained by step_01.
+dataset l1_l2_mapping = "step_01" named "L1_L2_MAPPING"
+// Read the complete MAT_GROUP_MAPPING working table retained by step_01.
+dataset mat_group_mapping = "step_01" named "MAT_GROUP_MAPPING"
+// Read the complete PRODUCT_MEMBERS working table retained by step_01.
+dataset product_members = "step_01" named "PRODUCT_MEMBERS"
+// Read the complete MATERIAL_MEMBERS working table retained by step_01.
+dataset material_members = "step_01" named "MATERIAL_MEMBERS"
+// Read the complete GROUP_MEMBERS working table retained by step_01.
+dataset group_members = "step_01" named "GROUP_MEMBERS"
+// Select the records required by this business block; retain their original signs and dimensions.
+filter filtered1 = input_data as f2 where f2.DEMREVID_KFS == "DEMREVID036"
+// Select the records required by this business block; retain their original signs and dimensions.
+filter filtered3 = input_data as f4 where f4.DEMREVID_KFS == "DEMREVID037"
+// Select the records required by this business block; retain their original signs and dimensions.
+filter filtered5 = input_data as f6 where f6.DEMREVID_KFS == "DEMREVID014"
+// Preserve the original sort keys and tie behavior used by subsequent lookups.
+sort filtered1 unstable by TIME asc, ACCOUNT asc, MATCONN asc
+sort filtered3 unstable by TIME asc, MATCONN asc, MAT_GROUP_ID asc
+sort filtered5 unstable by TIME asc, MATCONN asc
+// Index the complete working table; matching rows and first-match lookup precedence remain explicit.
+index ix10 = product_members by ["ID"] many
+index ix17 = material_members by ["ID"] many
+index ix21 = group_members by ["ID"] many
+for revenue7 in sap_revenues
+// A missing lookup returns initial values; the following found checks and fallback branches control the outcome.
+find found8 = filtered5 where TIME = revenue7.TIME and MATCONN = revenue7.MATCONN search binary missing initial
+if found(found8)
+// Format the numeric mapping as the original three-digit product code, then check the stored member table.
+lookup found9 = ix10 where ID = concat("PRODUCT_TYPE_", numeric_text(found8.SIGNEDDATA,3)) policy first missing initial
+if found(found9)
+revenue7.PRODUCT_TYPE = found9.ID
+else
+revenue7.PRODUCT_TYPE = found8.PRODUCT_TYPE
+end
+end
+lookup found11 = ix10 where ID = revenue7.PRODUCT_TYPE policy first missing initial
+revenue7.REV_ID_GROUP = found11.REV_ID_GROUP
+find found12 = conn_reg_split where TIME = revenue7.TIME and ACCOUNT = revenue7.ACCOUNT search binary missing initial
+if found(found12)
+revenue7.CONN_REG_SPLIT = found12.CONN_REG_SPLIT
+end
+find found13 = l1_l2_mapping where TIME = revenue7.TIME and ACCOUNT = revenue7.ACCOUNT search binary missing initial
+if found(found13)
+revenue7.FFLAS_SUBSET = found13.FFLAS_SUBSET
+end
+find found14 = filtered1 where TIME = revenue7.TIME and ACCOUNT = revenue7.ACCOUNT and MATCONN = revenue7.MATCONN search binary missing initial
+if found(found14)
+revenue7.MATREMAP = found14.MATREMAP
+else
+// This lookup uses the default account member; keep its position in the original lookup waterfall.
+find found15 = filtered1 where TIME = revenue7.TIME and ACCOUNT = "ACCOUNT_NA" and MATCONN = revenue7.MATCONN search binary missing initial
+if found(found15)
+revenue7.MATREMAP = found15.MATREMAP
+else
+if revenue7.MATCONN == "MATCONN_NA"
+revenue7.MATREMAP = "MATREMAP_NA"
+else
+revenue7.MATREMAP = revenue7.MATCONN
+end
+end
+end
+if revenue7.PRODUCT_TYPE == "PRODUCT_TYPE_NA" and revenue7.MATREMAP != "MATREMAP_NA"
+lookup found16 = ix17 where ID = revenue7.MATREMAP policy first missing initial
+revenue7.PRODUCT_TYPE = found16.PRODUCT_TYPE
+end
+if revenue7.MATREMAP != "MATREMAP_NA"
+find found18 = mat_group_mapping where TIME = revenue7.TIME and MATCONN = revenue7.MATREMAP and ACCOUNT = "ACCOUNT_NA" search binary missing initial
+if found(found18)
+revenue7.MAT_GROUP_ID = found18.MAT_GROUP_ID
+end
+else
+// Look up the default material member; surrounding found checks determine when this branch is used.
+find found19 = mat_group_mapping where TIME = revenue7.TIME and MATCONN = "MATCONN_NA" and ACCOUNT = revenue7.ACCOUNT search binary missing initial
+if found(found19)
+revenue7.MAT_GROUP_ID = found19.MAT_GROUP_ID
+end
+end
+lookup found20 = ix21 where ID = revenue7.MAT_GROUP_ID policy first missing initial
+if not initial(found20.REV_ID_GROUP)
+revenue7.REV_ID_GROUP = found20.REV_ID_GROUP
+end
+find found22 = filtered3 where TIME = revenue7.TIME and MATCONN = "MATCONN_NA" and MAT_GROUP_ID = revenue7.MAT_GROUP_ID search binary missing initial
+if found(found22)
+revenue7.REG_FFLAS_SERV = found22.REG_FFLAS_SERV
+else
+find found23 = filtered3 where TIME = revenue7.TIME and MATCONN = revenue7.MATREMAP search binary missing initial
+if found(found23)
+revenue7.REG_FFLAS_SERV = found23.REG_FFLAS_SERV
+end
+end
+end
+append new_data from sap_revenues
+// Retain complete native datasets for downstream stages; publication here does not post financial data.
+publish sap_revenues as "SAP_REVENUES"
+publish new_data as "NEW_DATA"
+// Sum signed amounts using the stated include/exclude dimension list and the original grouping semantics.
+group group24 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
+// Fill initial dimensions with their original NA members; GEO_DRIVERS uses GDRVS_NA.
+defaults group24 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
+sort group24 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc
+// Display a bounded sample for review; source totals and complete SAP working datasets remain separate.
+show group24 as "CONTROL_TOTALS"

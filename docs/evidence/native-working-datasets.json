@@ -1,0 +1,80 @@
+{
+  "at": "2026-10-09T06:08:19.669Z",
+  "notebookId": "E82AEA36D1571FD1B0F4FA717A7A9769",
+  "financialPosting": false,
+  "cases": [
+    {
+      "scope": "all",
+      "runId": "E82AEA36D1571FD1B0F4FA717A7B3769",
+      "results": [
+        {
+          "cellId": "seed",
+          "runId": "E82AEA36D1571FD1B0F4FA717A7B3769",
+          "revision": 1,
+          "rowCount": 12003,
+          "durationMs": 40,
+          "checksum": "5F113AB184A2A031CBB6C792950B00AD316917931AABCBB15239D4F8C18FFB7C",
+          "createdAt": "2026-10-09T06:08:20,6948320Z"
+        },
+        {
+          "cellId": "mutate",
+          "runId": "E82AEA36D1571FD1B0F4FA717A7B3769",
+          "revision": 1,
+          "rowCount": 12003,
+          "durationMs": 49,
+          "checksum": "DDEBA2FFDB78B1B838A4BEC107706F64A8D1AE2162AD6ED048AB6EF7683C1EC3",
+          "createdAt": "2026-10-09T06:08:20,7976390Z"
+        },
+        {
+          "cellId": "verify",
+          "runId": "E82AEA36D1571FD1B0F4FA717A7B3769",
+          "revision": 1,
+          "rowCount": 12003,
+          "durationMs": 65,
+          "checksum": "FC100B42EA81A2ABC584AE36A6E5D38383F39673015CE1CBD77B5C2FFA565B2E",
+          "createdAt": "2026-10-09T06:08:20,9224240Z"
+        }
+      ]
+    },
+    {
+      "scope": "one",
+      "runId": "E82AEA36D1571FD1B0F4FA717A7C5769",
+      "results": [
+        {
+          "cellId": "verify",
+          "runId": "E82AEA36D1571FD1B0F4FA717A7C5769",
+          "revision": 1,
+          "rowCount": 12003,
+          "durationMs": 61,
+          "checksum": "551A7832D7D474C8457A20F4BBC00C75AAF66248500C6734436079D0D6863F23",
+          "createdAt": "2026-10-09T06:08:21,7803980Z"
+        }
+      ]
+    },
+    {
+      "scope": "through",
+      "runId": "E82AEA36D1571FD1B0F4FA9A54F11769",
+      "results": [
+        {
+          "cellId": "seed",
+          "runId": "E82AEA36D1571FD1B0F4FA9A54F11769",
+          "revision": 1,
+          "rowCount": 12003,
+          "durationMs": 39,
+          "checksum": "9305C0AC3E9A57CA5BFD61793A639B12479A78515832333F33991D62898D81CB",
+          "createdAt": "2026-10-09T06:08:22,4634570Z"
+        },
+        {
+          "cellId": "mutate",
+          "runId": "E82AEA36D1571FD1B0F4FA9A54F11769",
+          "revision": 1,
+          "rowCount": 12003,
+          "durationMs": 51,
+          "checksum": "782A336168EFB19330332AD8227A093A35F13D4325EC65A29937AD0F5C6972E8",
+          "createdAt": "2026-10-09T06:08:22,5762510Z"
+        }
+      ]
+    }
+  ],
+  "passed": true
+}

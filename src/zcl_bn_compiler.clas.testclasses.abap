@@ -4,8 +4,70 @@ CLASS ltcl_compiler DEFINITION FINAL FOR TESTING
     METHODS wrapper_and_output FOR TESTING RAISING zcx_bn.
     METHODS syntax_line_mapping FOR TESTING.
     METHODS typed_json_inputs FOR TESTING.
+    METHODS crlf_compilation FOR TESTING.
+    METHODS json_controls FOR TESTING RAISING zcx_bn.
+    METHODS text_controls FOR TESTING RAISING zcx_bn.
 ENDCLASS.
 CLASS ltcl_compiler IMPLEMENTATION.
+  METHOD crlf_compilation.
+    DATA(source) = |DATA total TYPE i.{ cl_abap_char_utilities=>cr_lf }| &&
+      |{ cl_abap_char_utilities=>cr_lf }total = 1.{ cl_abap_char_utilities=>cr_lf }|.
+    DATA(original) = source.
+    DATA pool TYPE progname.
+    DATA diagnostics TYPE zcl_bn_types=>tt_diagnostics.
+    zcl_bn_compiler=>compile( EXPORTING source = source IMPORTING pool = pool diagnostics = diagnostics ).
+    cl_abap_unit_assert=>assert_not_initial( pool ).
+    cl_abap_unit_assert=>assert_initial( diagnostics ).
+    cl_abap_unit_assert=>assert_equals( act = source exp = original ).
+  ENDMETHOD.
+  METHOD text_controls.
+    DO 32 TIMES.
+      DATA hex TYPE x LENGTH 2. hex = sy-index - 1.
+      TRY.
+          zcl_bn_types=>validate_text( cl_abap_conv_in_ce=>uccp( hex ) ).
+          IF hex <> '0009' AND hex <> '000A' AND hex <> '000D'. cl_abap_unit_assert=>fail( 'Unsupported control accepted' ). ENDIF.
+        CATCH zcx_bn INTO DATA(error).
+          IF hex = '0009' OR hex = '000A' OR hex = '000D'. cl_abap_unit_assert=>fail( 'Supported line control rejected' ). ENDIF.
+          cl_abap_unit_assert=>assert_equals( act = error->code exp = 'TEXT_CONTROL' ).
+      ENDTRY.
+    ENDDO.
+    DATA(json) = zcl_bn_types=>request_json( '{"value":"\u000D\u000A\u0009"}' ).
+    TYPES: BEGIN OF ty_value, value TYPE string, END OF ty_value.
+    DATA parsed TYPE ty_value.
+    /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( json ) CHANGING data = parsed ).
+    cl_abap_unit_assert=>assert_equals( act = parsed-value
+      exp = cl_abap_char_utilities=>cr_lf && cl_abap_char_utilities=>horizontal_tab ).
+    DATA(literal) = `{"value":"\\u0001"}`.
+    cl_abap_unit_assert=>assert_equals( act = zcl_bn_types=>request_json( literal ) exp = literal ).
+    TRY.
+        zcl_bn_types=>request_json( '{"value":"\u0001"}' ).
+        cl_abap_unit_assert=>fail( 'Unicode control escape accepted before decoding' ).
+      CATCH zcx_bn INTO error. cl_abap_unit_assert=>assert_equals( act = error->code exp = 'JSON_UNICODE' ).
+    ENDTRY.
+  ENDMETHOD.
+  METHOD json_controls.
+    TYPES: BEGIN OF ty_text, word TYPE string, message TYPE string, END OF ty_text.
+    DATA(input) = VALUE ty_text( word = cl_abap_char_utilities=>cr_lf
+      message = |É · "quoted" \\ slash| ).
+    DO 32 TIMES.
+      DATA hex TYPE x LENGTH 2.
+      hex = sy-index - 1.
+      input-message = input-message && cl_abap_conv_in_ce=>uccp( hex ).
+    ENDDO.
+    DATA(json) = zcl_bn_types=>json( input ).
+    FIND REGEX '[[:cntrl:]]' IN json.
+    DATA(control_search) = sy-subrc.
+    cl_abap_unit_assert=>assert_equals( act = control_search exp = 4 ).
+    " The installed legacy /UI2 decoder does not decode all \u escapes.
+    " Browser JSON.parse verifies the complete 32-control wire round trip separately.
+    DATA(normal) = VALUE ty_text( word = cl_abap_char_utilities=>cr_lf
+      message = |É · "quoted" \\ slash{ cl_abap_char_utilities=>horizontal_tab }| &&
+        substring( val = cl_abap_char_utilities=>cr_lf off = 0 len = 1 ) && `literal \r` ).
+    DATA(normal_json) = zcl_bn_types=>json( normal ).
+    DATA output TYPE ty_text.
+    /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( normal_json ) CHANGING data = output ).
+    cl_abap_unit_assert=>assert_equals( act = output exp = normal ).
+  ENDMETHOD.
   METHOD wrapper_and_output.
     DATA source TYPE string.
     source = |DATA rows TYPE zcl_bn_context=>tt_rows.\n| &&

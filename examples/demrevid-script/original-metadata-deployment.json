@@ -1,0 +1,37 @@
+{
+  "system": "NPL",
+  "client": "001",
+  "user": "DEVELOPER",
+  "repoId": "000000000002",
+  "package": "ZCHORUS_BPC",
+  "branch": "codex/SSNG-3218-notebook-metadata-validation",
+  "commit": "17f37dd",
+  "transport": "NPLK900108",
+  "businessSourceUnchanged": true,
+  "checks": [
+    {
+      "name": "zif_bpc_validation_metadata",
+      "equal": true
+    },
+    {
+      "name": "zcl_bpc_dimension",
+      "equal": true
+    },
+    {
+      "name": "zcl_bpc_dim_product_type",
+      "equal": true
+    },
+    {
+      "name": "zcl_bpc_dim_audittrail",
+      "equal": true
+    },
+    {
+      "name": "zcl_bpc_dim_demrevid_kfs",
+      "equal": true
+    },
+    {
+      "name": "zcl_bpc_demrevid_calc_003",
+      "equal": true
+    }
+  ]
+}

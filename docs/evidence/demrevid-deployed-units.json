@@ -1,0 +1,15 @@
+{
+  "at": "2026-10-09T01:23:09.902Z",
+  "results": [
+    {
+      "name": "zcl_bn_dem_alloc",
+      "methods": 18,
+      "alerts": []
+    },
+    {
+      "name": "zcl_bn_context",
+      "methods": 0,
+      "alerts": []
+    }
+  ]
+}

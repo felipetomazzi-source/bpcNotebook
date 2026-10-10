@@ -13,7 +13,10 @@ CLASS zcl_bn_compiler IMPLEMENTATION.
     CLEAR: pool, diagnostics.
     APPEND 'PROGRAM SUBPOOL.' TO code.
     APPEND 'FORM execute USING io TYPE REF TO zcl_bn_context RAISING zcx_bn.' TO code.
-    SPLIT source AT cl_abap_char_utilities=>newline INTO TABLE body.
+    " Normalize only the compiler's private text; saved source/hash stays byte-identical.
+    DATA(compiler_source) = replace( val = source sub = cl_abap_char_utilities=>cr_lf
+      with = cl_abap_char_utilities=>newline occ = 0 ).
+    SPLIT compiler_source AT cl_abap_char_utilities=>newline INTO TABLE body.
     APPEND LINES OF body TO code.
     APPEND 'ENDFORM.' TO code.
     TRY.

@@ -1,0 +1,147 @@
+" Method: calc_fflas_ratios_by_material
+" Calculate material FFLAS ratios and skipped flags
+" Complete inputs come from the preceding method cells.
+constants kf_fflas_revenue type uj_dim_member value 'DEMREVID023' ##NO_TEXT.
+constants fflas_non type uj_dim_member value 'FFLASNON' ##NO_TEXT.
+constants kf_fflas_ratios_material type uj_dim_member value 'DEMREVID047' ##NO_TEXT.
+constants kf_fflas_ratio_skipped type uj_dim_member value 'DEMREVID052' ##NO_TEXT.
+constants fflas_na type uj_dim_member value 'FFLAS_NA' ##NO_TEXT.
+constants audit_dnrid_calc type uj_dim_member value 'DEMREVID_CALC' ##NO_TEXT.
+
+DATA(env) = io.
+
+DATA(parameters) = io->script_parameters( ).
+READ TABLE parameters ASSIGNING FIELD-SYMBOL(<flag>) WITH KEY hashkey = 'FFLASMATGROUPS'.
+IF sy-subrc = 0.
+CASE <flag>-hashvalue. WHEN 'true'. <flag>-hashvalue = '1'. WHEN 'false'. <flag>-hashvalue = '0'. ENDCASE.
+ENDIF.
+DATA(param) = NEW zcl_bpc_param( parameters ).
+DATA(skip_fflas_ratio_mat_group_id) = param->get_dimmem_range( 'FFLASMATGROUPSID' ).
+DATA(nb_skip_flags) = param->get_dimmem_range( 'FFLASMATGROUPS' ).
+LOOP AT skip_fflas_ratio_mat_group_id INTO DATA(nb_skip_id).
+ READ TABLE nb_skip_flags INTO DATA(nb_skip_flag) INDEX sy-tabix.
+ IF sy-subrc <> 0 OR nb_skip_flag-low = 0. DELETE skip_fflas_ratio_mat_group_id. ENDIF.
+ENDLOOP.
+DATA new_data TYPE REF TO zcl_bn_dem_model.
+DATA(ref_new_data) = io->read_dataset( dependency = 'step_16' name = 'NEW_DATA' ).
+FIELD-SYMBOLS <t_new_data> TYPE STANDARD TABLE.
+ASSIGN ref_new_data->* TO <t_new_data>.
+new_data = NEW #( environment = io model_data = <t_new_data> compressed = abap_false ).
+DATA sap_revenues TYPE REF TO zcl_bn_dem_model.
+DATA(ref_sap_revenues) = io->read_dataset( dependency = 'step_02' name = 'SAP_REVENUES' ).
+FIELD-SYMBOLS <t_sap_revenues> TYPE STANDARD TABLE.
+ASSIGN ref_sap_revenues->* TO <t_sap_revenues>.
+sap_revenues = NEW #( environment = io model_data = <t_sap_revenues> compressed = abap_false ).
+
+io->check_budget( ).
+DO 1 TIMES.
+DATA fflas_ratios TYPE REF TO zcl_bn_dem_model.
+fflas_ratios = new zcl_bn_dem_model( environment = env ).
+
+    " 1. Base revenue = total SAP Actuals grouped by Category/Time/Account/Matconn, re-tagged
+    "    with the audittrail used by this calculation and the FFLAS-ratio-by-Material key figure.
+    data(base_revenues) = sap_revenues->copy( )->group( value #(
+        ( 'CATEGORY' ) ( 'TIME' ) ( 'ACCOUNT' ) ( 'MATCONN' ) ( 'MAT_GROUP_ID' ) ) )->replaces( value #(
+            ( dimension = 'AUDITTRAIL' replace_with = audit_dnrid_calc )
+            ( dimension = 'DEMREVID_KFS' replace_with = kf_fflas_ratios_material ) )
+                 ).
+    io->emit_table( name = 'RATIO_BASE_BEFORE_EXCLUSIONS' rows = base_revenues->model_data ).
+    " 2. Exclude Material Groups flagged to skip the FFLAS ratio calculation (parameter FFLASMATGROUPSID).
+    "    Before excluding them, keep one flag record per Time/Account/Matconn so DEMREV knows these
+    "    materials were skipped and can post their fallback allocation separately (SSNG-3218).
+    data(skipped_materials) = new zcl_bn_dem_model( environment = env ).
+    if lines( skip_fflas_ratio_mat_group_id ) <> 0.
+      loop at base_revenues->model_data into data(_skipped_material)
+          where mat_group_id in skip_fflas_ratio_mat_group_id.
+        clear _skipped_material-mat_group_id.
+        _skipped_material-demrevid_kfs = kf_fflas_ratio_skipped.
+        _skipped_material-fflas = fflas_na.
+        _skipped_material-signeddata = 1.
+        " One flag per Time/Account/Matconn, even if it has several revenue rows.
+        if not line_exists( skipped_materials->model_data[
+                              time    = _skipped_material-time
+                              account = _skipped_material-account
+                              matconn = _skipped_material-matconn ] ).
+          skipped_materials->append( _skipped_material ).
+        endif.
+      endloop.
+
+      delete base_revenues->model_data where mat_group_id in skip_fflas_ratio_mat_group_id.
+    endif.
+    io->emit_table( name = 'SKIPPED_MATERIAL_FLAGS' rows = skipped_materials->model_data ).
+    io->emit_table( name = 'RATIO_BASE_AFTER_EXCLUSIONS' rows = base_revenues->model_data ).
+    " No need of Mat. Group anymore.
+    base_revenues->group( include_dimensions = abap_false group_by = value #( ( 'MAT_GROUP_ID' ) ) ).
+
+    " 3. FFLAS revenue = Allocated Revenues (DEMREVID023) grouped by the same key plus FFLAS and
+    "    MAT_GROUP_ID, so the share of the base revenue attributable to each FFLAS value can be computed.
+    data(fflas_rev) = new_data->copy( value #(
+            ( dimension = 'DEMREVID_KFS' low = kf_fflas_revenue ) ) )->group( value #(
+               (        'CATEGORY' ) (       'TIME' ) ( 'ACCOUNT' ) ( 'MATCONN' ) ( 'FFLAS' ) ( 'MAT_GROUP_ID' ) ) )->replaces( value #(
+            ( dimension = 'AUDITTRAIL' replace_with = audit_dnrid_calc )
+            ( dimension = 'DEMREVID_KFS' replace_with = kf_fflas_ratios_material ) ) ).
+    io->emit_table( name = 'FFLAS_REVENUE_NUMERATORS' rows = fflas_rev->model_data ).
+    " 4. For each base revenue record with a non-zero amount, compute the ratio of every matching
+    "    FFLAS revenue record to the base amount, and keep a running remainder (non_fflas_rev).
+    loop at base_revenues->model_data into data(_base_rev)
+        where signeddata is not initial.
+      data(non_fflas_rev) = _base_rev-signeddata.
+      loop at fflas_rev->model_data into data(_fflas_rev)
+        where time eq _base_rev-time and
+                   account eq _base_rev-account and
+                   matconn eq _base_rev-matconn.
+        " Track how much of the base revenue is still unaccounted for by an explicit FFLAS ratio.
+        subtract _fflas_rev-signeddata from non_fflas_rev.
+        " Ratio for this FFLAS value = FFLAS revenue / total (base) revenue.
+        _fflas_rev-signeddata =  _fflas_rev-signeddata / _base_rev-signeddata.
+        fflas_ratios->append( _fflas_rev ).
+      endloop.
+      " 5. Whatever remains unaccounted-for is booked to the synthetic Non-FFLAS ratio (FFLASNON),
+      "    ensuring the FFLAS ratios for this Time/Account/Matconn always sum to 1.
+      if non_fflas_rev is not initial.
+        _base_rev-signeddata =  non_fflas_rev / _base_rev-signeddata.
+        _base_rev-fflas = fflas_non.
+        fflas_ratios->collect( _base_rev ).
+      endif.
+    endloop.
+
+    io->emit_table( name = 'RATIOS_BEFORE_ROUNDING' rows = fflas_ratios->model_data ).
+    " 6. Rounding correction: due to floating-point precision in get_ratio / division,
+    "    the sum of ratios for a given Time/Account/Matconn may not be exactly 1.
+    "    For each combination where the total differs from 1, the discrepancy is added
+    "    to the first ratio row found (via binary search). This avoids incorrectly
+    "    creating or inflating a FFLASNON row when one doesn't logically belong.
+    data(fflas_ratios_cons) = fflas_ratios->copy( )->group(
+        include_dimensions = abap_false
+        group_by = value #( ( 'FFLAS' ) ( 'MAT_GROUP_ID' ) ) )->filter( value #(
+            ( dimension = 'SIGNEDDATA' option = 'NE' low = 1 ) ) ).
+    sort fflas_ratios->model_data by time account matconn.
+    loop at fflas_ratios_cons->model_data into data(_fflas_ratios_cons).
+      read table fflas_ratios->model_data assigning field-symbol(<_fflas_ratios>)
+          with key time = _fflas_ratios_cons-time
+                   account = _fflas_ratios_cons-account
+                   matconn = _fflas_ratios_cons-matconn
+                   binary search.
+      if sy-subrc is initial.
+        data(balance_ratio) = conv uj_signeddata( 1 - _fflas_ratios_cons-signeddata ).
+        add balance_ratio to <_fflas_ratios>-signeddata.
+      endif.
+    endloop.
+
+    " 7. Add the skipped-material flags (step 2) after the rounding correction, so they are not
+    "    mixed into the ratio balancing above.
+    fflas_ratios->append( skipped_materials ).
+    io->emit_table( name = 'RATIOS_AND_FLAGS' rows = fflas_ratios->model_data ).
+new_data->append( fflas_ratios ).
+ENDDO.
+IF new_data IS BOUND.
+io->check_rows( lines( new_data->model_data ) ).
+io->publish_dataset( name = 'NEW_DATA' rows = new_data->model_data ).
+ENDIF.
+IF new_data IS BOUND.
+" Complete control totals: retain key figures/audit trails so unlike measures are not mixed.
+DATA(control_totals) = new_data->copy( )->group( VALUE #(
+ ( 'CATEGORY' ) ( 'TIME' ) ( 'ACCOUNT' ) ( 'MATCONN' ) ( 'AUDITTRAIL' ) ( 'DEMREVID_KFS' ) ) ).
+io->emit_table( name = 'CONTROL_TOTALS' rows = control_totals->model_data ).
+ENDIF.
+io->check_budget( ).

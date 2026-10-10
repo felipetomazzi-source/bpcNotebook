@@ -1,5 +1,7 @@
 # Notebook Script v1
 
+For complete native working tables, grouping, indexed joins, explicit precision, reference scopes and allocation results, see [Notebook Script v2](notebook-script-v2.md). V2 requires an explicit `script version 2` header; existing v1 source remains compatible.
+
 Use **Add script cell** for the simpler language; **Add cell** retains the existing ABAP editor. Choose the notebook's BPC environment/model first for metadata completion and BPC reads. Existing scalar and dimension-selection inputs retain their contracts.
 
 ```text
@@ -69,3 +71,5 @@ templates before native formatting. No external library or CDN is used. SAP
 authorizations and the user's existing pretty-printer settings apply; the action
 does not change those settings. Failed requests or newer edits keep the source.
 ABAP formatting requires SAP; Script formatting also works in the local demo.
+
+Notebook Script accepts `#` and `//` comments, both full-line and inline after a statement. Comment markers inside double-quoted text stay literal. Comments may precede the `script version 2` or `script version 2 compact` declaration. Use **Pretty print** in each cell toolbar to indent loops and conditions; formatting preserves comments and requires Save version to persist.

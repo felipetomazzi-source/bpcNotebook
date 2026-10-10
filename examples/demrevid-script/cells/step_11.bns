@@ -1,0 +1,44 @@
+script version 2 compact
+// DEMREVID003 business-rule notes
+// Calculate the PQ share
+// Group PQ FFLAS revenue and divide by total FFLAS revenue at the original time/account/material grain. Use
+// native SAP precision and the existing divide behavior.
+// Check: Inspect numerator, denominator, zero-denominator behavior and the resulting PQ ratio.
+// Complete working tables stay in SAP; displayed previews are not calculation inputs.
+
+// Read the complete NEW_DATA working table retained by step_10.
+dataset new_data = "step_10" named "NEW_DATA"
+// Select the records required by this business block; retain their original signs and dimensions.
+filter filtered1 = new_data as f2 where f2.DEMREVID_KFS == "DEMREVID023"
+// Sum signed amounts using the stated include/exclude dimension list and the original grouping semantics.
+group group3 = filtered1 exclude ["GEO_DRIVERS","FFLAS"]
+// Fill initial dimensions with their original NA members; GEO_DRIVERS uses GDRVS_NA.
+defaults group3 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
+// Preserve the original sort keys and tie behavior used by subsequent lookups.
+sort group3 unstable by GEO_DRIVERS asc, FFLAS asc
+sort group3 unstable by TIME asc, ACCOUNT asc, MATCONN asc
+// Select the records required by this business block; retain their original signs and dimensions.
+filter filtered4 = filtered1 as f5 where f5.FFLAS == "FFLASPQ"
+// Sum signed amounts using the stated include/exclude dimension list and the original grouping semantics.
+group group6 = filtered4 exclude ["GEO_DRIVERS"]
+defaults group6 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
+sort group6 unstable by GEO_DRIVERS asc
+sort group6 unstable by TIME asc, ACCOUNT asc, MATCONN asc
+for divide7 in group6
+// A missing lookup returns initial values; the following found checks and fallback branches control the outcome.
+find found8 = group3 where TIME = divide7.TIME and ACCOUNT = divide7.ACCOUNT and MATCONN = divide7.MATCONN search binary missing initial
+// Use the original floating-point division; a zero denominator leaves the numerator unchanged.
+divide divide7.SIGNEDDATA by found8.SIGNEDDATA using float onzero keep
+end
+for replace9 in group6
+replace9.DEMREVID_KFS = "DEMREVID025"
+end
+append new_data from group6
+// Retain complete native datasets for downstream stages; publication here does not post financial data.
+publish new_data as "NEW_DATA"
+// Sum signed amounts using the stated include/exclude dimension list and the original grouping semantics.
+group group10 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
+defaults group10 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
+sort group10 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc
+// Display a bounded sample for review; source totals and complete SAP working datasets remain separate.
+show group10 as "CONTROL_TOTALS"

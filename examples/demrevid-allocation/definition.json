@@ -1,5 +1,5 @@
 {
-  "title": "DEMREVID003 - original baseline conversion",
+  "title": "DEMREVID003 - allocation",
   "environment": "CH_PLANNING",
   "model": "DEMREVID",
   "inputs": [
@@ -33,7 +33,8 @@
       "hierarchy": "PARENTH1",
       "required": true,
       "selected": [
-        "TIME_NA"
+        "TIME_NA",
+        "2025.008"
       ],
       "purpose": "reference",
       "lookbackFrom": "TIME",

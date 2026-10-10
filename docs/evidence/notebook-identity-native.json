@@ -1,0 +1,36 @@
+{
+  "at": "2026-10-10T05:18:53.823Z",
+  "passed": true,
+  "checks": [
+    "TECHNICAL_NAME",
+    "DESCRIPTION",
+    "TECHNICAL_NAME",
+    "BPC_CONTEXT",
+    "CONCURRENT_UNIQUENESS",
+    "NAME_IMMUTABLE",
+    "CONFLICT",
+    "DESCRIPTION_WITHOUT_SOURCE_REVISION",
+    "CONFLICT",
+    "PINNED_RESOLUTION",
+    "APPROVED_REVISION",
+    "INTEGRITY",
+    "DEMO_IDENTITY",
+    "LEGACY_ASSIGNMENT_PRESERVES_HISTORY_AND_RUN"
+  ],
+  "operational": {
+    "id": "E82AEA36D1571FE1B18BD135480E4C5E",
+    "technicalName": "DEMREVID003_ALLOCATION",
+    "revision": 2,
+    "scope": {
+      "environment": "CH_PLANNING",
+      "model": "DEMREVID"
+    },
+    "versionsHash": "09cce8c2bc0e62bfa761d63702bce01bae1a9c2053ba9c6e1001afbd8143ff02",
+    "runId": "E82AEA36D1571FE1B18C4A97C6DC4CF0",
+    "runHash": "24670b410c9c1ade9590ed7793df944b04152c03cc58f0657aade570c89dec08"
+  },
+  "created": [
+    "E82AEA36D1571FE1B18D410A41826E25",
+    "E82AEA36D1571FE1B18D4110AA046E25"
+  ]
+}

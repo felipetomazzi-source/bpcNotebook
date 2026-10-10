@@ -1,0 +1,388 @@
+{
+  "at": "2026-10-10T04:26:00.014Z",
+  "notebookId": "E82AEA36D1571FE1B18BD135480E4C5E",
+  "revision": 2,
+  "runId": "E82AEA36D1571FE1B18C4A97C6DC4CF0",
+  "state": "succeeded",
+  "error": {
+    "code": "",
+    "message": ""
+  },
+  "financialPosting": false,
+  "fixtureMode": false,
+  "inputs": [
+    {
+      "name": "CATEGORY",
+      "type": "member",
+      "value": "",
+      "dimension": "CATEGORY",
+      "hierarchy": "",
+      "required": true,
+      "selected": [
+        "Actual"
+      ],
+      "resolved": [
+        "Actual"
+      ]
+    },
+    {
+      "name": "TIME",
+      "type": "range",
+      "value": "",
+      "dimension": "TIME",
+      "hierarchy": "PARENTH1",
+      "required": true,
+      "selected": [
+        "2026.006"
+      ],
+      "resolved": [
+        "2026.006"
+      ]
+    },
+    {
+      "name": "REFERENCE_TIME",
+      "type": "range",
+      "value": "",
+      "dimension": "TIME",
+      "hierarchy": "PARENTH1",
+      "required": true,
+      "selected": [
+        "2026.007",
+        "TIME_NA"
+      ],
+      "resolved": [
+        "2026.005",
+        "2026.007",
+        "TIME_NA"
+      ],
+      "purpose": "reference",
+      "lookbackFrom": "TIME",
+      "lookbackSteps": 1,
+      "fiscalLinks": [
+        {
+          "dimension": "TIME",
+          "member": "2026.005",
+          "prior": "2026.004",
+          "next": "2026.006"
+        },
+        {
+          "dimension": "TIME",
+          "member": "2026.006",
+          "prior": "2026.005",
+          "next": "2026.007"
+        }
+      ]
+    },
+    {
+      "name": "READ_LIMIT",
+      "type": "number",
+      "value": "1000000",
+      "dimension": "",
+      "hierarchy": "",
+      "required": false,
+      "selected": [],
+      "resolved": []
+    },
+    {
+      "name": "PREVIEW_ROWS",
+      "type": "number",
+      "value": "100",
+      "dimension": "",
+      "hierarchy": "",
+      "required": false,
+      "selected": [],
+      "resolved": []
+    },
+    {
+      "name": "RUN_SECONDS",
+      "type": "number",
+      "value": "7200",
+      "dimension": "",
+      "hierarchy": "",
+      "required": false,
+      "selected": [],
+      "resolved": []
+    },
+    {
+      "name": "FFLASMATGROUPS",
+      "type": "boolean",
+      "value": "true",
+      "dimension": "",
+      "hierarchy": "",
+      "required": false,
+      "selected": [],
+      "resolved": []
+    },
+    {
+      "name": "FFLASMATGROUPSID",
+      "type": "string",
+      "value": "MATGROUPID038",
+      "dimension": "",
+      "hierarchy": "",
+      "required": false,
+      "selected": [],
+      "resolved": []
+    },
+    {
+      "name": "DEBUG",
+      "type": "string",
+      "value": "OFF",
+      "dimension": "",
+      "hierarchy": "",
+      "required": false,
+      "selected": [],
+      "resolved": []
+    },
+    {
+      "name": "HSNS_REALLOC_LOCATIONS",
+      "type": "string",
+      "value": "",
+      "dimension": "",
+      "hierarchy": "",
+      "required": false,
+      "selected": [],
+      "resolved": []
+    },
+    {
+      "name": "DATASET_BYTES",
+      "type": "number",
+      "value": "268435456",
+      "dimension": "",
+      "hierarchy": "",
+      "required": false,
+      "selected": [],
+      "resolved": []
+    },
+    {
+      "name": "WORK_ROWS",
+      "type": "number",
+      "value": "1000000",
+      "dimension": "",
+      "hierarchy": "",
+      "required": false,
+      "selected": [],
+      "resolved": []
+    }
+  ],
+  "results": [
+    {
+      "cellId": "step_01",
+      "runId": "E82AEA36D1571FE1B18C4A97C6DC4CF0",
+      "revision": 1,
+      "rowCount": 99820,
+      "durationMs": 23333,
+      "checksum": "1C9679229D3745FEA5C343E7DF906888498727AA8C36778C9A046F68035FE978",
+      "createdAt": "2026-10-10T04:23:52,2928850Z"
+    },
+    {
+      "cellId": "step_02",
+      "runId": "E82AEA36D1571FE1B18C4A97C6DC4CF0",
+      "revision": 1,
+      "rowCount": 2960,
+      "durationMs": 4797,
+      "checksum": "02C5AFE6253879CA7672F780674CBFEFD6CD23B71ED65CA4ABE106E14A6062E3",
+      "createdAt": "2026-10-10T04:23:57,7434420Z"
+    },
+    {
+      "cellId": "step_03",
+      "runId": "E82AEA36D1571FE1B18C4A97C6DC4CF0",
+      "revision": 1,
+      "rowCount": 983,
+      "durationMs": 1081,
+      "checksum": "BA57A22CB7F012C9BDA75BE7991E7113AE671F34C5949F23D7A91162DBC2F13B",
+      "createdAt": "2026-10-10T04:23:59,4709700Z"
+    },
+    {
+      "cellId": "step_04",
+      "runId": "E82AEA36D1571FE1B18C4A97C6DC4CF0",
+      "revision": 1,
+      "rowCount": 2463,
+      "durationMs": 2347,
+      "checksum": "95BF28690C977B830D940F49B8400275F369ADD5F0959197B3B325565136C789",
+      "createdAt": "2026-10-10T04:24:01,9740180Z"
+    },
+    {
+      "cellId": "step_05",
+      "runId": "E82AEA36D1571FE1B18C4A97C6DC4CF0",
+      "revision": 1,
+      "rowCount": 6793,
+      "durationMs": 2952,
+      "checksum": "75E20E952A4E54AF9E54CCA1C231E6840E14EB0D119B91FB9087E469A67B7036",
+      "createdAt": "2026-10-10T04:24:05,4915340Z"
+    },
+    {
+      "cellId": "step_06",
+      "runId": "E82AEA36D1571FE1B18C4A97C6DC4CF0",
+      "revision": 1,
+      "rowCount": 5649,
+      "durationMs": 6452,
+      "checksum": "6E20A0F312384CD1411926DC2C52AC8ED64F935A4006F5666776189B16A7B2D9",
+      "createdAt": "2026-10-10T04:24:12,7063920Z"
+    },
+    {
+      "cellId": "step_07",
+      "runId": "E82AEA36D1571FE1B18C4A97C6DC4CF0",
+      "revision": 1,
+      "rowCount": 6842,
+      "durationMs": 2870,
+      "checksum": "52EBF25CE9F26FFEB11B8A11E5C1A5FF92847D691B2329A867F6C3678E70B4E5",
+      "createdAt": "2026-10-10T04:24:16,3887090Z"
+    },
+    {
+      "cellId": "step_08",
+      "runId": "E82AEA36D1571FE1B18C4A97C6DC4CF0",
+      "revision": 1,
+      "rowCount": 8096,
+      "durationMs": 2952,
+      "checksum": "D17CC3705EEC06FE13BD2F4D644B0940EAD1BEE9032DA1CC50B7AC2CBFA70BBA",
+      "createdAt": "2026-10-10T04:24:20,2500740Z"
+    },
+    {
+      "cellId": "step_09",
+      "runId": "E82AEA36D1571FE1B18C4A97C6DC4CF0",
+      "revision": 1,
+      "rowCount": 9855,
+      "durationMs": 3644,
+      "checksum": "9AA54E84067CE0FDF99DE2E1E162095414FDC134D80A20F05034F049453C602D",
+      "createdAt": "2026-10-10T04:24:24,9022290Z"
+    },
+    {
+      "cellId": "step_10",
+      "runId": "E82AEA36D1571FE1B18C4A97C6DC4CF0",
+      "revision": 1,
+      "rowCount": 11717,
+      "durationMs": 3180,
+      "checksum": "DA870492744A72D345150DAED44C35CA538D4888A62AE284CC3000410F809C92",
+      "createdAt": "2026-10-10T04:24:29,1936060Z"
+    },
+    {
+      "cellId": "step_11",
+      "runId": "E82AEA36D1571FE1B18C4A97C6DC4CF0",
+      "revision": 1,
+      "rowCount": 12093,
+      "durationMs": 2873,
+      "checksum": "6B002DB08023494DA5F79A99D8B63A2967A2BFC17ABBFA910BCE45444570EA0C",
+      "createdAt": "2026-10-10T04:24:33,0730950Z"
+    },
+    {
+      "cellId": "step_12",
+      "runId": "E82AEA36D1571FE1B18C4A97C6DC4CF0",
+      "revision": 1,
+      "rowCount": 13076,
+      "durationMs": 3757,
+      "checksum": "5387FED1F6FA8175EE5588B8550F3C3E658DDE38D257E88DB3E3821E74CEA14A",
+      "createdAt": "2026-10-10T04:24:37,8752980Z"
+    },
+    {
+      "cellId": "step_13",
+      "runId": "E82AEA36D1571FE1B18C4A97C6DC4CF0",
+      "revision": 1,
+      "rowCount": 18174,
+      "durationMs": 4385,
+      "checksum": "C2181FABD2AC914F20F90E4E9EE2219BB976FE68EA882FD81A4750C2B9F556EF",
+      "createdAt": "2026-10-10T04:24:43,4329760Z"
+    },
+    {
+      "cellId": "step_14",
+      "runId": "E82AEA36D1571FE1B18C4A97C6DC4CF0",
+      "revision": 1,
+      "rowCount": 15851,
+      "durationMs": 3988,
+      "checksum": "897D05A169C08EB5AEA9160340568E7AAB693A6847B1DFBF052734A6D27A930E",
+      "createdAt": "2026-10-10T04:24:48,4991380Z"
+    },
+    {
+      "cellId": "step_15",
+      "runId": "E82AEA36D1571FE1B18C4A97C6DC4CF0",
+      "revision": 1,
+      "rowCount": 16713,
+      "durationMs": 4920,
+      "checksum": "55DC9F48A5F8726136CBDBB9D0C8AB46DC3ABC7FD1A1D4883C510967EB287E83",
+      "createdAt": "2026-10-10T04:24:54,5125220Z"
+    },
+    {
+      "cellId": "step_16",
+      "runId": "E82AEA36D1571FE1B18C4A97C6DC4CF0",
+      "revision": 1,
+      "rowCount": 17080,
+      "durationMs": 12380,
+      "checksum": "E791CE744D4FC302068B085092A935EEE54A22EEE9B746AFC1222B74A7A2F015",
+      "createdAt": "2026-10-10T04:25:08,0381850Z"
+    },
+    {
+      "cellId": "step_17",
+      "runId": "E82AEA36D1571FE1B18C4A97C6DC4CF0",
+      "revision": 1,
+      "rowCount": 18353,
+      "durationMs": 6643,
+      "checksum": "26EB038C61D883DCBF11E77A61473CCD596DC3851845BE219A64981145E38454",
+      "createdAt": "2026-10-10T04:25:16,7364290Z"
+    },
+    {
+      "cellId": "step_18",
+      "runId": "E82AEA36D1571FE1B18C4A97C6DC4CF0",
+      "revision": 1,
+      "rowCount": 20701,
+      "durationMs": 6517,
+      "checksum": "FF86A63A404A6C19444397B5AAFDAF1B60023D98C3E572A7309D0705557FACA2",
+      "createdAt": "2026-10-10T04:25:26,0201540Z"
+    },
+    {
+      "cellId": "step_19",
+      "runId": "E82AEA36D1571FE1B18C4A97C6DC4CF0",
+      "revision": 1,
+      "rowCount": 20203,
+      "durationMs": 6614,
+      "checksum": "007A4AF2238756FE48F7837750D5A9F435CF073141A7318FFD235A39576F75DA",
+      "createdAt": "2026-10-10T04:25:33,7886830Z"
+    },
+    {
+      "cellId": "step_20",
+      "runId": "E82AEA36D1571FE1B18C4A97C6DC4CF0",
+      "revision": 1,
+      "rowCount": 21376,
+      "durationMs": 13679,
+      "checksum": "111FEC27B15C0C69E91547645EF21BA0F465353464C0C583163FB53E3A91377C",
+      "createdAt": "2026-10-10T04:25:48,7697370Z"
+    },
+    {
+      "cellId": "reconcile",
+      "runId": "E82AEA36D1571FE1B18C4A97C6DC4CF0",
+      "revision": 1,
+      "rowCount": 22995,
+      "durationMs": 6289,
+      "checksum": "BD701057A0EBA53B0DCE4662DAC723B236C2B13B56D7CAF30E8BBE21D21D0200",
+      "createdAt": "2026-10-10T04:25:56,3200680Z"
+    }
+  ],
+  "tables": [
+    {
+      "name": "DATASET/FINAL_REPLACEMENT",
+      "rowCount": 100,
+      "totalCount": 20482,
+      "truncated": true,
+      "elapsedUs": 0
+    },
+    {
+      "name": "DATASET/FINAL_DELTA",
+      "rowCount": 100,
+      "totalCount": 2513,
+      "truncated": true,
+      "elapsedUs": 0
+    },
+    {
+      "name": "FINAL_REPLACEMENT",
+      "rowCount": 5000,
+      "totalCount": 20482,
+      "truncated": true,
+      "elapsedUs": 0
+    },
+    {
+      "name": "FINAL_DELTA",
+      "rowCount": 2513,
+      "totalCount": 2513,
+      "truncated": false,
+      "elapsedUs": 0
+    }
+  ]
+}

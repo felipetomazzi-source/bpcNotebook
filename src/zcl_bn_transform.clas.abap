@@ -672,8 +672,23 @@ class zcl_bn_transform implementation.
       DATA(filter) = VALUE zcl_bn_bpc=>ty_filter( dimension = range-dimension ).
       DATA(dim) = environment->bpc_dimension( CONV string( range-dimension ) ).
       DATA(ref) = dim->member_data( ). FIELD-SYMBOLS <members> TYPE STANDARD TABLE. ASSIGN ref->* TO <members>.
+      " RSDRI facts contain base members. Exclusion ranges must not introduce hierarchy nodes.
+      DATA node_ids TYPE HASHED TABLE OF string WITH UNIQUE KEY table_line.
+      CLEAR node_ids.
+      DATA(hierarchies) = dim->hierarchies( ).
+      FIELD-SYMBOLS <property> TYPE any.
       LOOP AT <members> ASSIGNING FIELD-SYMBOL(<member>).
         ASSIGN COMPONENT 'ID' OF STRUCTURE <member> TO FIELD-SYMBOL(<id>).
+        UNASSIGN <property>. ASSIGN COMPONENT 'CALC' OF STRUCTURE <member> TO <property>.
+        IF <property> IS ASSIGNED AND <property> = 'Y'. INSERT CONV string( <id> ) INTO TABLE node_ids. ENDIF.
+        LOOP AT hierarchies INTO DATA(hierarchy).
+          UNASSIGN <property>. ASSIGN COMPONENT hierarchy OF STRUCTURE <member> TO <property>.
+          IF <property> IS ASSIGNED AND <property> IS NOT INITIAL. INSERT CONV string( <property> ) INTO TABLE node_ids. ENDIF.
+        ENDLOOP.
+      ENDLOOP.
+      LOOP AT <members> ASSIGNING <member>.
+        ASSIGN COMPONENT 'ID' OF STRUCTURE <member> TO <id>.
+        IF line_exists( node_ids[ table_line = CONV string( <id> ) ] ). CONTINUE. ENDIF.
         IF <id> IN range-ranges. APPEND CONV string( <id> ) TO filter-members. ENDIF.
       ENDLOOP.
       IF filter-members IS INITIAL. CLEAR model_data. RETURN. ENDIF.

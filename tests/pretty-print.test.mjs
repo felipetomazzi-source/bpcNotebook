@@ -93,3 +93,29 @@ test('format action marks a draft without saving and never overwrites edits made
   const failure=component(async()=>{throw new Error('Denied');});
   await failure.run();assert.equal(failure.cell.source,'original');assert.equal(failure.state.failure.message,'Denied');
 });
+
+test('both comment styles survive formatting, headers and text literals across language versions',()=>{
+ const Script=script();
+ for(const header of ['', 'script version 2 # version comment\n', 'script version 2 compact // compact comment\n']){
+  const source='# Calculation É · São\n// Explain inputs\n'+header+'let factor = 2 // inline\nif factor > 1\nmessage "https://example.invalid/#literal" # keep text\n// Explain branch\nelse\nmessage "other"\nend\n';
+  const formatted=Script.prettyPrint(source),before=Script.compile(source),after=Script.compile(formatted);
+  assert.equal(Script.unpack(after).text,formatted);
+  assert.equal(after.split('* @bn-generated\n')[1],before.split('* @bn-generated\n')[1]);
+  assert.ok(formatted.includes('  // Explain branch'));
+  assert.ok(formatted.includes('"https://example.invalid/#literal" # keep text'));
+  assert.equal(Script.prettyPrint(formatted),formatted);
+  if(header.includes('compact')) assert.ok(after.startsWith('* BPC Notebook Script v2 compact\n'));
+ }
+});
+
+ test('Script formatting spaces straight statements while preserving aliases and literal bytes',()=>{
+  const language=script();
+  const source='script version 2 compact\r\nreference model source_model=DEMREVID\r\ndata raw_source=source_model limit 100\r\nproject output=raw_source fields ["CATEGORY","TIME","SIGNEDDATA"]\r\nlet factor=2 // Keep É · punctuation =, intact\r\nmessage "literal =, // # \"  \r\n';
+  const formatted=language.prettyPrint(source);
+  assert.ok(formatted.includes('source_model = DEMREVID'));
+  assert.ok(formatted.includes('["CATEGORY", "TIME", "SIGNEDDATA"]'));
+  assert.ok(formatted.includes('// Keep É · punctuation =, intact'));
+  assert.ok(formatted.includes('message "literal =, // # "  \r\n'));
+  assert.equal(language.compile(formatted).body,language.compile(source).body);
+  assert.equal(language.prettyPrint(formatted),formatted);
+});

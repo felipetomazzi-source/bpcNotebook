@@ -23,22 +23,13 @@ test('packaging leaves native sources and SAP metadata byte-identical and is ide
  for(const n of names)assert.deepEqual(readFileSync('src/'+n),before.get(n),n);
 });
 
-test('repository bytes match the recorded real SAP serializations',()=>{
- const evidence=JSON.parse(readUtf8('docs/evidence/sap-roundtrip.json'));
- const pretty=JSON.parse(readUtf8('docs/evidence/pretty-printer-roundtrip.json'));
+test('repository bytes match the recorded real SAP serialization',()=>{
+ const evidence=JSON.parse(readUtf8('docs/evidence/bpc-deployment.json'));
  assert.equal(evidence.passed,true);
- assert.equal(evidence.files.length,56);
- assert.equal(pretty.passed,true);
- assert.equal(pretty.files.length,9);
- assert.equal(pretty.liveApplicationModified,false);
- const latest=new Map(evidence.files.map(file=>[file.filename,file]));
- for(const file of pretty.files){
-  assert.ok(file.filename.startsWith('zbpc_notebook.wapa.'),'Supplement must contain only the actual isolated BSP round trip');
-  assert.ok(latest.has(file.filename),'Supplement cannot silently replace the verified artifact set');
-  latest.set(file.filename,file);
- }
- for(const file of latest.values()){
-  const path=file.filename==='.abapgit.xml'?file.filename:'src/'+file.filename;
+ assert.equal(evidence.files.length,readdirSync("src").length + 1);
+ assert.deepEqual(evidence.missing,[]);
+ for(const file of evidence.files){
+  const path=file.filename;
   const bytes=readFileSync(path);
   assert.equal(createHash('sha256').update(gitBytes(bytes)).digest('hex'),file.sapSha256,path);
   const bom=bytes.subarray(0,3).equals(Buffer.from([0xef,0xbb,0xbf]));

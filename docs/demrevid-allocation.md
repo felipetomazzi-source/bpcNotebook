@@ -1,5 +1,7 @@
 # DEMREVID003 allocation through BPC Notebook
 
+The saved executable allocation and full native comparison notebooks are described in [demrevid-notebook-usage.md](demrevid-notebook-usage.md), with separate nonempty fixture and live-period evidence. Customer-data acceptance remains pending.
+
 The executable port is `ZCL_BN_DEM_ALLOC=>EXECUTE`. It runs all 20 stages in **one ABAP cell**, with complete native multidimensional working tables in SAP memory. It uses generic authorized BPC reads and stored-property access. Independent execution of an internal stage and full-table transfer between notebook cells are not implemented. This is the permitted initial one-service design.
 
 Business acceptance is **pending**. The connected DEV model has 3,550 authorized Actual / 2027.006 records, principally SAP prices, and no SAP revenues. All stages execute, but the final replacement and change-set are empty. This verifies execution, metadata and inspection; it does not prove end-to-end allocation equivalence.

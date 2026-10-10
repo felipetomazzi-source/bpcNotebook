@@ -57,6 +57,8 @@ class zcl_bn_dem_alloc definition public
              output_row_count type i,
              output_truncated type abap_bool,
            end of inspection_result.
+    TYPES: BEGIN OF validation_result, replacement TYPE zcl_bn_dem_model=>tabl, delta TYPE zcl_bn_dem_model=>tabl, END OF validation_result.
+    CLASS-METHODS validate_fixtures IMPORTING io TYPE REF TO zcl_bn_context RETURNING VALUE(result) TYPE validation_result RAISING zcx_bn.
     CLASS-METHODS execute IMPORTING io TYPE REF TO zcl_bn_context stop_after TYPE string DEFAULT '' RAISING zcx_bn.
     class-methods get_steps returning value(result) type step_list.
     " Always uses a fresh engine; reruns prerequisites; never returns data to BPC.
@@ -467,6 +469,33 @@ class zcl_bn_dem_alloc implementation.
  ENDTRY.
   endmethod.
 
+
+  METHOD validate_fixtures.
+    IF io IS NOT BOUND OR io->fixture_mode <> abap_true OR io->environment <> 'CH_PLANNING' OR io->model <> 'DEMREVID'.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MODE' detail = 'Native validation requires the fixture DEMREVID context'.
+    ENDIF.
+    DATA(engine) = NEW zcl_bn_dem_alloc( ). engine->env = io.
+    engine->capture_enabled = abap_false.
+    DATA(parameters) = io->script_parameters( ).
+    READ TABLE parameters ASSIGNING FIELD-SYMBOL(<flag>) WITH KEY hashkey = 'FFLASMATGROUPS'.
+    IF sy-subrc = 0.
+      CASE <flag>-hashvalue.
+        WHEN 'true'. <flag>-hashvalue = '1'.
+        WHEN 'false'. <flag>-hashvalue = '0'.
+      ENDCASE.
+    ENDIF.
+    READ TABLE parameters ASSIGNING <flag> WITH KEY hashkey = 'DEBUG'.
+    IF sy-subrc = 0.
+      CASE <flag>-hashvalue.
+        WHEN 'true'. <flag>-hashvalue = 'ON'.
+        WHEN 'false'. <flag>-hashvalue = 'OFF'.
+      ENDCASE.
+    ENDIF.
+    engine->calculate( it_param = parameters current_view = io->current_view( ) ).
+    result-replacement = engine->new_data->model_data.
+    engine->new_data->compare_delta( engine->output_data ).
+    result-delta = engine->new_data->model_data.
+  ENDMETHOD.
 
   METHOD execute.
  TRY.

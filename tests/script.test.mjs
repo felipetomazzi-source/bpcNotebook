@@ -96,5 +96,9 @@ test('editor completions fetch metadata with the current environment and resolve
   assert.equal(items[0].value,'time-EVDESCRIPTION');assert.deepEqual(calls.at(-1),{kind:'properties',model:'DEMREVID',dimension:'TIME'});
   items=await component.scriptSuggestions('model plan = DEMREVID', 'plan-TIME-');
   assert.equal(items[0].value,'plan-TIME-EVDESCRIPTION');
+  items=await component.scriptSuggestions('reference model refs = DEMREVID', 'refs-TIME-');
+  assert.equal(items[0].value,'refs-TIME-EVDESCRIPTION');
+  items=await component.scriptSuggestions('script version 2', '');
+  for(const keyword of ['dataset','index','ordered','fixture','decimal'])assert(items.some(i=>i.value===keyword));
   await assert.rejects(component.scriptSuggestions('', 'NOTAUTHORIZED-'),/BPC_AUTH/);
 });

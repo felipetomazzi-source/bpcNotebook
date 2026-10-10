@@ -1,0 +1,65 @@
+script version 2 compact
+// DEMREVID003 business-rule notes
+// Choose FFLAS mapping and monthly percentages
+// Look up FFLAS grouping by material first. Only when that grouping is absent use account grouping. Resolve
+// the monthly ratio within the corresponding material/account branch, preserving original precedence.
+// Check: Verify material-versus-account precedence and missing monthly percentages separately.
+// Complete working tables stay in SAP; displayed previews are not calculation inputs.
+
+// Read the complete INPUT_DATA working table retained by step_01.
+dataset input_data = "step_01" named "INPUT_DATA"
+// Read the complete NEW_DATA working table retained by step_08.
+dataset new_data = "step_08" named "NEW_DATA"
+// Read the complete SAP_REVENUES_CONSOL working table retained by step_03.
+dataset sap_revenues_consol = "step_03" named "SAP_REVENUES_CONSOL"
+empty fflas_month_ratio = new_data
+// Select the records required by this business block; retain their original signs and dimensions.
+filter filtered1 = input_data as f2 where is_in(f2.DEMREVID_KFS,["DEMREVID021","DEMREVID022"])
+// Preserve the original sort keys and tie behavior used by subsequent lookups.
+sort filtered1 unstable by MATCONN asc, ACCOUNT asc, DEMREVID_KFS asc, TIME asc
+for revenue in sap_revenues_consol
+// A missing lookup returns initial values; the following found checks and fallback branches control the outcome.
+// This lookup uses the default account member; keep its position in the original lookup waterfall.
+find found3 = filtered1 where MATCONN = revenue.MATCONN and ACCOUNT = "ACCOUNT_NA" and DEMREVID_KFS = "DEMREVID021" and TIME = revenue.TIME search binary missing initial
+if found(found3)
+copy row4 = revenue
+row4.DEMREVID_KFS = found3.DEMREVID_KFS
+row4.SIGNEDDATA = found3.SIGNEDDATA
+append new_data row row4
+find found5 = filtered1 where MATCONN = revenue.MATCONN and ACCOUNT = "ACCOUNT_NA" and DEMREVID_KFS = "DEMREVID022" and TIME = revenue.TIME search binary missing initial
+if found(found5)
+copy row6 = revenue
+row6.DEMREVID_KFS = found5.DEMREVID_KFS
+row6.SIGNEDDATA = found5.SIGNEDDATA
+append new_data row row6
+append fflas_month_ratio row row6
+end
+else
+// Look up the default material member; surrounding found checks determine when this branch is used.
+find found7 = filtered1 where MATCONN = "MATCONN_NA" and ACCOUNT = revenue.ACCOUNT and DEMREVID_KFS = "DEMREVID021" and TIME = revenue.TIME search binary missing initial
+if found(found7)
+copy row8 = revenue
+row8.DEMREVID_KFS = found7.DEMREVID_KFS
+row8.SIGNEDDATA = found7.SIGNEDDATA
+append new_data row row8
+find found9 = filtered1 where MATCONN = "MATCONN_NA" and ACCOUNT = revenue.ACCOUNT and DEMREVID_KFS = "DEMREVID022" and TIME = revenue.TIME search binary missing initial
+if found(found9)
+copy row10 = revenue
+row10.DEMREVID_KFS = found9.DEMREVID_KFS
+row10.SIGNEDDATA = found9.SIGNEDDATA
+append new_data row row10
+append fflas_month_ratio row row10
+end
+end
+end
+end
+// Retain complete native datasets for downstream stages; publication here does not post financial data.
+publish new_data as "NEW_DATA"
+publish fflas_month_ratio as "FFLAS_MONTH_RATIO"
+// Sum signed amounts using the stated include/exclude dimension list and the original grouping semantics.
+group group11 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
+// Fill initial dimensions with their original NA members; GEO_DRIVERS uses GDRVS_NA.
+defaults group11 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
+sort group11 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc
+// Display a bounded sample for review; source totals and complete SAP working datasets remain separate.
+show group11 as "CONTROL_TOTALS"

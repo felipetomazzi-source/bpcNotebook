@@ -1,0 +1,2233 @@
+{
+  "sourceCommit": "3e7f636c43d55b9ab98d5be1ec96ac192e2face8",
+  "at": "2026-10-09T01:20:08.196Z",
+  "system": "NPL",
+  "client": "001",
+  "notebookId": "E82AEA36D1571FD1B0EFCB12C2BD12AE",
+  "cases": [
+    {
+      "scenario": "standard",
+      "suppress": true,
+      "runId": "E82AEA36D1571FD1B0EFF289DA07D2F4",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "24",
+        "NOTEBOOK_ROWS": "24",
+        "UNCHANGED": "24",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "25",
+        "NOTEBOOK_ROWS": "25",
+        "UNCHANGED": "25",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "coverage": [
+        {
+          "KEY_FIGURE": "DEMREVID006",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID007",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID009",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID015",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID017",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID018",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID021",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID022",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID023",
+          "ROWS": "4"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID025",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID028",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID033",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID038",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID042",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID052",
+          "ROWS": "1"
+        }
+      ],
+      "zeroClears": 3,
+      "diagnostics": [
+        {
+          "ENVIRONMENT": "CH_PLANNING",
+          "MODEL": "DEMREVID",
+          "SCOPE": "reference",
+          "SOURCE": "fixture",
+          "SECURITY": "MEMBER_AUTH_ON; NO_QUERY",
+          "STATE": "succeeded",
+          "ROW_COUNT": "11",
+          "PACKAGES": "0",
+          "MAX_ROWS": "1000000",
+          "ERROR_CODE": ""
+        }
+      ],
+      "reads": [
+        {
+          "name": "ORIGINAL/READ_1/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "11",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        },
+        {
+          "name": "NOTEBOOK/READ_1/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "11",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        }
+      ],
+      "disappearedOldRatioCleared": true,
+      "filterDiagnostics": {
+        "schema": [
+          "purpose",
+          "dimension",
+          "member"
+        ],
+        "rows": [
+          {
+            "values": [
+              "effective filter",
+              "CATEGORY",
+              "Actual"
+            ]
+          },
+          {
+            "values": [
+              "effective filter",
+              "TIME",
+              "2025.007"
+            ]
+          },
+          {
+            "values": [
+              "effective filter",
+              "TIME",
+              "TIME_NA"
+            ]
+          },
+          {
+            "values": [
+              "output period",
+              "TIME",
+              "2025.007"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "2025.006"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "2025.008"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "TIME_NA"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "scenario": "standard",
+      "suppress": false,
+      "runId": "E82AEA36D1571FD1B0EFF535F6B892F8",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "25",
+        "NOTEBOOK_ROWS": "25",
+        "UNCHANGED": "25",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "26",
+        "NOTEBOOK_ROWS": "26",
+        "UNCHANGED": "26",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "coverage": [
+        {
+          "KEY_FIGURE": "DEMREVID006",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID007",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID009",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID015",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID017",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID018",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID021",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID022",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID023",
+          "ROWS": "4"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID025",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID028",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID033",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID038",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID042",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID047",
+          "ROWS": "2"
+        }
+      ],
+      "zeroClears": 3,
+      "diagnostics": [
+        {
+          "ENVIRONMENT": "CH_PLANNING",
+          "MODEL": "DEMREVID",
+          "SCOPE": "reference",
+          "SOURCE": "fixture",
+          "SECURITY": "MEMBER_AUTH_ON; NO_QUERY",
+          "STATE": "succeeded",
+          "ROW_COUNT": "11",
+          "PACKAGES": "0",
+          "MAX_ROWS": "1000000",
+          "ERROR_CODE": ""
+        }
+      ],
+      "reads": [
+        {
+          "name": "ORIGINAL/READ_1/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "11",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        },
+        {
+          "name": "NOTEBOOK/READ_1/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "11",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        }
+      ],
+      "disappearedOldRatioCleared": true,
+      "filterDiagnostics": {
+        "schema": [
+          "purpose",
+          "dimension",
+          "member"
+        ],
+        "rows": [
+          {
+            "values": [
+              "effective filter",
+              "CATEGORY",
+              "Actual"
+            ]
+          },
+          {
+            "values": [
+              "effective filter",
+              "TIME",
+              "2025.007"
+            ]
+          },
+          {
+            "values": [
+              "effective filter",
+              "TIME",
+              "TIME_NA"
+            ]
+          },
+          {
+            "values": [
+              "output period",
+              "TIME",
+              "2025.007"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "2025.006"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "2025.008"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "TIME_NA"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "scenario": "fallback",
+      "suppress": false,
+      "runId": "E82AEA36D1571FD1B0EFF7AC089152FA",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "19",
+        "NOTEBOOK_ROWS": "19",
+        "UNCHANGED": "19",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "20",
+        "NOTEBOOK_ROWS": "20",
+        "UNCHANGED": "20",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "coverage": [
+        {
+          "KEY_FIGURE": "DEMREVID006",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID007",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID009",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID015",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID017",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID018",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID021",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID022",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID023",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID025",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID028",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID033",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID038",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID042",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID047",
+          "ROWS": "2"
+        }
+      ],
+      "zeroClears": 3,
+      "diagnostics": [
+        {
+          "ENVIRONMENT": "CH_PLANNING",
+          "MODEL": "DEMREVID",
+          "SCOPE": "reference",
+          "SOURCE": "fixture",
+          "SECURITY": "MEMBER_AUTH_ON; NO_QUERY",
+          "STATE": "succeeded",
+          "ROW_COUNT": "9",
+          "PACKAGES": "0",
+          "MAX_ROWS": "1000000",
+          "ERROR_CODE": ""
+        }
+      ],
+      "reads": [
+        {
+          "name": "ORIGINAL/READ_1/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "9",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        },
+        {
+          "name": "NOTEBOOK/READ_1/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "9",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        }
+      ],
+      "disappearedOldRatioCleared": true,
+      "filterDiagnostics": {
+        "schema": [
+          "purpose",
+          "dimension",
+          "member"
+        ],
+        "rows": [
+          {
+            "values": [
+              "effective filter",
+              "CATEGORY",
+              "Actual"
+            ]
+          },
+          {
+            "values": [
+              "effective filter",
+              "TIME",
+              "2025.007"
+            ]
+          },
+          {
+            "values": [
+              "effective filter",
+              "TIME",
+              "TIME_NA"
+            ]
+          },
+          {
+            "values": [
+              "output period",
+              "TIME",
+              "2025.007"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "2025.006"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "2025.008"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "TIME_NA"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "scenario": "rounding",
+      "suppress": false,
+      "runId": "E82AEA36D1571FD1B0EFFAA6470CD304",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "25",
+        "NOTEBOOK_ROWS": "25",
+        "UNCHANGED": "25",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "26",
+        "NOTEBOOK_ROWS": "26",
+        "UNCHANGED": "26",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "coverage": [
+        {
+          "KEY_FIGURE": "DEMREVID006",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID007",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID009",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID015",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID017",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID018",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID021",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID022",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID023",
+          "ROWS": "4"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID025",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID028",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID033",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID038",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID042",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID047",
+          "ROWS": "2"
+        }
+      ],
+      "zeroClears": 3,
+      "diagnostics": [
+        {
+          "ENVIRONMENT": "CH_PLANNING",
+          "MODEL": "DEMREVID",
+          "SCOPE": "reference",
+          "SOURCE": "fixture",
+          "SECURITY": "MEMBER_AUTH_ON; NO_QUERY",
+          "STATE": "succeeded",
+          "ROW_COUNT": "11",
+          "PACKAGES": "0",
+          "MAX_ROWS": "1000000",
+          "ERROR_CODE": ""
+        }
+      ],
+      "reads": [
+        {
+          "name": "ORIGINAL/READ_1/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "11",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        },
+        {
+          "name": "NOTEBOOK/READ_1/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "11",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        }
+      ],
+      "disappearedOldRatioCleared": true,
+      "filterDiagnostics": {
+        "schema": [
+          "purpose",
+          "dimension",
+          "member"
+        ],
+        "rows": [
+          {
+            "values": [
+              "effective filter",
+              "CATEGORY",
+              "Actual"
+            ]
+          },
+          {
+            "values": [
+              "effective filter",
+              "TIME",
+              "2025.007"
+            ]
+          },
+          {
+            "values": [
+              "effective filter",
+              "TIME",
+              "TIME_NA"
+            ]
+          },
+          {
+            "values": [
+              "output period",
+              "TIME",
+              "2025.007"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "2025.006"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "2025.008"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "TIME_NA"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "scenario": "negative",
+      "suppress": false,
+      "runId": "E82AEA36D1571FD1B0EFFD25CADD9304",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "25",
+        "NOTEBOOK_ROWS": "25",
+        "UNCHANGED": "25",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "26",
+        "NOTEBOOK_ROWS": "26",
+        "UNCHANGED": "26",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "coverage": [
+        {
+          "KEY_FIGURE": "DEMREVID006",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID007",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID009",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID015",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID017",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID018",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID021",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID022",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID023",
+          "ROWS": "4"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID025",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID028",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID033",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID038",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID042",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID047",
+          "ROWS": "2"
+        }
+      ],
+      "zeroClears": 3,
+      "diagnostics": [
+        {
+          "ENVIRONMENT": "CH_PLANNING",
+          "MODEL": "DEMREVID",
+          "SCOPE": "reference",
+          "SOURCE": "fixture",
+          "SECURITY": "MEMBER_AUTH_ON; NO_QUERY",
+          "STATE": "succeeded",
+          "ROW_COUNT": "11",
+          "PACKAGES": "0",
+          "MAX_ROWS": "1000000",
+          "ERROR_CODE": ""
+        }
+      ],
+      "reads": [
+        {
+          "name": "ORIGINAL/READ_1/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "11",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        },
+        {
+          "name": "NOTEBOOK/READ_1/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "11",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        }
+      ],
+      "disappearedOldRatioCleared": true,
+      "filterDiagnostics": {
+        "schema": [
+          "purpose",
+          "dimension",
+          "member"
+        ],
+        "rows": [
+          {
+            "values": [
+              "effective filter",
+              "CATEGORY",
+              "Actual"
+            ]
+          },
+          {
+            "values": [
+              "effective filter",
+              "TIME",
+              "2025.007"
+            ]
+          },
+          {
+            "values": [
+              "effective filter",
+              "TIME",
+              "TIME_NA"
+            ]
+          },
+          {
+            "values": [
+              "output period",
+              "TIME",
+              "2025.007"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "2025.006"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "2025.008"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "TIME_NA"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "scenario": "carry",
+      "suppress": false,
+      "runId": "E82AEA36D1571FD1B0F0006FEFE4D30B",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "27",
+        "NOTEBOOK_ROWS": "27",
+        "UNCHANGED": "27",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "28",
+        "NOTEBOOK_ROWS": "28",
+        "UNCHANGED": "28",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "coverage": [
+        {
+          "KEY_FIGURE": "DEMREVID006",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID007",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID009",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID015",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID017",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID018",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID021",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID022",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID023",
+          "ROWS": "4"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID025",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID028",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID033",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID038",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID040",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID041",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID042",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID047",
+          "ROWS": "2"
+        }
+      ],
+      "zeroClears": 3,
+      "diagnostics": [
+        {
+          "ENVIRONMENT": "CH_PLANNING",
+          "MODEL": "DEMREVID",
+          "SCOPE": "reference",
+          "SOURCE": "fixture",
+          "SECURITY": "MEMBER_AUTH_ON; NO_QUERY",
+          "STATE": "succeeded",
+          "ROW_COUNT": "12",
+          "PACKAGES": "0",
+          "MAX_ROWS": "1000000",
+          "ERROR_CODE": ""
+        }
+      ],
+      "reads": [
+        {
+          "name": "ORIGINAL/READ_1/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "12",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        },
+        {
+          "name": "ORIGINAL/READ_2/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "1",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        },
+        {
+          "name": "ORIGINAL/READ_3/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "1",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        },
+        {
+          "name": "ORIGINAL/READ_4/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "0",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        },
+        {
+          "name": "NOTEBOOK/READ_1/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "12",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        },
+        {
+          "name": "NOTEBOOK/READ_2/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "1",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        },
+        {
+          "name": "NOTEBOOK/READ_3/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "1",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        },
+        {
+          "name": "NOTEBOOK/READ_4/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "0",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        }
+      ],
+      "disappearedOldRatioCleared": true,
+      "filterDiagnostics": {
+        "schema": [
+          "purpose",
+          "dimension",
+          "member"
+        ],
+        "rows": [
+          {
+            "values": [
+              "effective filter",
+              "CATEGORY",
+              "Actual"
+            ]
+          },
+          {
+            "values": [
+              "effective filter",
+              "TIME",
+              "2025.007"
+            ]
+          },
+          {
+            "values": [
+              "effective filter",
+              "TIME",
+              "TIME_NA"
+            ]
+          },
+          {
+            "values": [
+              "output period",
+              "TIME",
+              "2025.007"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "2025.006"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "2025.008"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "TIME_NA"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "scenario": "carry",
+      "suppress": true,
+      "runId": "E82AEA36D1571FD1B0F0035EC617D30D",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "26",
+        "NOTEBOOK_ROWS": "26",
+        "UNCHANGED": "26",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "27",
+        "NOTEBOOK_ROWS": "27",
+        "UNCHANGED": "27",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "coverage": [
+        {
+          "KEY_FIGURE": "DEMREVID006",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID007",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID009",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID015",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID017",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID018",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID021",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID022",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID023",
+          "ROWS": "4"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID025",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID028",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID033",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID038",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID040",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID041",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID042",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID052",
+          "ROWS": "1"
+        }
+      ],
+      "zeroClears": 3,
+      "diagnostics": [
+        {
+          "ENVIRONMENT": "CH_PLANNING",
+          "MODEL": "DEMREVID",
+          "SCOPE": "reference",
+          "SOURCE": "fixture",
+          "SECURITY": "MEMBER_AUTH_ON; NO_QUERY",
+          "STATE": "succeeded",
+          "ROW_COUNT": "12",
+          "PACKAGES": "0",
+          "MAX_ROWS": "1000000",
+          "ERROR_CODE": ""
+        }
+      ],
+      "reads": [
+        {
+          "name": "ORIGINAL/READ_1/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "12",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        },
+        {
+          "name": "ORIGINAL/READ_2/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "1",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        },
+        {
+          "name": "ORIGINAL/READ_3/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "1",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        },
+        {
+          "name": "ORIGINAL/READ_4/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "0",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        },
+        {
+          "name": "NOTEBOOK/READ_1/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "12",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        },
+        {
+          "name": "NOTEBOOK/READ_2/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "1",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        },
+        {
+          "name": "NOTEBOOK/READ_3/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "1",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        },
+        {
+          "name": "NOTEBOOK/READ_4/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "0",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        }
+      ],
+      "disappearedOldRatioCleared": true,
+      "filterDiagnostics": {
+        "schema": [
+          "purpose",
+          "dimension",
+          "member"
+        ],
+        "rows": [
+          {
+            "values": [
+              "effective filter",
+              "CATEGORY",
+              "Actual"
+            ]
+          },
+          {
+            "values": [
+              "effective filter",
+              "TIME",
+              "2025.007"
+            ]
+          },
+          {
+            "values": [
+              "effective filter",
+              "TIME",
+              "TIME_NA"
+            ]
+          },
+          {
+            "values": [
+              "output period",
+              "TIME",
+              "2025.007"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "2025.006"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "2025.008"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "TIME_NA"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "scenario": "hsns",
+      "suppress": false,
+      "runId": "E82AEA36D1571FD1B0F0078BFF7E9318",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "42",
+        "NOTEBOOK_ROWS": "42",
+        "UNCHANGED": "42",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "43",
+        "NOTEBOOK_ROWS": "43",
+        "UNCHANGED": "43",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "coverage": [
+        {
+          "KEY_FIGURE": "DEMREVID006",
+          "ROWS": "4"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID007",
+          "ROWS": "3"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID009",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID015",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID017",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID018",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID021",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID022",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID023",
+          "ROWS": "11"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID025",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID028",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID033",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID038",
+          "ROWS": "4"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID042",
+          "ROWS": "3"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID047",
+          "ROWS": "4"
+        }
+      ],
+      "zeroClears": 6,
+      "diagnostics": [
+        {
+          "ENVIRONMENT": "CH_PLANNING",
+          "MODEL": "DEMREVID",
+          "SCOPE": "reference",
+          "SOURCE": "fixture",
+          "SECURITY": "MEMBER_AUTH_ON; NO_QUERY",
+          "STATE": "succeeded",
+          "ROW_COUNT": "14",
+          "PACKAGES": "0",
+          "MAX_ROWS": "1000000",
+          "ERROR_CODE": ""
+        }
+      ],
+      "reads": [
+        {
+          "name": "ORIGINAL/READ_1/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "14",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        },
+        {
+          "name": "NOTEBOOK/READ_1/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "14",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        }
+      ],
+      "disappearedOldRatioCleared": true,
+      "filterDiagnostics": {
+        "schema": [
+          "purpose",
+          "dimension",
+          "member"
+        ],
+        "rows": [
+          {
+            "values": [
+              "effective filter",
+              "CATEGORY",
+              "Actual"
+            ]
+          },
+          {
+            "values": [
+              "effective filter",
+              "TIME",
+              "2025.007"
+            ]
+          },
+          {
+            "values": [
+              "effective filter",
+              "TIME",
+              "TIME_NA"
+            ]
+          },
+          {
+            "values": [
+              "output period",
+              "TIME",
+              "2025.007"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "2025.006"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "2025.008"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "TIME_NA"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "scenario": "hsns",
+      "suppress": true,
+      "runId": "E82AEA36D1571FD1B0F009E712BD9318",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "39",
+        "NOTEBOOK_ROWS": "39",
+        "UNCHANGED": "39",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "40",
+        "NOTEBOOK_ROWS": "40",
+        "UNCHANGED": "40",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "coverage": [
+        {
+          "KEY_FIGURE": "DEMREVID006",
+          "ROWS": "4"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID007",
+          "ROWS": "3"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID009",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID015",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID017",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID018",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID021",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID022",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID023",
+          "ROWS": "11"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID025",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID028",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID033",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID038",
+          "ROWS": "4"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID042",
+          "ROWS": "3"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID052",
+          "ROWS": "1"
+        }
+      ],
+      "zeroClears": 5,
+      "diagnostics": [
+        {
+          "ENVIRONMENT": "CH_PLANNING",
+          "MODEL": "DEMREVID",
+          "SCOPE": "reference",
+          "SOURCE": "fixture",
+          "SECURITY": "MEMBER_AUTH_ON; NO_QUERY",
+          "STATE": "succeeded",
+          "ROW_COUNT": "14",
+          "PACKAGES": "0",
+          "MAX_ROWS": "1000000",
+          "ERROR_CODE": ""
+        }
+      ],
+      "reads": [
+        {
+          "name": "ORIGINAL/READ_1/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "14",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        },
+        {
+          "name": "NOTEBOOK/READ_1/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "14",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        }
+      ],
+      "disappearedOldRatioCleared": true,
+      "filterDiagnostics": {
+        "schema": [
+          "purpose",
+          "dimension",
+          "member"
+        ],
+        "rows": [
+          {
+            "values": [
+              "effective filter",
+              "CATEGORY",
+              "Actual"
+            ]
+          },
+          {
+            "values": [
+              "effective filter",
+              "TIME",
+              "2025.007"
+            ]
+          },
+          {
+            "values": [
+              "effective filter",
+              "TIME",
+              "TIME_NA"
+            ]
+          },
+          {
+            "values": [
+              "output period",
+              "TIME",
+              "2025.007"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "2025.006"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "2025.008"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "TIME_NA"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "scenario": "standard",
+      "suppress": true,
+      "runId": "E82AEA36D1571FD1B0F00C2E7E4C131B",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "replacement": {
+        "NAME": "REPLACEMENT",
+        "ORIGINAL_ROWS": "24",
+        "NOTEBOOK_ROWS": "24",
+        "UNCHANGED": "24",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "delta": {
+        "NAME": "DELTA",
+        "ORIGINAL_ROWS": "25",
+        "NOTEBOOK_ROWS": "25",
+        "UNCHANGED": "25",
+        "ADDED": "0",
+        "MISSING": "0",
+        "CHANGED": "0"
+      },
+      "coverage": [
+        {
+          "KEY_FIGURE": "DEMREVID006",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID007",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID009",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID015",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID017",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID018",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID021",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID022",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID023",
+          "ROWS": "4"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID025",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID028",
+          "ROWS": "1"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID033",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID038",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID042",
+          "ROWS": "2"
+        },
+        {
+          "KEY_FIGURE": "DEMREVID052",
+          "ROWS": "1"
+        }
+      ],
+      "zeroClears": 3,
+      "diagnostics": [
+        {
+          "ENVIRONMENT": "CH_PLANNING",
+          "MODEL": "DEMREVID",
+          "SCOPE": "reference",
+          "SOURCE": "fixture",
+          "SECURITY": "MEMBER_AUTH_ON; NO_QUERY",
+          "STATE": "succeeded",
+          "ROW_COUNT": "11",
+          "PACKAGES": "0",
+          "MAX_ROWS": "1000000",
+          "ERROR_CODE": ""
+        }
+      ],
+      "reads": [
+        {
+          "name": "ORIGINAL/READ_1/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "11",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        },
+        {
+          "name": "NOTEBOOK/READ_1/SUMMARY",
+          "rows": [
+            {
+              "environment": "CH_PLANNING",
+              "model": "DEMREVID",
+              "scope": "reference",
+              "source": "fixture",
+              "security": "MEMBER_AUTH_ON; NO_QUERY",
+              "state": "succeeded",
+              "row_count": "11",
+              "packages": "0",
+              "max_rows": "1000000",
+              "error_code": ""
+            }
+          ]
+        }
+      ],
+      "disappearedOldRatioCleared": true,
+      "filterDiagnostics": {
+        "schema": [
+          "purpose",
+          "dimension",
+          "member"
+        ],
+        "rows": [
+          {
+            "values": [
+              "effective filter",
+              "CATEGORY",
+              "Actual"
+            ]
+          },
+          {
+            "values": [
+              "effective filter",
+              "TIME",
+              "2025.007"
+            ]
+          },
+          {
+            "values": [
+              "effective filter",
+              "TIME",
+              "TIME_NA"
+            ]
+          },
+          {
+            "values": [
+              "output period",
+              "TIME",
+              "2025.007"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "2025.006"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "2025.008"
+            ]
+          },
+          {
+            "values": [
+              "declared reference period",
+              "TIME",
+              "TIME_NA"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "businessEquivalent": false,
+  "originalBranch": "codex/SSNG-3218-npl-skip-bw-enrichment",
+  "originalCommit": "c3b722f",
+  "comparisonScope": "All 20 dimensions and native SIGNEDDATA in complete replacement/delta tables; no tolerance"
+}

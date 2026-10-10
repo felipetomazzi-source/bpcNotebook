@@ -50,10 +50,34 @@ export class Engine {
       this.persist();
     }
   }
+  organization(user) {
+    const value=copy(this.db.organizations?.[user] || {revision:0,folders:[],memberships:[]});
+    value.memberships=value.memberships.filter(m=>this.db.notebooks[m.notebookId] && !this.db.notebooks[m.notebookId].deletedAt);
+    return value;
+  }
+  saveOrganization(body,user) {
+    const old=this.organization(user),next=copy(body);
+    if(next.expectedRevision!==old.revision) fail(409,'CONFLICT','Folders changed; reload organization');
+    next.folders ||= [];next.memberships ||= [];
+    if(next.folders.length>200||next.memberships.length>10000) fail(400,'FOLDER_LIMIT','Folder organization exceeds limits');
+    const ids=new Set(),names=new Set(),notebooks=new Set();
+    for(const f of next.folders){
+      if(!/^[A-Za-z0-9_-]{1,64}$/.test(f.id)||typeof f.name!=='string'||!f.name.trim()||f.name.length>80||/[\x00-\x1f\x7f]/.test(f.name)) fail(400,'FOLDER','Invalid folder');
+      const name=f.name.trim().replace(/ +/g,' ').toUpperCase();
+      if(ids.has(f.id)||names.has(name)) fail(400,'FOLDER','Duplicate folder ID or name');ids.add(f.id);names.add(name);
+    }
+    for(const f of old.folders) if(!ids.has(f.id)&&old.memberships.some(m=>m.folderId===f.id)) fail(409,'FOLDER_NOT_EMPTY','Move notebooks out before removing a folder');
+    for(const m of next.memberships){
+      if(!ids.has(m.folderId)||notebooks.has(m.notebookId)) fail(400,'FOLDER','Invalid membership');
+      this.owned('notebooks',m.notebookId,user);notebooks.add(m.notebookId);
+    }
+    delete next.expectedRevision;next.revision=old.revision+1;
+    this.db.organizations ||= {};this.db.organizations[user]=next;this.persist();return copy(next);
+  }
   persist() {
     if (!this.file) return;
     mkdirSync(dirname(this.file), {recursive: true});
-    writeFileSync(this.file + '.tmp', JSON.stringify(this.db)); renameSync(this.file + '.tmp', this.file);
+    writeFileSync(this.file + '.tmp', JSON.stringify(this.db), 'utf8'); renameSync(this.file + '.tmp', this.file);
   }
   audit(user, action, id) { this.db.audit.push({user, action, id, at: now()}); }
   owned(collection, id, user, includeDeleted = false) {
@@ -66,6 +90,7 @@ export class Engine {
     if (typeof n.title !== 'string' || !n.title.trim() || n.title.length > 120) fail(400, 'TITLE', 'Title is required (max 120 characters)');
     if (!Array.isArray(n.cells) || n.cells.length > 30) fail(400, 'CELL_LIMIT', 'At most 30 cells per notebook');
     if (!Array.isArray(n.inputs) || n.inputs.length > 50) fail(400, 'INPUTS', 'At most 50 typed inputs');
+    if (n.explanation !== undefined && (typeof n.explanation !== 'string' || n.explanation.length > 8000)) fail(400, 'EXPLANATION', 'Setup explanation exceeds 8000 characters');
     const names = new Set();
     for (const p of n.inputs) {
       if (!/^[a-zA-Z][a-zA-Z0-9_]{0,29}$/.test(p.name) || names.has(p.name)) fail(400, 'INPUT_NAME', 'Input names must be unique identifiers');
@@ -76,35 +101,75 @@ export class Engine {
     }
     const seen = new Set();
     for (const c of n.cells) {
+      if (c.explanation !== undefined && (typeof c.explanation !== 'string' || c.explanation.length > 4000)) fail(400, 'EXPLANATION', 'Stage explanation exceeds 4000 characters');
       if (!/^[a-zA-Z][a-zA-Z0-9_-]{0,29}$/.test(c.id) || seen.has(c.id)) fail(400, 'CELL_ID', 'Cell IDs must be unique identifiers');
-      if (typeof c.source !== 'string' || c.source.length > 60000) fail(400, 'SOURCE', 'Source must be text (max 60 KB)');
+      const sourceLimit = typeof c.source === 'string' && c.source.startsWith('* BPC Notebook Script v2 compact\n') ? 120000 : 60000;
+      if (typeof c.source !== 'string' || c.source.length > sourceLimit) fail(400, 'SOURCE', `Source must be text (max ${sourceLimit} characters)`);
       if (typeof c.title !== 'string' || c.title.length > 120) fail(400, 'CELL_TITLE', 'Cell title is required');
       if (!Array.isArray(c.dependencies) || new Set(c.dependencies).size !== c.dependencies.length || c.dependencies.some(d => !seen.has(d)))
         fail(400, 'DEPENDENCY_ORDER', 'Dependencies must be unique and precede their consumer');
       seen.add(c.id);
     }
   }
+  identityKey(data) { return hash([data.environment || '', data.model || '', data.technicalName]); }
+  validateIdentity(data) {
+    if (!/^[A-Z][A-Z0-9_]{0,29}$/.test(data.technicalName || '')) fail(400,'TECHNICAL_NAME','Technical name: 1 to 30 uppercase letters, digits or underscores; start with a letter');
+    if (typeof data.description !== 'string' || !data.description.trim() || data.description.length > 240 || /[\x00-\x1f\x7f]/.test(data.description)) fail(400,'DESCRIPTION','Single-line description required (maximum 240 characters)');
+  }
+  reserveIdentity(id,data) {
+    this.db.identityNames ||= {};
+    const key=this.identityKey(data), other=this.db.identityNames[key];
+    if(other && other!==id) fail(409,'NAME_TAKEN','Technical name is reserved in this environment/model');
+    this.db.identityNames[key]=id;
+  }
+  identity(id,user) { this.owned('notebooks',id,user);return copy(this.db.identities?.[id] || {technicalName:'',description:'',identityRevision:0}); }
+  view(id,user) { return {...this.get(id,user),...this.identity(id,user)}; }
+  assignIdentity(data,user) {
+    const n=this.owned('notebooks',data.notebookId,user), old=this.identity(n.id,user);
+    if(n.current!==data.expectedRevision || old.identityRevision!==data.expectedIdentityRevision) fail(409,'CONFLICT','Notebook or identity changed; reopen before assigning');
+    this.validateIdentity(data);
+    if(old.technicalName && old.technicalName!==data.technicalName) fail(409,'NAME_IMMUTABLE','Assigned technical names cannot be changed');
+    this.reserveIdentity(n.id,{...n.versions.at(-1),technicalName:data.technicalName});
+    const next={technicalName:data.technicalName,description:data.description,identityRevision:old.identityRevision+1};
+    this.db.identities ||= {};this.db.identities[n.id]=next;this.persist();return copy(next);
+  }
+  resolveIdentity(data,user) {
+    if(!Number.isInteger(data.approvedRevision) || data.approvedRevision<1) fail(400,'APPROVED_REVISION','An explicit saved revision is required');
+    const id=this.db.identityNames?.[this.identityKey(data)], n=this.owned('notebooks',id,user);
+    const version=n.versions.find(v=>v.revision===data.approvedRevision);
+    if(!version) fail(409,'INTEGRITY','Requested immutable revision is missing');
+    if((version.environment || '')!==(data.environment || '') || (version.model || '')!==(data.model || '') || this.identity(id,user).technicalName!==data.technicalName) fail(409,'IDENTITY_SCOPE','Saved revision does not match identity scope');
+    return {...copy(version),...this.identity(id,user)};
+  }
   create(data, user) {
-    const id = randomUUID(); this.validateDefinition(data);
+    data={...data,title:data.title || data.technicalName};
+    const id = randomUUID(); this.validateDefinition(data); this.validateIdentity(data);
+    this.reserveIdentity(id,data);
     const n = {id, owner: user, versions: [], current: 0}; this.db.notebooks[id] = n;
-    return this.save(id, {...data, expectedRevision: 0}, user);
+    this.db.identities ||= {}; this.db.identities[id]={technicalName:data.technicalName,description:data.description,identityRevision:1};
+    this.save(id, {...data, expectedRevision: 0}, user); return this.view(id,user);
   }
   save(id, data, user) {
     const n = this.owned('notebooks', id, user); this.validateDefinition(data);
     if (data.expectedRevision !== n.current) fail(409, 'CONFLICT', 'Notebook changed; reload before saving');
+    const identity=this.identity(id,user);
+    if(identity.technicalName){
+      if(data.technicalName && data.technicalName!==identity.technicalName) fail(409,'NAME_IMMUTABLE','Assigned technical names cannot be changed');
+      this.reserveIdentity(id,{...data,technicalName:identity.technicalName});
+    }
     const old = n.versions.at(-1);
     const cells = data.cells.map(c => {
       const previous = n.versions.flatMap(v=>v.cells).filter(p=>p.id===c.id).at(-1);
       const checksum = hash(c.source);
       return {...copy(c), checksum, sourceVersion: (previous?.sourceVersion || 0) + (previous?.checksum === checksum ? 0 : 1)};
     });
-    const version = {id, title: data.title.trim(), environment: data.environment || '', model: data.model || '', inputs: copy(data.inputs), cells,
+    const version = {id, explanation: data.explanation || '', title: data.title.trim(), environment: data.environment || '', model: data.model || '', inputs: copy(data.inputs), cells,
       revision: n.current + 1, author: user, savedAt: now()};
     version.checksum = hash(version); n.versions.push(version); n.current++;
     this.audit(user, 'SAVE', id); this.persist(); return this.get(id, user);
   }
   list(user) { return Object.values(this.db.notebooks).filter(n => n.owner === user && !n.deletedAt).map(n => {
-    const v = n.versions.at(-1); return {id: n.id, title: v.title, environment: v.environment, model: v.model, revision: v.revision, savedAt: v.savedAt};
+    const v = n.versions.at(-1); return {id: n.id, ...this.identity(n.id,user), title: v.title, explanation: v.explanation, environment: v.environment, model: v.model, revision: v.revision, savedAt: v.savedAt};
   }); }
   fingerprint(n, cellId) {
     const c = n.cells.find(c => c.id === cellId);

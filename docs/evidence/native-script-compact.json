@@ -1,0 +1,124 @@
+{
+  "at": "2026-10-10T03:44:55.544Z",
+  "financialPosting": false,
+  "sourceCommit": "8809e42195ae81b69f65611bd4f9136a23ad09ea",
+  "cases": [
+    {
+      "name": "all native table operations in compact mode",
+      "runId": "E82AEA36D1571FE1B18B9EAE967F2C06",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "messages": [
+        {
+          "cellId": "native",
+          "severity": "Information",
+          "text": "NATIVE_SCRIPT_OK"
+        }
+      ],
+      "sourceCharacters": [
+        26641
+      ]
+    },
+    {
+      "name": "generic defaults and scalar lists",
+      "runId": "E82AEA36D1571FE1B18B9EF622972C06",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "messages": [],
+      "sourceCharacters": [
+        9281
+      ]
+    },
+    {
+      "name": "native numeric conversion oracle",
+      "runId": "E82AEA36D1571FE1B18B9F4256AD8C06",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "messages": [
+        {
+          "cellId": "oracle",
+          "severity": "Information",
+          "text": "NATIVE_NUM03_ORACLE_OK: 11 boundaries x packed/decfloat34"
+        }
+      ],
+      "sourceCharacters": [
+        1817
+      ]
+    },
+    {
+      "name": "larger compact source save compile run reopen",
+      "runId": "E82AEA36D1571FE1B18B9F6EE9CB0C06",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "messages": [],
+      "sourceCharacters": [
+        91070
+      ]
+    },
+    {
+      "name": "empty schema validates default fields",
+      "runId": "E82AEA36D1571FE1B18B9FC86A3A4C06",
+      "state": "failed",
+      "error": {
+        "code": "SCRIPT_FIELD",
+        "message": "Unknown or duplicate field UNKNOWN"
+      },
+      "messages": [],
+      "sourceCharacters": [
+        1008
+      ]
+    },
+    {
+      "name": "defaults validate native conversion before mutation",
+      "runId": "E82AEA36D1571FE1B18B9FF00F398C06",
+      "state": "failed",
+      "error": {
+        "code": "SCRIPT_DEFAULTS",
+        "message": "The argument 'bad' cannot be interpreted as a number"
+      },
+      "messages": [],
+      "sourceCharacters": [
+        1049
+      ]
+    },
+    {
+      "name": "empty separator rejected",
+      "runId": "E82AEA36D1571FE1B18BA03AD734CC06",
+      "state": "failed",
+      "error": {
+        "code": "SCRIPT_LIST",
+        "message": "Split separator must be nonempty"
+      },
+      "messages": [],
+      "sourceCharacters": [
+        787
+      ]
+    },
+    {
+      "name": "numeric width rejected",
+      "runId": "E82AEA36D1571FE1B18BA0567FC5AC06",
+      "state": "failed",
+      "error": {
+        "code": "SCRIPT_NUMERIC_TEXT",
+        "message": "Native NUMC width must be 1-255"
+      },
+      "messages": [],
+      "sourceCharacters": [
+        814
+      ]
+    }
+  ],
+  "passed": true
+}

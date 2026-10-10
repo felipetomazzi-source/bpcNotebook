@@ -1,0 +1,84 @@
+{
+  "at": "2026-10-10T03:41:23.058Z",
+  "system": "NPL",
+  "client": "001",
+  "notebookId": "E82AEA36D1571FE1B18B8D2041D88BF2",
+  "archived": true,
+  "kind": "initial ordinary-v2 compilation before compact follow-up",
+  "financialPosting": false,
+  "executionPerformed": false,
+  "cells": [
+    {
+      "id": "step_02",
+      "diagnostics": []
+    },
+    {
+      "id": "step_03",
+      "diagnostics": []
+    },
+    {
+      "id": "step_04",
+      "diagnostics": []
+    },
+    {
+      "id": "step_05",
+      "diagnostics": []
+    },
+    {
+      "id": "step_07",
+      "diagnostics": []
+    },
+    {
+      "id": "step_08",
+      "diagnostics": []
+    },
+    {
+      "id": "step_09",
+      "diagnostics": []
+    },
+    {
+      "id": "step_10",
+      "diagnostics": []
+    },
+    {
+      "id": "step_11",
+      "diagnostics": []
+    },
+    {
+      "id": "step_12",
+      "diagnostics": []
+    },
+    {
+      "id": "step_13",
+      "diagnostics": []
+    },
+    {
+      "id": "step_14",
+      "diagnostics": []
+    },
+    {
+      "id": "step_15",
+      "diagnostics": []
+    },
+    {
+      "id": "step_18",
+      "diagnostics": []
+    },
+    {
+      "id": "step_19",
+      "diagnostics": []
+    },
+    {
+      "id": "reconcile",
+      "diagnostics": []
+    }
+  ],
+  "pending": [
+    "step_01",
+    "step_06",
+    "step_16",
+    "step_17",
+    "step_20"
+  ],
+  "businessEquivalent": false
+}
