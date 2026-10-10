@@ -573,7 +573,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
       TRY.
         zcl_bn_bpc=>begin_cell_cache( ).
         PERFORM execute IN PROGRAM (pool) USING context.
-        context->check_budget( ).
+        context->check_budget( force_poll = abap_true ).
         zcl_bn_bpc=>end_cell_cache( ).
       CLEANUP.
         zcl_bn_bpc=>end_cell_cache( ).
@@ -701,7 +701,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
           TRY.
             zcl_bn_bpc=>begin_cell_cache( ).
             PERFORM execute IN PROGRAM (pool) USING context.
-            context->check_budget( ).
+            context->check_budget( force_poll = abap_true ).
             zcl_bn_bpc=>end_cell_cache( ).
           CLEANUP.
             zcl_bn_bpc=>end_cell_cache( ).

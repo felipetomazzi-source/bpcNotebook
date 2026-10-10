@@ -52,7 +52,7 @@ CLASS zcl_bn_context DEFINITION PUBLIC FINAL CREATE PUBLIC.
     METHODS record_read IMPORTING diagnostic TYPE ty_read RAISING zcx_bn.
     METHODS checkpoint IMPORTING name TYPE string state TYPE string
       inputs TYPE zcl_bn_types=>tt_ids OPTIONAL outputs TYPE zcl_bn_types=>tt_ids OPTIONAL RAISING zcx_bn.
-    METHODS check_budget RAISING zcx_bn.
+    METHODS check_budget IMPORTING force_poll TYPE abap_bool DEFAULT abap_false RAISING zcx_bn.
     METHODS check_data_snapshot RAISING zcx_bn.
     METHODS check_rows IMPORTING count TYPE i RAISING zcx_bn.
     METHODS check_working_bytes IMPORTING count TYPE int8 RAISING zcx_bn.
@@ -113,6 +113,8 @@ CLASS zcl_bn_context DEFINITION PUBLIC FINAL CREATE PUBLIC.
     DATA mt_fixtures TYPE tt_fixtures.
     DATA mv_run_id TYPE string.
     DATA mv_started TYPE timestampl.
+    DATA mv_cancel_polled TYPE timestampl.
+    DATA mv_cancel_revision TYPE i.
     DATA mv_seconds TYPE i VALUE 600.
     DATA mv_step_started TYPE i.
     DATA mv_active_step TYPE string.
@@ -143,14 +145,22 @@ CLASS zcl_bn_context IMPLEMENTATION.
     IF mv_seconds < 1 OR mv_seconds > 7200 OR cl_abap_tstmp=>subtract( tstmp1 = stamp tstmp2 = mv_started ) > mv_seconds.
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'TIMEOUT' detail = 'Calculation resource deadline exceeded'.
     ENDIF.
-    IF mv_run_id IS NOT INITIAL AND zcl_bn_store=>current( kind = 'R' id = mv_run_id ) > 0.
-      DATA json TYPE string. json = zcl_bn_store=>read( kind = 'R' id = mv_run_id ).
+    IF mv_run_id IS INITIAL. RETURN. ENDIF.
+    IF force_poll = abap_false AND mv_cancel_polled IS NOT INITIAL AND
+       cl_abap_tstmp=>subtract( tstmp1 = stamp tstmp2 = mv_cancel_polled ) < '0.5'.
+      RETURN.
+    ENDIF.
+    DATA(revision) = zcl_bn_store=>current( kind = 'R' id = mv_run_id ).
+    IF revision > 0 AND revision <> mv_cancel_revision.
+      DATA json TYPE string. json = zcl_bn_store=>read( kind = 'R' id = mv_run_id revision = revision ).
       DATA run TYPE zcl_bn_types=>ty_run.
       /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( json ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = run ).
       IF run-cancel_requested = abap_true.
         RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'CANCELLED' detail = 'Cancellation requested at a calculation boundary'.
       ENDIF.
+      mv_cancel_revision = revision.
     ENDIF.
+    mv_cancel_polled = stamp.
   ENDMETHOD.
   METHOD check_rows.
     DATA maximum TYPE i VALUE 1000000.
@@ -168,7 +178,7 @@ CLASS zcl_bn_context IMPLEMENTATION.
     IF count MOD 1000 = 0. check_budget( ). ENDIF.
   ENDMETHOD.
   METHOD checkpoint.
-    check_budget( ).
+    check_budget( force_poll = abap_true ).
     IF state = 'running'.
       IF mv_active_step IS NOT INITIAL OR line_exists( checkpoints[ name = name ] ).
         RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'CHECKPOINT' detail = 'Overlapping or duplicate step'.
@@ -279,7 +289,7 @@ CLASS zcl_bn_context IMPLEMENTATION.
     IF result_rows IS BOUND OR name IS INITIAL OR ( kind <> 'replacement' AND kind <> 'delta' ).
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'RESULT_CONTRACT' detail = 'Publish one explicitly named replacement or delta result'.
     ENDIF.
-    check_budget( ). check_rows( lines( rows ) ).
+    check_budget( force_poll = abap_true ). check_rows( lines( rows ) ).
     zcl_bn_bpc=>describe_table( table = REF #( rows ) source = 'allocation' ).
     DATA(descr) = CAST cl_abap_tabledescr( cl_abap_tabledescr=>describe_by_data( rows ) ).
     CREATE DATA result_rows TYPE HANDLE descr.
@@ -389,7 +399,7 @@ CLASS zcl_bn_context IMPLEMENTATION.
     IF line_exists( artifacts[ name = name ] ) OR lines( artifacts ) >= 100.
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_NAME' detail = 'Publish each dataset once per cell; maximum 100 datasets'.
     ENDIF.
-    check_budget( ). check_rows( mv_dataset_rows + lines( rows ) ).
+    check_budget( force_poll = abap_true ). check_rows( mv_dataset_rows + lines( rows ) ).
     DATA(packet) = zcl_bn_dataset=>freeze( name = name rows = rows max_bytes = dataset_budget( ) - mv_dataset_bytes ).
     reserve_dataset( row_count = packet-row_count byte_count = nmax( val1 = packet-byte_count val2 = packet-memory_bytes ) ).
     IF environment IS NOT INITIAL.
