@@ -70,10 +70,10 @@ CLASS zcl_bn_table IMPLEMENTATION.
   METHOD signed_boundary.
     DATA(structure) = shape( rows ). DATA(components) = structure->get_components( ).
     READ TABLE components INTO DATA(amount) WITH KEY name = 'SIGNEDDATA'.
-    DATA(native) = cl_abap_typedescr=>describe_by_name( 'UJ_SIGNEDDATA' ).
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'SCRIPT_BOUNDARY' detail = 'Result requires native SIGNEDDATA'.
     ENDIF.
+    DATA(native) = cl_abap_typedescr=>describe_by_name( 'UJ_SIGNEDDATA' ).
     IF amount-type->type_kind <> native->type_kind OR amount-type->length <> native->length OR
         amount-type->decimals <> native->decimals OR native->decimals <> 7.
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'SCRIPT_BOUNDARY' detail = 'Explicitly cast SIGNEDDATA to signed at the calculation boundary'.

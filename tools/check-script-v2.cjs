@@ -2,7 +2,9 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto'),api=require('./bpc-api.cjs');
 let Script;vm.runInNewContext(fs.readFileSync('webapp/model/Script.js','utf8'),{sap:{ui:{define:(_,f)=>Script=f()}},TextEncoder,TextDecoder,btoa,atob});
 const testSource=fs.readFileSync('tests/script-v2.test.mjs','utf8').match(/export const nativeScript = `([\s\S]*?)`;/)[1];
-const evidence={at:new Date().toISOString(),financialPosting:false,cases:[],passed:false};
+const evidence={at:new Date().toISOString(),system:'NPL',client:process.env.SAP_CLIENT,
+ sourceCommit:require('node:child_process').execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),
+ financialPosting:false,cases:[],passed:false};
 async function run(n,scope='all',cellId=''){
  let r=await api('/runs',{notebookId:n.id,expectedRevision:n.revision,scope,cellId,idempotencyKey:randomUUID()});
  for(let i=0;i<240&&['running','queued'].includes(r.state);i++){await new Promise(resolve=>setTimeout(resolve,500));r=await api('/run?id='+r.id,null,'GET');}
@@ -12,8 +14,27 @@ async function check(name,cells,expect='succeeded',inputs=[],context={}){
  const n=await api('/notebooks',{...context,title:'Platform Script v2 '+name,explanation:'Controlled in-memory verification; no financial posting.',inputs:[{name:'PREVIEW_ROWS',type:'number',value:'3'},...inputs],cells:cells.map(c=>({...c,title:c.id,source:c.abap||Script.compile(c.script),dependencies:c.dependencies||[]}))});
  try{
   for(const c of n.cells){const v=await api('/validate',{notebookId:n.id,cellId:c.id});assert.equal(v.supported,true,JSON.stringify(v));}
-  const r=await run(n);evidence.cases.push({name,notebookId:n.id,runId:r.id,state:r.state,error:r.error,results:r.results});
+  const r=await run(n);evidence.cases.push({name,notebookId:n.id,runId:r.id,state:r.state,error:r.error,results:r.results,messages:r.messages});
   assert.equal(r.state,expect,JSON.stringify(r.error));
+  if(expect==='failed'){
+   const expectedCodes={'unique index rejects duplicates':'SCRIPT_CARDINALITY','unique lookup rejects duplicates':'SCRIPT_CARDINALITY',
+    'strict changes rejects duplicates':'SCRIPT_CARDINALITY','explicit native result boundary':'SCRIPT_BOUNDARY',
+    'working table budget fails explicitly':'DATASET_BUDGET','undeclared reference period is rejected':'BPC_FILTER',
+    'fixture financial result publication is blocked':'FIXTURE_POSTING'};
+   assert.equal(r.error.code,expectedCodes[name],JSON.stringify(r.error));
+  }
+  if(name==='shared authorized fixtures and frozen scopes'){
+   const summary=await api('/output?runId='+r.id+'&cellId=left&revision=1&offset=0&limit=100&table=READ_1%2FSUMMARY',null,'GET');
+   const selection=await api('/output?runId='+r.id+'&cellId=left&revision=1&offset=0&limit=100&table=READ_1%2FFILTERS_AND_PERIODS',null,'GET');
+   const sourceColumn=summary.schema.findIndex(c=>c.name==='source');
+   const securityColumn=summary.schema.findIndex(c=>c.name==='security');
+   const countColumn=summary.schema.findIndex(c=>c.name==='row_count');
+   assert.equal(summary.rows[0].values[sourceColumn],'fixture');
+   assert.equal(summary.rows[0].values[securityColumn],'MEMBER_AUTH_ON; NO_QUERY');
+   assert.equal(Number(summary.rows[0].values[countColumn]),1);
+   evidence.readDiagnostics={summary,selection};
+   evidence.frozenSelections=r.snapshot.inputs;
+  }
   if(name==='full shared tables'){
    const header=await api('/datasets?runId='+r.id+'&cellId=seed&revision=1',null,'GET');
    assert.equal(header.artifacts.find(d=>d.name==='FULL').rowCount,12003);
@@ -65,17 +86,6 @@ io->message( 'DELTA_ORACLE_OK' ).`;
  await check('unique lookup rejects duplicates',[{id:'fail',script:prefix+'index ix = rows by ["TIME", "MATCONN"] many\nlookup hit = ix where TIME = "period_A" and MATCONN = "A" policy unique missing error'}],'failed');
  await check('strict changes rejects duplicates',[{id:'fail',script:prefix+'empty old = rows\nchanges delta = rows against old mode unique'}],'failed');
  await check('explicit native result boundary',[{id:'fail',script:prefix+'cast high = rows with SIGNEDDATA decimal\nresult high as "OUTPUT" kind delta'}],'failed');
- const seed=`script version 2
-table rows columns CATEGORY member, TIME member, SIGNEDDATA signed, RATIO decimal, POSITION integer
-row r like rows
-r.CATEGORY = "Actual"
-r.TIME = "period_A"
-r.RATIO = decimal("0.000000000000000000000000000000001")
-let counter = integer(0)
-for memberid in ["batch"]
-  counter = 1
-end
-`;
  const abapSeed="TYPES: BEGIN OF ty_row, category TYPE uj_dim_member, time TYPE uj_dim_member, signeddata TYPE uj_signeddata, ratio TYPE decfloat34, position TYPE i, END OF ty_row.\nDATA rows TYPE STANDARD TABLE OF ty_row WITH EMPTY KEY.\nDO 12003 TIMES.\n APPEND VALUE #( category = 'Actual' time = 'period_A' signeddata = CONV uj_signeddata( '-0.0000001' ) * sy-index ratio = CONV decfloat34( '0.000000000000000000000000000000001' ) position = sy-index ) TO rows.\nENDDO.\nio->publish_dataset( name = 'FULL' rows = rows ).\nCLEAR rows.\nio->publish_dataset( name = 'EMPTY' rows = rows ).";
  const handoff=`script version 2
 dataset rows = "seed" named "FULL"
@@ -140,7 +150,14 @@ for period in periods
 end
 data full = references limit 100
 assert count(full) == 3 message "Scope coverage"
+dimension categories = DEMREVID-CATEGORY
+members stored = categories ["Actual"]
+properties storedschema = categories
+assert count(stored) == 1 message "Authorized member metadata"
+assert count(storedschema) > 0 message "Stored-property schema"
 for row in full
+  let description = categories-EVDESCRIPTION(row.CATEGORY)
+  message description
   row.SIGNEDDATA = row.SIGNEDDATA * 2
 end
 publish full as "TRANSFORMED"`;
@@ -153,6 +170,9 @@ compare summary = a with b as "FIXTURE_COMPARE"
 assert summary.original_rows == 3 message "Nonempty comparison required"
 assert summary.added == 0 and summary.missing == 0 and summary.changed == 0 message "Shared fixture mismatch"`;
  await check('shared authorized fixtures and frozen scopes',[{id:'seed',abap:fixtureSeed},{id:'left',script:shared,dependencies:['seed']},{id:'right',script:shared,dependencies:['seed']},{id:'compare',script:compare,dependencies:['seed','left','right']}],'succeeded',selections,{environment:'CH_PLANNING',model:'DEMREVID'});
+ const fixturePrefix='script version 2\ndataset inputs = "seed" named "FIXTURE"\nfixture inputs model "DEMREVID"\n';
+ await check('undeclared reference period is rejected',[{id:'seed',abap:fixtureSeed},{id:'fail',script:fixturePrefix+'reference model refs = DEMREVID\ndata forbidden = refs where TIME = ["2027.006"] limit 100',dependencies:['seed']}],'failed',selections,{environment:'CH_PLANNING',model:'DEMREVID'});
+ await check('fixture financial result publication is blocked',[{id:'seed',abap:fixtureSeed},{id:'fail',script:fixturePrefix+'result inputs as "BPC_RESULT" kind delta',dependencies:['seed']}],'failed',selections,{environment:'CH_PLANNING',model:'DEMREVID'});
  evidence.passed=true;
 })().catch(e=>{evidence.failure=e.message;console.error(e.message);process.exitCode=1;}).finally(()=>{
  fs.writeFileSync('docs/evidence/native-script-v2.json',JSON.stringify(evidence,null,2)+'\n','utf8');
