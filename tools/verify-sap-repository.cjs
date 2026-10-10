@@ -10,14 +10,14 @@ if(!/^\d{12}$/.test(repoId||'')||!/^[$A-Z0-9_]+$/.test(target))throw Error('Spec
  if(!installed.includes("get( '"+repoId+"' )") || !installed.includes("get_package( ) <> '"+target+"'"))
    throw Error('Installed serialization helper does not target this repository/package; update only through reviewed Git/abapGit transport');
  const output=await c.runClass(name);if(output.includes('BNERROR|'))throw Error(output);
- const commit=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
- const expected=new Set(['.abapgit.xml',...execFileSync('git',['ls-tree','-r','--name-only','HEAD','src'],{encoding:'utf8'}).trim().split(/\r?\n/)]);
+ const commit=execFileSync('git',['rev-parse','--verify',args.commit || 'HEAD'],{encoding:'utf8'}).trim();
+ const expected=new Set(['.abapgit.xml',...execFileSync('git',['ls-tree','-r','--name-only',commit,'src'],{encoding:'utf8'}).trim().split(/\r?\n/)]);
  const evidence={at:new Date().toISOString(),repoId,package:target,transport:args.transport || '',commit,
   method:'Full online abapGit repository serialization (refresh + get_files_local) after network pull, compared byte-for-byte with committed Git blobs',files:[],missing:[],passed:false};
  for(const line of output.split(/\r?\n/)){if(!line.startsWith('BNFILE|'))continue;
   const [,path,base64]=line.split('|'), filename=path.replace(/^\//,''),bytes=Buffer.from(base64,'base64');
   if(!expected.has(filename))throw Error('Unexpected serialized file '+filename);
-  const git=execFileSync('git',['show','HEAD:'+filename],{maxBuffer:10e6});
+  const git=execFileSync('git',['show',commit+':'+filename],{maxBuffer:10e6});
   evidence.files.push({filename,bytes:bytes.length,sapSha256:createHash('sha256').update(bytes).digest('hex'),equal:bytes.equals(git)});
   expected.delete(filename);
  }

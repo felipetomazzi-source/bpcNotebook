@@ -27,6 +27,14 @@ fs.writeFileSync(path.join(__dirname,'validation.draft.json'),JSON.stringify(def
 const live=JSON.parse(JSON.stringify(definition));live.title='DEMREVID003 - Script live-data comparison';
 live.cells[0].source=`" Read live facts with a separate secured adapter before entering fixture mode.
 " Only backend-frozen base IDs are used; TIME is not expanded here.
+io->check_data_snapshot( ).
+DATA(cv) = io->current_view( ).
+LOOP AT cv INTO DATA(selection).
+ IF selection-dimension <> 'CATEGORY' AND selection-dimension <> 'TIME'.
+  RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'VALIDATION_SCOPE'
+   detail = 'This live fixture preparation accepts CATEGORY/TIME selections only'.
+ ENDIF.
+ENDLOOP.
 DATA(periods) = io->range( 'TIME' ).
 DATA(references) = io->range( 'REFERENCE_TIME' ).
 APPEND LINES OF references TO periods.
