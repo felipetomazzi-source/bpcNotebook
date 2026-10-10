@@ -1,9 +1,9 @@
 {
-  "at": "2026-10-10T02:58:37.911Z",
+  "at": "2026-10-10T03:03:14.805Z",
   "repoId": "000000000008",
   "package": "ZBPC_NOTEBOOK",
   "transport": "NPLK900126",
-  "commit": "4cb5e20f3d731d902d0a51f9a1e68733828a0f94",
+  "commit": "4996bd04702b5dc98b058ca50cfcec4aaeacfd21",
   "method": "Full online abapGit repository serialization (refresh + get_files_local) after network pull, compared byte-for-byte with committed Git blobs",
   "files": [
     {
@@ -218,8 +218,8 @@
     },
     {
       "filename": "src/zcl_bn_table.clas.abap",
-      "bytes": 18632,
-      "sapSha256": "489433b442f8b95e2975143223a709f3f05f500255aa85016466c616a07fb6ce",
+      "bytes": 21486,
+      "sapSha256": "6cd74ea4935a2e47b3d714cf5e1d877a825991b8da092ac86cd36c328a03f473",
       "equal": true
     },
     {
@@ -380,8 +380,8 @@
     },
     {
       "filename": "src/zbpc_notebook.wapa.model_-script.js",
-      "bytes": 127487,
-      "sapSha256": "dd4d01bb9e13d6c8464e22c0e31a171ee2c51ad44d39a5e0963f37f31fb33bbc",
+      "bytes": 131839,
+      "sapSha256": "02cd498f9b8071b136ccaba6b95920a0900700cd4a95057fb0799c91a68c1692",
       "equal": true
     },
     {
