@@ -16,7 +16,7 @@ CLASS zcl_bn_identity DEFINITION PUBLIC FINAL CREATE PRIVATE.
       RETURNING VALUE(notebook) TYPE zcl_bn_types=>ty_notebook RAISING zcx_bn.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_key, environment TYPE string, model TYPE string, technical_name TYPE string, END OF ty_key.
-    CLASS-METHODS key IMPORTING environment TYPE string model TYPE string technical_name TYPE string RETURNING VALUE(result) TYPE string.
+    CLASS-METHODS key IMPORTING environment TYPE string model TYPE string technical_name TYPE string RETURNING VALUE(result) TYPE string RAISING zcx_bn.
 ENDCLASS.
 CLASS zcl_bn_identity IMPLEMENTATION.
   METHOD key.
