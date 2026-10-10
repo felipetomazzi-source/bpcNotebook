@@ -1,0 +1,33 @@
+{
+  "at": "2026-10-10T05:08:30.780Z",
+  "objects": [
+    {
+      "name": "ZCL_BN_DM",
+      "syntax": [],
+      "active": {
+        "messages": [],
+        "success": true,
+        "inactive": []
+      }
+    },
+    {
+      "name": "ZCL_BN_DM_PROCESS",
+      "syntax": [],
+      "active": {
+        "messages": [],
+        "success": true,
+        "inactive": []
+      }
+    },
+    {
+      "name": "ZCL_BN_DM_INSTALL",
+      "syntax": [],
+      "active": {
+        "messages": [],
+        "success": true,
+        "inactive": []
+      }
+    }
+  ],
+  "installation": "BNINSTALL|ZBNBOOK|ZBPC_NOTEBOOK|ZBPC_NOTEBOOK_RUN|ZBPC_NOTEBOOK_START\n\n"
+}
