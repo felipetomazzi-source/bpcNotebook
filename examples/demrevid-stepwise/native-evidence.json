@@ -1,13 +1,13 @@
 {
   "kind": "complete native multi-cell original comparison",
   "notebookId": "E82AEA36D1571FD1B0F40B2F42FC568E",
-  "at": "2026-10-09T05:30:53.322Z",
+  "at": "2026-10-09T07:54:37.925Z",
   "customerEquivalent": false,
   "cases": [
     {
       "scenario": "standard",
       "suppress": true,
-      "runId": "E82AEA36D1571FD1B0F453650F3356D6",
+      "runId": "E82AEA36D1571FD1B0F6D5FC03A4D924",
       "state": "succeeded",
       "error": {
         "code": "",
@@ -36,7 +36,7 @@
     {
       "scenario": "standard",
       "suppress": false,
-      "runId": "E82AEA36D1571FD1B0F456E51D6356D6",
+      "runId": "E82AEA36D1571FD1B0F6D87728621926",
       "state": "succeeded",
       "error": {
         "code": "",
@@ -65,7 +65,7 @@
     {
       "scenario": "fallback",
       "suppress": false,
-      "runId": "E82AEA36D1571FD1B0F45A78F69196D7",
+      "runId": "E82AEA36D1571FD1B0F6DAE66216D926",
       "state": "succeeded",
       "error": {
         "code": "",
@@ -94,7 +94,7 @@
     {
       "scenario": "rounding",
       "suppress": false,
-      "runId": "E82AEA36D1571FD1B0F45E1E80D616DA",
+      "runId": "E82AEA36D1571FD1B0F6DD7579465929",
       "state": "succeeded",
       "error": {
         "code": "",
@@ -123,7 +123,7 @@
     {
       "scenario": "negative",
       "suppress": false,
-      "runId": "E82AEA36D1571FD1B0F46271479556DD",
+      "runId": "E82AEA36D1571FD1B0F6DFFD012E5929",
       "state": "succeeded",
       "error": {
         "code": "",
@@ -152,7 +152,7 @@
     {
       "scenario": "carry",
       "suppress": false,
-      "runId": "E82AEA36D1571FD1B0F47787D18116EE",
+      "runId": "E82AEA36D1571FD1B0F6E287F658592C",
       "state": "succeeded",
       "error": {
         "code": "",
@@ -181,7 +181,7 @@
     {
       "scenario": "carry",
       "suppress": true,
-      "runId": "E82AEA36D1571FD1B0F47A34A39156EE",
+      "runId": "E82AEA36D1571FD1B0F6E4E82EFAD92F",
       "state": "succeeded",
       "error": {
         "code": "",
@@ -210,7 +210,7 @@
     {
       "scenario": "hsns",
       "suppress": false,
-      "runId": "E82AEA36D1571FD1B0F47CBE975C96F0",
+      "runId": "E82AEA36D1571FD1B0F6E7718468D92F",
       "state": "succeeded",
       "error": {
         "code": "",
@@ -239,7 +239,7 @@
     {
       "scenario": "hsns",
       "suppress": true,
-      "runId": "E82AEA36D1571FD1B0F47F5ADFC516F6",
+      "runId": "E82AEA36D1571FD1B0F6E9E70E619931",
       "state": "succeeded",
       "error": {
         "code": "",
@@ -266,14 +266,18 @@
       "zeroClears": 5
     }
   ],
-  "readRetries": [],
-  "incidents": [
+  "readRetries": [
     {
-      "runId": "E82AEA36D1571FD1B0F46664763396DF",
-      "endpoint": "GET /run",
-      "code": "INTEGRITY",
-      "laterRead": "succeeded",
-      "disposition": "Transient polling failure; retained run untouched. Carry case repeated and exact comparison passed. Platform investigation requested."
+      "endpoint": "/run?id=E82AEA36D1571FD1B0F6E7718468D92F",
+      "attempt": 1,
+      "at": "2026-10-09T07:58:47.712Z"
+    },
+    {
+      "endpoint": "/run?id=E82AEA36D1571FD1B0F6E9E70E619931",
+      "attempt": 1,
+      "at": "2026-10-09T07:59:30.519Z"
     }
-  ]
+  ],
+  "sourceCommit": "8ee59af",
+  "operationalNotebookRevision": 3
 }

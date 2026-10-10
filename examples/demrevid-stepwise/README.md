@@ -15,6 +15,10 @@ One notebook contains 20 ordered calculation tabs and a final reconciliation tab
 
 Changing inputs or source requires fresh downstream execution. Rerunning the initial stage establishes new complete financial inputs. It retains output/reference facts on SAP; later cells filter those native artifacts rather than reading new financial amounts. Metadata and authorization are checked at each cell boundary. A preview is never a calculation input.
 
+## Actual / 2026.006 simulation
+
+Saved operational revision 5 selects Actual / 2026.006, with metadata-resolved references 2026.005, 2026.007 and TIME_NA. DATASET_BYTES is 268435456 (256 MiB); the 64 MiB default stopped the first attempt without truncation or posting. All 21 cells completed after increasing this supported input budget. The live query returned 44,110 rows, matching the nonzero row count in the local DEMREVID (7).csv export (64,894 total, including 20,784 zero records). This is a count comparison, not a full value comparison. Complete replacement: 20,482 rows; final delta: 2,513 rows. See simulation-2026-006.json. No business data was posted, and this customer-data run has not yet been compared against the original calculation.
+
 ## Verification and limits
 
 Every primary cell passed native SAP compilation. `verify-native.cjs` runs a separate nonposting comparison notebook against the original calculation using identical complete native fixtures. It compares every dimension and exact SAP SIGNEDDATA for replacement and delta. See `native-evidence.json` for completed scenario evidence, including suppression, fallback, rounding, negative amounts, carry-forward, HSNS and disappeared records. All nine scenarios passed with zero added, missing or changed records. The polling integrity incident and its repeated successful case are recorded separately; this is fixture equivalence, not customer acceptance.

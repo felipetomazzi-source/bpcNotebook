@@ -1,159 +1,159 @@
 {
   "notebookId": "E82AEA36D1571FD1B0F434ABC4D096B7",
-  "at": "2026-10-09T05:33:26.651Z",
+  "at": "2026-10-09T07:59:40.550Z",
   "financialPosting": false,
   "customerEquivalent": false,
   "runs": [
     {
-      "id": "E82AEA36D1571FD1B0F45E981E6416DA",
+      "id": "E82AEA36D1571FD1B0F6EC3541511931",
       "scope": "all",
       "cellId": "",
       "state": "succeeded",
       "cells": [
         {
           "id": "step_01",
-          "durationMs": 9528,
+          "durationMs": 1434,
           "previewRows": 0
         },
         {
           "id": "step_02",
-          "durationMs": 1248,
+          "durationMs": 837,
           "previewRows": 0
         },
         {
           "id": "step_03",
-          "durationMs": 400,
+          "durationMs": 254,
           "previewRows": 0
         },
         {
           "id": "step_04",
-          "durationMs": 1816,
+          "durationMs": 1118,
           "previewRows": 0
         },
         {
           "id": "step_05",
-          "durationMs": 1199,
+          "durationMs": 815,
           "previewRows": 0
         },
         {
           "id": "step_06",
-          "durationMs": 973,
+          "durationMs": 737,
           "previewRows": 0
         },
         {
           "id": "step_07",
-          "durationMs": 603,
+          "durationMs": 418,
           "previewRows": 0
         },
         {
           "id": "step_08",
-          "durationMs": 540,
+          "durationMs": 414,
           "previewRows": 0
         },
         {
           "id": "step_09",
-          "durationMs": 649,
+          "durationMs": 453,
           "previewRows": 0
         },
         {
           "id": "step_10",
-          "durationMs": 366,
+          "durationMs": 294,
           "previewRows": 0
         },
         {
           "id": "step_11",
-          "durationMs": 461,
+          "durationMs": 276,
           "previewRows": 0
         },
         {
           "id": "step_12",
-          "durationMs": 1877,
+          "durationMs": 1141,
           "previewRows": 0
         },
         {
           "id": "step_13",
-          "durationMs": 1386,
+          "durationMs": 769,
           "previewRows": 0
         },
         {
           "id": "step_14",
-          "durationMs": 489,
+          "durationMs": 331,
           "previewRows": 0
         },
         {
           "id": "step_15",
-          "durationMs": 660,
+          "durationMs": 478,
           "previewRows": 0
         },
         {
           "id": "step_16",
-          "durationMs": 1421,
+          "durationMs": 891,
           "previewRows": 0
         },
         {
           "id": "step_17",
-          "durationMs": 515,
+          "durationMs": 354,
           "previewRows": 0
         },
         {
           "id": "step_18",
-          "durationMs": 608,
+          "durationMs": 433,
           "previewRows": 0
         },
         {
           "id": "step_19",
-          "durationMs": 781,
+          "durationMs": 485,
           "previewRows": 0
         },
         {
           "id": "step_20",
-          "durationMs": 1494,
+          "durationMs": 997,
           "previewRows": 0
         },
         {
           "id": "reconcile",
-          "durationMs": 603,
+          "durationMs": 371,
           "previewRows": 0
         }
       ]
     },
     {
-      "id": "E82AEA36D1571FD1B0F461F6222C16DD",
+      "id": "E82AEA36D1571FD1B0F6EDC8089C9933",
       "scope": "one",
       "cellId": "step_02",
       "state": "succeeded",
       "cells": [
         {
           "id": "step_02",
-          "durationMs": 564,
+          "durationMs": 574,
           "previewRows": 0
         }
       ]
     },
     {
-      "id": "E82AEA36D1571FD1B0F46216EAF596DD",
+      "id": "E82AEA36D1571FD1B0F6EDFEB41C1933",
       "scope": "through",
       "cellId": "step_04",
       "state": "succeeded",
       "cells": [
         {
           "id": "step_01",
-          "durationMs": 1118,
+          "durationMs": 813,
           "previewRows": 0
         },
         {
           "id": "step_02",
-          "durationMs": 786,
+          "durationMs": 564,
           "previewRows": 0
         },
         {
           "id": "step_03",
-          "durationMs": 191,
+          "durationMs": 148,
           "previewRows": 0
         },
         {
           "id": "step_04",
-          "durationMs": 911,
+          "durationMs": 728,
           "previewRows": 0
         }
       ]

@@ -1,0 +1,18 @@
+{
+  "at": "2026-10-09T08:03:08.040Z",
+  "notebookId": "E82AEA36D1571FD1B0F434ABC4D096B7",
+  "revision": 3,
+  "methodCells": 20,
+  "reconciliationCells": 1,
+  "nativeCompilation": 21,
+  "nativeFixtureCases": 9,
+  "completeNativeDifferences": 0,
+  "editorFixCommit": "de4cb2b",
+  "embeddedUI": {
+    "method": "group",
+    "advancedOpened": true,
+    "unsaved": false
+  },
+  "financialPosting": false,
+  "customerEquivalent": false
+}
