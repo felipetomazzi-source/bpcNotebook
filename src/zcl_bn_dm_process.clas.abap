@@ -86,17 +86,17 @@ CLASS zcl_bn_dm_process IMPLEMENTATION.
         DATA(result) = zcl_bn_dm=>preview( handler = handler handler_revision = revision
           environment = environment model = model scope = scope overrides = parameters ).
         io_logger->if_ujd_logger~add_message(
-          is_message = VALUE #( msgid = 'UJK_MESSAGE' msgno = '004' msgty = 'I' msgv1 = |Notebook run { result-id }| )
+          is_message = VALUE #( msgty = 'I' )
           i_addition_text = |Notebook run { result-id } succeeded; preview only; no financial posting| ).
         LOOP AT result-messages INTO DATA(message).
           io_logger->if_ujd_logger~add_message(
-            is_message = VALUE #( msgid = 'UJK_MESSAGE' msgno = '004' msgty = 'I' msgv1 = CONV #( message-text ) )
+            is_message = VALUE #( msgty = 'I' )
             i_addition_text = message-text ).
         ENDLOOP.
         e_pack_status = ujd0_cs_package_status-succeed.
       CATCH zcx_bn INTO DATA(fault).
         io_logger->if_ujd_logger~add_message(
-          is_message = VALUE #( msgid = 'UJK_MESSAGE' msgno = '004' msgty = 'E' msgv1 = CONV #( fault->code ) )
+          is_message = VALUE #( msgty = 'E' )
           i_addition_text = |{ fault->code }: { fault->detail }| ).
     ENDTRY.
   ENDMETHOD.
