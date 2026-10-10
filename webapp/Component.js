@@ -1693,7 +1693,8 @@ sap.ui.define(
             self.datasetSelect.removeAllItems();
             self.datasetSelect.setVisible(!!(page.tables && page.tables.length));
             (page.tables || []).forEach(function(t) {
-              self.datasetSelect.addItem(new sap.ui.core.Item({key:t.name,text:t.name + " · " + t.totalCount + " rows"}));
+              var clipped = t.valuesTruncated || t.byteLimitReached ? " · shortened preview" : "";
+              self.datasetSelect.addItem(new sap.ui.core.Item({key:t.name,text:t.name + " · " + t.totalCount + " rows" + clipped}));
             });
             self.tableName = page.tableName || "";
             self.datasetSelect.setSelectedKey(self.tableName);
@@ -1706,15 +1707,18 @@ sap.ui.define(
               });
               return cells;
             }));
+            var previewNote = page.valuesTruncated ? " · " + page.truncatedValues + " long values shortened for preview" : "";
+            if (page.byteLimitReached) { previewNote += " · preview size limit reached"; }
             self.pageLabel.setText(
-              page.total === 0 ? "0 rows · output revision " + page.revision : page.offset +
+              (page.total === 0 ? "0 rows · output revision " + page.revision : page.offset +
                 1 +
                 "–" +
                 Math.min(page.offset + page.limit, page.total) +
                 " of " +
                 page.total +
                 " · output revision " +
-                page.revision + (page.partial ? " · incomplete calculation checkpoints" : "") + (page.truncated ? " · preview of " + page.sourceTotal + " source rows" : ""),
+                page.revision + (page.partial ? " · incomplete calculation checkpoints" : "") +
+                (page.truncated ? " · preview of " + page.sourceTotal + " source rows" : "")) + previewNote,
             );
           })
           .catch(function(e) { if (self.previewToken === token && self.runId === requestRun) { self.error(e); } });
