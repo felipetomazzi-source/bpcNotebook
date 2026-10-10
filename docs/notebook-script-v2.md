@@ -140,4 +140,6 @@ Fixture mode supplies complete native in-memory model input tables without finan
 
 Working tables stay on SAP. WORK_ROWS, read limits, deadlines and DATASET_BYTES fail explicitly, never truncate calculation inputs. Per-operation working-table/index memory guards are estimates, not a total live-heap accounting mechanism; published/consumed dataset budgets remain cumulative. A failed cell cannot publish a completed partial dataset. Large workload budgets must be set explicitly and validated with representative data.
 
+Ordered comparison adds two reserved preview fields, `BN_DIFF_POSITION` and `BN_DIFF_SOURCE`; its input is limited to 98 fields and must not already contain those names. Other full native working tables support up to 100 fields.
+
 The generic runtime lives in ZCL_BN_TABLE / ZCL_BN_INDEX; it contains no DEMREVID business constants or model-specific method calls. The original allocation class is used only as a controlled test oracle. Full 21-step allocation equivalence requires the separate Script conversion and representative nonempty comparisons, including skipped flags, connections, lookbacks and final CT_DATA semantics.
