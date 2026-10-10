@@ -35,7 +35,7 @@ CLASS zcl_bn_service DEFINITION PUBLIC FINAL CREATE PUBLIC.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_notebook_header,
              id TYPE string, title TYPE string, revision TYPE i, author TYPE string, saved_at TYPE string,
-             environment TYPE string, model TYPE string,
+             environment TYPE string, model TYPE string, explanation TYPE string,
            END OF ty_notebook_header,
            tt_notebook_headers TYPE STANDARD TABLE OF ty_notebook_header WITH DEFAULT KEY,
            BEGIN OF ty_run_header,
@@ -51,6 +51,20 @@ CLASS zcl_bn_service DEFINITION PUBLIC FINAL CREATE PUBLIC.
              retention_until TYPE timestampl,
            END OF ty_dataset_header,
            tt_dataset_headers TYPE HASHED TABLE OF ty_dataset_header WITH UNIQUE KEY cell_id.
+    TYPES: BEGIN OF ty_folder,
+             id TYPE string, name TYPE string,
+           END OF ty_folder,
+           tt_folders TYPE STANDARD TABLE OF ty_folder WITH DEFAULT KEY,
+           BEGIN OF ty_membership,
+             notebook_id TYPE string, folder_id TYPE string,
+           END OF ty_membership,
+           tt_memberships TYPE STANDARD TABLE OF ty_membership WITH DEFAULT KEY,
+           BEGIN OF ty_organization,
+             revision TYPE i, expected_revision TYPE i,
+             folders TYPE tt_folders, memberships TYPE tt_memberships,
+           END OF ty_organization.
+    CLASS-METHODS organization RETURNING VALUE(result) TYPE ty_organization RAISING zcx_bn.
+    CLASS-METHODS save_organization IMPORTING body TYPE string RETURNING VALUE(result) TYPE ty_organization RAISING zcx_bn.
     CLASS-DATA mv_cached_notebook TYPE string.
     CLASS-DATA mt_latest TYPE tt_dataset_headers.
     CLASS-METHODS run_headers IMPORTING notebook_id TYPE string RETURNING VALUE(result) TYPE tt_run_headers RAISING zcx_bn.
@@ -785,6 +799,81 @@ CLASS zcl_bn_service IMPLEMENTATION.
     zcl_bn_store=>write( kind = 'R' id = id payload = zcl_bn_types=>json( run ) expected = rev ).
     COMMIT WORK AND WAIT.
   ENDMETHOD.
+  METHOD organization.
+    DATA revision TYPE i.
+    revision = zcl_bn_store=>current( kind = 'O' id = CONV string( sy-uname ) ).
+    IF revision = 0. RETURN. ENDIF.
+    DATA(payload) = zcl_bn_store=>read( kind = 'O' id = CONV string( sy-uname ) ).
+    /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( payload )
+      pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = result ).
+    " Deleted notebooks retain their history, but no longer need navigation membership.
+    DATA(deleted) = zcl_bn_store=>heads( 'A' ).
+    LOOP AT deleted INTO DATA(deleted_id).
+      DELETE result-memberships WHERE notebook_id = deleted_id.
+    ENDLOOP.
+  ENDMETHOD.
+  METHOD save_organization.
+    authorize( '02' ).
+    /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( zcl_bn_types=>request_json( body ) )
+      pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = result ).
+    DATA(previous) = organization( ).
+    IF result-expected_revision <> previous-revision.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'CONFLICT' detail = 'Folders changed; reload organization' status = 409.
+    ENDIF.
+    IF lines( result-folders ) > 200 OR lines( result-memberships ) > 10000.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FOLDER_LIMIT' detail = 'Folder organization exceeds limits'.
+    ENDIF.
+    DATA ids TYPE HASHED TABLE OF string WITH UNIQUE KEY table_line.
+    DATA names TYPE HASHED TABLE OF string WITH UNIQUE KEY table_line.
+    LOOP AT result-folders ASSIGNING FIELD-SYMBOL(<folder>).
+      zcl_bn_types=>validate_text( <folder>-name ).
+      FIND REGEX '^[A-Za-z0-9_-]{1,64}$' IN <folder>-id.
+      IF sy-subrc <> 0 OR strlen( <folder>-name ) > 80 OR <folder>-name IS INITIAL.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FOLDER' detail = 'Folder requires a valid ID and name (1-80 characters)'.
+      ENDIF.
+      FIND REGEX '[[:cntrl:]]' IN <folder>-name.
+      IF sy-subrc = 0.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FOLDER' detail = 'Folder name cannot contain line breaks or controls'.
+      ENDIF.
+      DATA(trimmed_name) = <folder>-name.
+      CONDENSE trimmed_name.
+      IF trimmed_name IS INITIAL.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FOLDER' detail = 'Folder name cannot be blank'.
+      ENDIF.
+      INSERT <folder>-id INTO TABLE ids.
+      IF sy-subrc <> 0.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FOLDER' detail = 'Duplicate folder ID'.
+      ENDIF.
+      INSERT to_upper( trimmed_name ) INTO TABLE names.
+      IF sy-subrc <> 0.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FOLDER' detail = 'Duplicate folder name'.
+      ENDIF.
+    ENDLOOP.
+    LOOP AT previous-folders INTO DATA(old_folder).
+      IF NOT line_exists( ids[ table_line = old_folder-id ] ) AND
+          line_exists( previous-memberships[ folder_id = old_folder-id ] ).
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FOLDER_NOT_EMPTY' detail = 'Move notebooks out before removing a folder' status = 409.
+      ENDIF.
+    ENDLOOP.
+    CLEAR ids.
+    LOOP AT result-memberships INTO DATA(membership).
+      IF NOT line_exists( result-folders[ id = membership-folder_id ] ).
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FOLDER' detail = 'Unknown folder'.
+      ENDIF.
+      INSERT membership-notebook_id INTO TABLE ids.
+      IF sy-subrc <> 0.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FOLDER' detail = 'Notebook can belong to only one folder'.
+      ENDIF.
+      " Owner/deletion and current BPC context authorization are enforced on the server.
+      DATA(member_notebook) = get_notebook( membership-notebook_id ).
+      IF member_notebook-environment IS NOT INITIAL AND member_notebook-model IS NOT INITIAL.
+        DATA(adapter) = NEW zcl_bn_bpc( environment = member_notebook-environment model = member_notebook-model ).
+      ENDIF.
+    ENDLOOP.
+    result-revision = previous-revision + 1. CLEAR result-expected_revision.
+    zcl_bn_store=>write( kind = 'O' id = CONV string( sy-uname ) payload = zcl_bn_types=>json( result )
+      expected = previous-revision ).
+  ENDMETHOD.
   METHOD dispatch.
     CLEAR: mv_cached_notebook, mt_latest.
     authorize( '03' ).
@@ -795,6 +884,10 @@ CLASS zcl_bn_service IMPLEMENTATION.
     DATA notebook TYPE zcl_bn_types=>ty_notebook.
     DATA run TYPE zcl_bn_types=>ty_run.
     CASE |{ method } { path }|.
+      WHEN 'GET /folders'.
+        json = zcl_bn_types=>json( organization( ) ).
+      WHEN 'PUT /folders'.
+        json = zcl_bn_types=>json( save_organization( body ) ).
       WHEN 'POST /logic-handler'.
         json = zcl_bn_types=>json( zcl_bn_logic=>register( name = request-handler notebook_id = request-notebook_id
           notebook_revision = request-expected_revision expected = request-handler_revision

@@ -532,3 +532,7 @@ This guide is the current entry point. Older file counts, responsive-table parag
 - [Installation](INSTALL.md)
 - [README and hub example](../README.md)
 - Native/browser/round-trip evidence under docs/evidence.
+
+## Notebook folders
+
+Use **New folder**, a folder's rename button, and each notebook's move button to organize your own notebooks. **Unfiled** retains all existing notebooks until you move them. Search includes explanations across folders; models group within folders. Folder metadata has its own owner-scoped revision and never rewrites notebook source, execution snapshots or bindings. See [folder contract and verification](notebook-folders.md).
