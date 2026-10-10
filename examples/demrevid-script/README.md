@@ -2,7 +2,7 @@
 
 Branch: `codex/SSNG-3218-fixture-validation`.
 
-The saved DEV notebook is **DEMREVID003 - Script allocation**, ID `E82AEA36D1571FE1B18BD135480E4C5E`, revision 2, in environment `CH_PLANNING`, model `DEMREVID`. All 21 Script cells passed SAP syntax validation and completed a real `Actual` / `2026.006` run. That operational run produced 20,482 replacement records and 2,513 legacy change-set records; its complete datasets and stage outputs are retained in the application. It is a simulation, with no financial posting or Script Logic allocation binding.
+The saved DEV notebook is **DEMREVID003 - Script allocation**, ID `E82AEA36D1571FE1B18BD135480E4C5E`, revision 6 (with explanatory Script comments), in environment `CH_PLANNING`, model `DEMREVID`. All 21 Script cells passed SAP syntax validation and completed a real `Actual` / `2026.006` run. That operational run produced 20,482 replacement records and 2,513 legacy change-set records; its complete datasets and stage outputs are retained in the application. It is a simulation, with no financial posting or Script Logic allocation binding.
 
 ## Try the calculation
 
@@ -61,3 +61,6 @@ Before any posting migration, restricted-user authorization and caller posting/r
 Display values are now capped at 4,096 characters and cell previews at eight MiB, including historical outputs. This keeps metadata packet previews manageable while preserving complete native datasets and exact financial amounts. See `docs/preview-bounds.md` for the display contract.
 
 Technical name: `DEMREVID003_ALLOCATION`. Description: `DEMREVID003 demand revenue allocation`. These are assigned to the existing UUID through the identity sidecar; saved calculation revision 2 and historical executions are unchanged. The technical name is unique within the exact SAP client/environment/model and remains immutable. Future package integration must resolve it with the selected context and an explicit approved revision; assigning the name does not enable posting.
+
+
+Revision 6 adds explanatory comments to all 21 Script cells. Native validation and exact readback passed; generated calculation bodies, dependencies and current input selections are unchanged. Existing execution history is retained. `comments-evidence.json` records this check.
