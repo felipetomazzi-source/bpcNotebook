@@ -81,6 +81,16 @@ CLASS zcl_bn_service DEFINITION PUBLIC FINAL CREATE PUBLIC.
              environment TYPE string, model TYPE string, kind TYPE string,
              dimension TYPE string, hierarchy TYPE string, search TYPE string, offset TYPE i,
            END OF ty_request.
+    TYPES: BEGIN OF ty_submission_request,
+             id TYPE string, notebook_id TYPE string, expected_revision TYPE i,
+             handler TYPE string, handler_revision TYPE i, execution_mode TYPE string,
+             scope TYPE string, cell_id TYPE string, idempotency_key TYPE string,
+             title TYPE string, explanation TYPE string, cells TYPE zcl_bn_types=>tt_cells,
+             inputs TYPE zcl_bn_types=>tt_inputs, demo TYPE abap_bool,
+             retry_run_id TYPE string,
+             environment TYPE string, model TYPE string, kind TYPE string,
+             dimension TYPE string, hierarchy TYPE string, search TYPE string, offset TYPE i,
+           END OF ty_submission_request.
     CLASS-METHODS save IMPORTING request TYPE ty_request
       RETURNING VALUE(notebook) TYPE zcl_bn_types=>ty_notebook RAISING zcx_bn.
     CLASS-METHODS submit IMPORTING request TYPE ty_request
@@ -396,7 +406,10 @@ CLASS zcl_bn_service IMPLEMENTATION.
            END OF ty_reservation.
     DATA reservation TYPE ty_reservation.
     DATA digest TYPE string.
-    digest = zcl_bn_types=>hash( zcl_bn_types=>json( request ) ).
+    " Identity sidecars must not change historical submission-key digests.
+    DATA submission_request TYPE ty_submission_request.
+    submission_request = CORRESPONDING #( request ).
+    digest = zcl_bn_types=>hash( zcl_bn_types=>json( submission_request ) ).
     IF zcl_bn_store=>current( kind = 'K' id = key ) > 0.
       DATA(existing) = zcl_bn_store=>read( kind = 'K' id = key ).
       /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( existing ) CHANGING data = reservation ).
