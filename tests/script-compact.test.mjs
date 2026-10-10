@@ -35,7 +35,7 @@ test('defaults and scalar list helpers are explicit and reject ambiguous maps',(
  }
 });
 test('larger budget is bounded and restricted to the exact compact envelope',()=>{
- const e=new Engine({auto:false}),definition=demo();
+ const e=new Engine({auto:false}),definition={...demo(),technicalName:'TEST_COMPACT',description:'Compact test'};
  definition.cells=definition.cells.slice(0,1);
  definition.cells[0].source='* BPC Notebook Script v2 compact\n'+' '.repeat(90000);
  assert.equal(e.create(definition,'alice').cells[0].source,definition.cells[0].source);
