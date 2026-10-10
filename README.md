@@ -22,6 +22,7 @@ The local service **simulates two demo cell bodies**. The SAP DEV version is dep
 - [Installation and remaining production requirements](docs/INSTALL.md)
 - [BPC selections, frozen parameters and calculation adapters](docs/bpc-inputs.md)
 - [Notebook Script and metadata completion](docs/notebook-script.md)
+- [BW InfoProvider reads: explicit fields, SAP authorization and bounded results](docs/bw-infoproviders.md)
 - [Notebook Script v2: generic native tables, lookup and allocation contracts](docs/notebook-script-v2.md)
 - [Notebook handlers in BPC Script Logic](docs/notebook-script-logic.md)
 - [Notebook deletion and loading performance](docs/notebook-management.md)

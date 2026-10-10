@@ -448,6 +448,33 @@ sap.ui.define([], function () {
         id = name(); take("="); var dim = dimension(resource()), ids = "";
         if (peek() === "[") { value = expression(); ids = "ids = " + value.code; }
         var ref = fresh(); emit("DATA(" + ref + ") = " + dim + "->member_data( " + ids + " )."); dynamicTable(id,ref);
+      } else if (v2 && command === "bwdata") {
+        id=name();take("=");var provider=take();
+        if(provider.type!=="text" || !/^[A-Z0-9_/]{1,30}$/.test(provider.value)){failure(line,"Quoted technical BW provider required");}
+        take("fields");var bwfields=[],aliases=[],objects=[];
+        do {
+          var kind=take(),object=take();take("as");var alias=name().toUpperCase();take("type");var ddic=take();
+          if(!["characteristic","keyfigure"].includes(kind.value) || object.type!=="text" ||
+             !/^[A-Z0-9_/]{1,30}$/.test(object.value) || ddic.type!=="text" ||
+             !/^[A-Z0-9_/]{1,30}$/.test(ddic.value) || !/^[A-Z][A-Z0-9_]{0,29}$/.test(alias) ||
+             aliases.includes(alias) || objects.includes(object.value)){failure(line,"Invalid or duplicate BW field; explicit DDIC type required");}
+          aliases.push(alias);objects.push(object.value);
+          bwfields.push("( infoobject = " + literal(object.value) + " alias = " + literal(alias) + " ddic_type = " + literal(ddic.value) + " kind = " + literal(kind.value) + " )");
+          if(peek()!==","){break;}take(",");
+        }while(true);
+        if(bwfields.length>100){failure(line,"At most 100 BW fields");}
+        var bwfilters=fresh();emit("DATA " + bwfilters + " TYPE zcl_bn_bpc=>tt_filters.");
+        if(peek()==="where"){
+          take("where");do {var bwfilter=take();take("=");value=expression(2);
+            if(bwfilter.type!=="text" || value.kind!=="ids"){failure(line,"BW filters require quoted InfoObjects and ID lists");}
+            emit("APPEND VALUE #( dimension = " + literal(bwfilter.value) + " members = " + value.code + " ) TO " + bwfilters + ".");
+            if(peek()!=="and"){break;}take("and");
+          }while(true);
+        }
+        take("limit");var bwmax=take(),bwlimit=Number(bwmax.value);
+        if(bwmax.type!=="number" || !Number.isInteger(bwlimit) || bwlimit<1 || bwlimit>100000){failure(line,"BW limit must be 1..100000");}
+        var bwref=fresh();emit("DATA(" + bwref + ") = io->bw_data( provider = " + literal(provider.value) +
+          " fields = VALUE #( " + bwfields.join(" ") + " ) filters = " + bwfilters + " max_rows = " + bwlimit + " ).");dynamicTable(id,bwref);
       } else if (command === "data") {
         id = name(); take("="); var source = name(), adapter;
         if (symbols[source]) { adapter = lookup(source,"model").code; }

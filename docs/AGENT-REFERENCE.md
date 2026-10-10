@@ -23,6 +23,7 @@ Use generic BPC adapters for reads. Use ABAP cells or installed custom ABAP serv
 | Selections | Authorized dimension members/ranges, actual hierarchy expansion |
 | Metadata | Generic members, descriptions, properties, fields and hierarchies |
 | Model reads | Security-enabled, validated, dynamically typed flat SAP tables |
+| BW provider reads | Explicit local provider/InfoObjects/DDIC types, exact filters, SAP RSDRI read authorization, fail on incomplete bounded result; see [scope and compatibility](bw-infoproviders.md) |
 | Reference data | Explicit mapping/lookback read scope separate from output periods |
 | Custom code | ABAP cells can call installed ABAP classes/services |
 | Inspection | Messages, bounded named previews, schemas/counts, stage timing/checkpoints |

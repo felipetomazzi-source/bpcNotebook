@@ -90,6 +90,10 @@ CLASS zcl_bn_context DEFINITION PUBLIC FINAL CREATE PUBLIC.
       logic_parameters TYPE ujk_t_script_logic_hashtable OPTIONAL logic_call TYPE abap_bool DEFAULT abap_false.
     METHODS bpc_dimension IMPORTING name TYPE string model_name TYPE string DEFAULT ''
       RETURNING VALUE(adapter) TYPE REF TO zcl_bn_bpc RAISING zcx_bn.
+    METHODS check_bw_context RAISING zcx_bn.
+    METHODS bw_data IMPORTING provider TYPE string fields TYPE zcl_bn_bw=>tt_fields
+      filters TYPE zcl_bn_bpc=>tt_filters max_rows TYPE i
+      RETURNING VALUE(result) TYPE REF TO data RAISING zcx_bn.
     METHODS bpc_model IMPORTING name TYPE string DEFAULT ''
       RETURNING VALUE(adapter) TYPE REF TO zcl_bn_bpc RAISING zcx_bn.
     METHODS reference_model IMPORTING name TYPE string DEFAULT ''
@@ -221,6 +225,15 @@ CLASS zcl_bn_context IMPLEMENTATION.
     IF name IS INITIAL.
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_DIMENSION' detail = 'Choose a dimension name'.
     ENDIF.
+  ENDMETHOD.
+  METHOD check_bw_context.
+    IF mv_logic_call = abap_true OR fixture_mode = abap_true OR mv_fixture_required = abap_true.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BW_CONTEXT'
+        detail = 'BW reads are unavailable in Script Logic and fixture executions'.
+    ENDIF.
+  ENDMETHOD.
+  METHOD bw_data.
+    result = zcl_bn_bw=>read_data( io = me provider = provider fields = fields filters = filters max_rows = max_rows ).
   ENDMETHOD.
   METHOD bpc_model.
     check_logic_model( name ).
