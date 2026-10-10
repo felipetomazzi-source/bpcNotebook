@@ -1,0 +1,31 @@
+{
+  "at": "2026-10-10T04:36:48.839Z",
+  "financialPosting": false,
+  "passed": true,
+  "runId": "E82AEA36D1571FE1B18C861DA8C8ED35",
+  "messages": [
+    {
+      "cellId": "capture",
+      "severity": "Information",
+      "text": "PREVIEW_NATIVE_BYTES_UNCHANGED:TOTAL_PREVIEW_BYTES:8385172:FULL_ROWS:3000"
+    },
+    {
+      "cellId": "verify",
+      "severity": "Information",
+      "text": "FULL_NATIVE_CONSUMER_OK"
+    }
+  ],
+  "nativeFullRows": 3000,
+  "previewRows": 816,
+  "previewByteLimit": 8388608,
+  "previewBytes": 6721192,
+  "truncatedValues": 1,
+  "fullArtifactUnchanged": true,
+  "emptySchemaPreserved": true,
+  "legacyGetClipped": true,
+  "legacyDocumentUnchanged": true,
+  "legacyProbeRunId": "E82AEA36D1571FE1B18C866814A82D35",
+  "artifactBeforeGetProbeRunId": "E82AEA36D1571FE1B18C861DA8CA2D35",
+  "artifactAfterGetUnchanged": true,
+  "unicodeBoundaryValid": true
+}
