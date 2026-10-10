@@ -35,6 +35,29 @@ CLASS zcl_bn_bpc DEFINITION PUBLIC CREATE PUBLIC.
              source TYPE string,
            END OF ty_field,
            tt_fields TYPE STANDARD TABLE OF ty_field WITH DEFAULT KEY.
+    TYPES: BEGIN OF ty_hierarchy_read,
+      hierarchy TYPE string, member TYPE string, bases TYPE zcl_bn_types=>tt_ids,
+    END OF ty_hierarchy_read,
+    tt_hierarchy_reads TYPE STANDARD TABLE OF ty_hierarchy_read WITH DEFAULT KEY,
+    BEGIN OF ty_dimension_fixture,
+      environment TYPE string, model TYPE string, dimension TYPE string,
+      snapshot_id TYPE string, rows TYPE REF TO data, properties TYPE tt_fields,
+      hierarchies TYPE zcl_bn_types=>tt_ids, children TYPE tt_hierarchy_reads,
+    END OF ty_dimension_fixture,
+    tt_dimension_fixtures TYPE STANDARD TABLE OF ty_dimension_fixture WITH DEFAULT KEY.
+    TYPES: BEGIN OF ty_dimension_packet,
+      environment TYPE string, model TYPE string, dimension TYPE string, snapshot_id TYPE string,
+      rows_packet TYPE string, properties TYPE string, hierarchies TYPE string, children TYPE string,
+    END OF ty_dimension_packet,
+    tt_dimension_packets TYPE STANDARD TABLE OF ty_dimension_packet WITH DEFAULT KEY.
+    CLASS-METHODS pack_dimensions IMPORTING fixtures TYPE tt_dimension_fixtures max_bytes TYPE i DEFAULT 67108864
+      RETURNING VALUE(result) TYPE tt_dimension_packets RAISING zcx_bn.
+    CLASS-METHODS unpack_dimensions IMPORTING packets TYPE tt_dimension_packets max_bytes TYPE i DEFAULT 67108864
+      RETURNING VALUE(result) TYPE tt_dimension_fixtures RAISING zcx_bn.
+    METHODS capture_dimension IMPORTING snapshot_id TYPE string hierarchy_reads TYPE tt_hierarchy_reads OPTIONAL
+      RETURNING VALUE(result) TYPE ty_dimension_fixture RAISING zcx_bn.
+    CLASS-METHODS copy_dimension IMPORTING fixture TYPE ty_dimension_fixture
+      RETURNING VALUE(result) TYPE ty_dimension_fixture RAISING zcx_bn.
     METHODS children IMPORTING member TYPE string hierarchy TYPE string
       RETURNING VALUE(result) TYPE zcl_bn_types=>tt_ids RAISING zcx_bn.
     METHODS fiscal_links IMPORTING ids TYPE zcl_bn_types=>tt_ids
@@ -86,6 +109,7 @@ CLASS zcl_bn_bpc DEFINITION PUBLIC CREATE PUBLIC.
     CLASS-DATA mt_member_cache TYPE tt_cached_members.
     DATA mo_diagnostics TYPE REF TO zcl_bn_context.
     DATA mv_read_scope TYPE string.
+    DATA ms_dimension_fixture TYPE ty_dimension_fixture.
     DATA mt_inputs TYPE zcl_bn_types=>tt_inputs.
     DATA mt_scope TYPE ujk_t_cv.
     CLASS-METHODS validate_filters IMPORTING environment TYPE string model TYPE string filters TYPE tt_filters RAISING zcx_bn.
@@ -119,8 +143,151 @@ CLASS zcl_bn_bpc IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_DIMENSION' detail = 'Dimension is not in this model'.
     ENDIF.
     mv_environment = environment. mv_model = model. mv_dimension = dimension. mt_inputs = inputs. mt_scope = scope.
+    IF dimension IS NOT INITIAL AND diagnostics IS BOUND AND diagnostics->metadata_fixture_mode = abap_true.
+      ms_dimension_fixture = diagnostics->fixture_dimension( model_name = model dimension = dimension ).
+    ENDIF.
+  ENDMETHOD.
+  METHOD capture_dimension.
+    IF ms_dimension_fixture-rows IS BOUND OR mv_dimension IS INITIAL OR snapshot_id IS INITIAL OR strlen( snapshot_id ) > 64.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_METADATA' detail = 'Capture requires a live dimension and snapshot identifier'.
+    ENDIF.
+    IF mo_diagnostics IS BOUND. mo_diagnostics->check_data_snapshot( ). mo_diagnostics->check_budget( force_poll = abap_true ). ENDIF.
+    result = VALUE #( environment = mv_environment model = mv_model dimension = mv_dimension snapshot_id = snapshot_id
+      rows = member_data( ) hierarchies = hierarchies( ) ).
+    result-properties = describe_table( table = result-rows source = 'stored' ).
+    LOOP AT hierarchy_reads INTO DATA(request).
+      IF NOT line_exists( result-hierarchies[ table_line = request-hierarchy ] ) OR
+         line_exists( result-children[ hierarchy = request-hierarchy member = request-member ] ).
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_METADATA' detail = 'Unique available hierarchy requests required'.
+      ENDIF.
+      request-bases = children( member = request-member hierarchy = request-hierarchy ).
+      APPEND request TO result-children.
+      IF mo_diagnostics IS BOUND. mo_diagnostics->check_budget( ). ENDIF.
+    ENDLOOP.
+    result = copy_dimension( result ).
+  ENDMETHOD.
+  METHOD pack_dimensions.
+    DATA total TYPE int8.
+    IF fixtures IS INITIAL OR lines( fixtures ) > 50 OR max_bytes < 1 OR max_bytes > 268435456.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_METADATA' detail = 'Bounded nonempty dimension bundles required'.
+    ENDIF.
+    LOOP AT fixtures INTO DATA(fixture).
+      DATA(copy) = copy_dimension( fixture ).
+      FIELD-SYMBOLS <rows> TYPE STANDARD TABLE. ASSIGN copy-rows->* TO <rows>.
+      DATA(packet) = zcl_bn_dataset=>freeze( name = 'METADATA' rows = <rows> max_bytes = max_bytes ).
+      DATA(packed) = VALUE ty_dimension_packet( environment = copy-environment model = copy-model
+        dimension = copy-dimension snapshot_id = copy-snapshot_id rows_packet = zcl_bn_types=>json( packet )
+        properties = zcl_bn_types=>json( copy-properties ) hierarchies = zcl_bn_types=>json( copy-hierarchies )
+        children = zcl_bn_types=>json( copy-children ) ).
+      total = total + packet-memory_bytes + ( strlen( packed-rows_packet ) + strlen( packed-properties ) +
+        strlen( packed-hierarchies ) + strlen( packed-children ) ) * cl_abap_char_utilities=>charsize.
+      IF total > max_bytes.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_BUDGET' detail = 'Complete metadata bundles exceed the combined byte budget'.
+      ENDIF.
+      APPEND packed TO result.
+    ENDLOOP.
+  ENDMETHOD.
+  METHOD unpack_dimensions.
+    DATA total TYPE int8.
+    IF packets IS INITIAL OR lines( packets ) > 50 OR max_bytes < 1 OR max_bytes > 268435456.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_METADATA' detail = 'Bounded nonempty dimension packets required'.
+    ENDIF.
+    LOOP AT packets INTO DATA(packed).
+      total = total + ( strlen( packed-rows_packet ) + strlen( packed-properties ) +
+        strlen( packed-hierarchies ) + strlen( packed-children ) ) * cl_abap_char_utilities=>charsize.
+      IF total > max_bytes.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_BUDGET' detail = 'Metadata packet payload exceeds the combined byte budget'.
+      ENDIF.
+      DATA(packet) = VALUE zcl_bn_dataset=>ty_packet( ).
+      DATA(fixture) = VALUE ty_dimension_fixture( environment = packed-environment model = packed-model
+        dimension = packed-dimension snapshot_id = packed-snapshot_id ).
+      TRY.
+        /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( packed-rows_packet )
+          pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = packet ).
+        IF packet-memory_bytes < 0 OR packet-memory_bytes > max_bytes OR packet-row_count > 1000000.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_BUDGET' detail = 'Retained metadata table exceeds the byte or row budget'.
+        ENDIF.
+        total = total + packet-memory_bytes.
+        IF total > max_bytes.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_BUDGET' detail = 'Retained metadata exceeds the combined byte budget'.
+        ENDIF.
+        fixture-rows = zcl_bn_dataset=>thaw( packet ).
+        /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( packed-properties )
+          pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = fixture-properties ).
+        /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( packed-hierarchies )
+          pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = fixture-hierarchies ).
+        /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( packed-children )
+          pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = fixture-children ).
+      CATCH zcx_bn INTO DATA(notebook_error). RAISE EXCEPTION notebook_error.
+      CATCH cx_root INTO DATA(native_error).
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_METADATA' detail = native_error->get_text( ).
+      ENDTRY.
+      APPEND copy_dimension( fixture ) TO result.
+    ENDLOOP.
+  ENDMETHOD.
+  METHOD copy_dimension.
+    IF fixture-rows IS NOT BOUND OR fixture-dimension IS INITIAL OR fixture-snapshot_id IS INITIAL OR
+       strlen( fixture-snapshot_id ) > 64 OR lines( fixture-children ) > 1000.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_METADATA' detail = 'Complete native metadata bundle and capture identifier required'.
+    ENDIF.
+    DATA(adapter) = NEW zcl_bn_bpc( environment = fixture-environment model = fixture-model dimension = fixture-dimension ).
+    DATA(schema) = describe_table( table = fixture-rows source = 'stored' ).
+    IF schema <> fixture-properties OR NOT line_exists( schema[ name = 'ID' ] ).
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_METADATA' detail = 'Stored property schema must match the native member table'.
+    ENDIF.
+    FIELD-SYMBOLS <rows> TYPE STANDARD TABLE. ASSIGN fixture-rows->* TO <rows>.
+    IF sy-subrc <> 0 OR lines( <rows> ) > 1000000.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_METADATA' detail = 'Bounded native flat standard member table required'.
+    ENDIF.
+    TYPES tt_set TYPE HASHED TABLE OF string WITH UNIQUE KEY table_line.
+    DATA ids TYPE tt_set. DATA native_ids TYPE uje_t_mem.
+    LOOP AT <rows> ASSIGNING FIELD-SYMBOL(<row>).
+      ASSIGN COMPONENT 'ID' OF STRUCTURE <row> TO FIELD-SYMBOL(<id>).
+      DATA(id) = CONV string( <id> ).
+      IF id IS INITIAL OR strlen( id ) > 32 OR line_exists( ids[ table_line = id ] ).
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_METADATA' detail = 'Member IDs must be unique and nonempty'.
+      ENDIF.
+      INSERT id INTO TABLE ids. APPEND CONV #( id ) TO native_ids.
+    ENDLOOP.
+    DATA(authorized) = permitted( dimension = fixture-dimension members = native_ids ).
+    DATA(available) = list_members( environment = fixture-environment model = fixture-model
+      dimension = fixture-dimension hierarchy = '' ).
+    DATA existing TYPE tt_set.
+    LOOP AT available-items INTO DATA(available_id). INSERT available_id-id INTO TABLE existing. ENDLOOP.
+    DATA allowed TYPE tt_set.
+    LOOP AT authorized INTO DATA(authorized_id). INSERT CONV string( authorized_id ) INTO TABLE allowed. ENDLOOP.
+    LOOP AT ids INTO id.
+      IF NOT line_exists( allowed[ table_line = id ] ) OR NOT line_exists( existing[ table_line = id ] ).
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_AUTH' detail = 'Frozen metadata member authorization revoked or unavailable' status = 403.
+      ENDIF.
+    ENDLOOP.
+    DATA seen TYPE tt_hierarchy_reads.
+    LOOP AT fixture-children INTO DATA(request).
+      IF NOT line_exists( fixture-hierarchies[ table_line = request-hierarchy ] ) OR
+         NOT line_exists( ids[ table_line = request-member ] ) OR
+         line_exists( seen[ hierarchy = request-hierarchy member = request-member ] ).
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_METADATA' detail = 'Hierarchy resolutions require unique retained roots and names'.
+      ENDIF.
+      LOOP AT request-bases INTO id.
+        IF NOT line_exists( ids[ table_line = id ] ).
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_METADATA' detail = 'Hierarchy base missing from retained authorized members'.
+        ENDIF.
+      ENDLOOP.
+      APPEND request TO seen.
+    ENDLOOP.
+    result = fixture.
+    DATA(descriptor) = CAST cl_abap_tabledescr( cl_abap_typedescr=>describe_by_data( <rows> ) ).
+    CREATE DATA result-rows TYPE HANDLE descriptor.
+    FIELD-SYMBOLS <copy> TYPE STANDARD TABLE. ASSIGN result-rows->* TO <copy>. <copy> = <rows>.
   ENDMETHOD.
   METHOD children.
+    IF ms_dimension_fixture-rows IS BOUND.
+      READ TABLE ms_dimension_fixture-children INTO DATA(retained) WITH KEY hierarchy = hierarchy member = member.
+      IF sy-subrc <> 0.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MISSING' detail = 'Hierarchy resolution was not captured; live enrichment prohibited'.
+      ENDIF.
+      result = retained-bases. RETURN.
+    ENDIF.
     DATA(list) = list_members( environment = mv_environment model = mv_model dimension = mv_dimension hierarchy = hierarchy ).
     IF NOT line_exists( list-items[ id = member ] ).
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_AUTH' detail = 'Hierarchy member unavailable' status = 403.
@@ -201,6 +368,29 @@ CLASS zcl_bn_bpc IMPLEMENTATION.
     ENDLOOP.
   ENDMETHOD.
   METHOD member_data.
+    IF ms_dimension_fixture-rows IS BOUND.
+      FIELD-SYMBOLS <frozen_rows> TYPE STANDARD TABLE. ASSIGN ms_dimension_fixture-rows->* TO <frozen_rows>.
+      DATA(frozen_type) = CAST cl_abap_tabledescr( cl_abap_typedescr=>describe_by_data( <frozen_rows> ) ).
+      CREATE DATA result TYPE HANDLE frozen_type.
+      FIELD-SYMBOLS <selected_rows> TYPE STANDARD TABLE. ASSIGN result->* TO <selected_rows>.
+      TYPES tt_frozen_ids TYPE HASHED TABLE OF string WITH UNIQUE KEY table_line.
+      DATA requested TYPE tt_frozen_ids.
+      LOOP AT ids INTO DATA(requested_id). INSERT requested_id INTO TABLE requested. ENDLOOP.
+      DATA found TYPE tt_frozen_ids.
+      LOOP AT <frozen_rows> ASSIGNING FIELD-SYMBOL(<frozen_row>).
+        ASSIGN COMPONENT 'ID' OF STRUCTURE <frozen_row> TO FIELD-SYMBOL(<frozen_id>).
+        DATA(frozen_id) = CONV string( <frozen_id> ).
+        IF ids IS INITIAL OR line_exists( requested[ table_line = frozen_id ] ).
+          APPEND <frozen_row> TO <selected_rows>. INSERT frozen_id INTO TABLE found.
+        ENDIF.
+      ENDLOOP.
+      LOOP AT requested INTO requested_id.
+        IF NOT line_exists( found[ table_line = requested_id ] ).
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MISSING' detail = 'Member absent from retained metadata; live enrichment prohibited'.
+        ENDIF.
+      ENDLOOP.
+      RETURN.
+    ENDIF.
     DATA(available) = context( environment = mv_environment model = mv_model ).
     IF mv_dimension IS INITIAL OR NOT line_exists( available[ id = mv_dimension ] ).
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_DIMENSION' detail = 'Use a dimension adapter for member access'.
@@ -269,6 +459,7 @@ CLASS zcl_bn_bpc IMPLEMENTATION.
     result = describe_table( table = member_data( ) source = 'stored' ).
   ENDMETHOD.
   METHOD hierarchies.
+    IF ms_dimension_fixture-rows IS BOUND. result = ms_dimension_fixture-hierarchies. RETURN. ENDIF.
     DATA(available) = context( environment = mv_environment model = mv_model ).
     IF mv_dimension IS INITIAL OR NOT line_exists( available[ id = mv_dimension ] ).
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_DIMENSION' detail = 'Use a dimension adapter for hierarchies'.
