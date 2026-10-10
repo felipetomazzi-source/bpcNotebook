@@ -1,10 +1,23 @@
 script version 2 compact
+// DEMREVID003 business-rule notes
+// Load revenues and allocation drivers
+// Read authorized inputs and existing outputs for the selected category/output periods. Include explicitly
+// selected mapping/lookback periods for reference reads. Separate revenue, geography, supplier and material
+// mappings into complete working tables.
+// Check: Confirm the read diagnostics, period scope, source row counts and amounts. Empty inputs do not
+// establish calculation equivalence.
+// Complete working tables stay in SAP; displayed previews are not calculation inputs.
+
 reference model source_model = DEMREVID
+// Read authorized model facts, including the selected reference periods; fail rather than use partial inputs.
 data raw_source = source_model limit 1000000
 assert count(raw_source) <= number(input("READ_LIMIT")) message "Complete source exceeds configured READ_LIMIT"
+// Keep all model dimensions and the signed amount so later stages retain the original calculation grain.
 project complete_source_data = raw_source fields ["ACCOUNT","AUDITTRAIL","CATEGORY","COSTCENTRE","DEMREVID_KFS","FFLAS","FFLAS_SUBSET","MATCONN","TIME","PRODUCT_TYPE","GEO_DRIVERS","DOC_TYP","CONN_REG_SPLIT","LFC_WIN_SUPPLIER","MAT_GROUP_ID","REG_FFLAS_SERV","UFB_DR_ID","MATREMAP","RSP_SERVICE_ID","REV_ID_GROUP","SIGNEDDATA"]
+// Read actual stored dimension metadata for member mappings; do not invent member IDs.
 dimension dim_product_members = DEMREVID-PRODUCT_TYPE
 members product_members = dim_product_members
+// Retain complete native datasets for downstream stages; publication here does not post financial data.
 publish product_members as "PRODUCT_MEMBERS"
 dimension dim_material_members = DEMREVID-MATCONN
 members material_members = dim_material_members
@@ -17,48 +30,66 @@ dimension measures = DEMREVID-DEMREVID_KFS
 let input_ids = children(audits, "DEMREVID_INPUT", "PARENTH1")
 let output_ids = children(audits, "DEMREVID_OUTPUT", "PARENTH1")
 let revenue_ids = children(measures, "DEMREVID004", "PARENTH1")
+// Select the records required by this business block; retain their original signs and dimensions.
 filter filtered1 = complete_source_data as f2 where (is_in(f2.TIME, range("TIME")) or f2.TIME == "TIME_NA") and f2.CATEGORY == member("CATEGORY")
+// Select the records required by this business block; retain their original signs and dimensions.
 filter input_data = filtered1 as source_input where is_in(source_input.AUDITTRAIL, input_ids)
+// Select the records required by this business block; retain their original signs and dimensions.
 filter output_data = filtered1 as source_output where is_in(source_output.AUDITTRAIL, output_ids)
 empty new_data = complete_source_data
+// Select the records required by this business block; retain their original signs and dimensions.
 filter filtered3 = input_data as f4 where is_in(f4.DEMREVID_KFS, revenue_ids)
+// Sum signed amounts using the stated include/exclude dimension list and the original grouping semantics.
 group group5 = filtered3 exclude ["COSTCENTRE","DOC_TYP","AUDITTRAIL"]
+// Fill initial dimensions with their original NA members; GEO_DRIVERS uses GDRVS_NA.
 defaults group5 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
+// Preserve the original sort keys and tie behavior used by subsequent lookups.
 sort group5 unstable by COSTCENTRE asc, DOC_TYP asc, AUDITTRAIL asc
 for replace6 in group5
 replace6.AUDITTRAIL = "DEMREVID_CALC"
 end
 copy sap_revenues = group5
+// Select the records required by this business block; retain their original signs and dimensions.
 filter filtered7 = input_data as f8 where f8.DEMREVID_KFS == "DEMREVID008"
 copy conn_reg_split = filtered7
 sort conn_reg_split unstable by TIME asc, ACCOUNT asc
+// Select the records required by this business block; retain their original signs and dimensions.
 filter filtered9 = input_data as f10 where f10.DEMREVID_KFS == "DEMREVID027"
 copy l1_l2_mapping = filtered9
 sort l1_l2_mapping unstable by TIME asc, ACCOUNT asc
+// Select the records required by this business block; retain their original signs and dimensions.
 filter filtered11 = input_data as f12 where f12.DEMREVID_KFS == "DEMREVID035"
 copy mat_group_mapping = filtered11
 sort mat_group_mapping unstable by TIME asc, MATCONN asc, ACCOUNT asc
+// Select the records required by this business block; retain their original signs and dimensions.
 filter filtered13 = input_data as f14 where f14.DEMREVID_KFS == "DEMREVID010"
 copy rsp_location_material_ratio = filtered13
 sort rsp_location_material_ratio unstable by TIME asc, MATCONN asc
+// Select the records required by this business block; retain their original signs and dimensions.
 filter filtered15 = input_data as f16 where f16.DEMREVID_KFS == "DEMREVID011"
 copy rsp_location_gl_ratio = filtered15
 sort rsp_location_gl_ratio unstable by TIME asc, ACCOUNT asc
+// Select the records required by this business block; retain their original signs and dimensions.
 filter filtered17 = input_data as f18 where f18.DEMREVID_KFS == "DEMREVID012"
 copy cal_location_gl_ratio = filtered17
 sort cal_location_gl_ratio unstable by TIME asc, ACCOUNT asc
+// Select the records required by this business block; retain their original signs and dimensions.
 filter filtered19 = input_data as f20 where f20.DEMREVID_KFS == "DEMREVID013"
 copy cal_location_conn_seg_ratio = filtered19
 sort cal_location_conn_seg_ratio unstable by TIME asc, CONN_REG_SPLIT asc
+// Select the records required by this business block; retain their original signs and dimensions.
 filter filtered21 = input_data as f22 where f22.DEMREVID_KFS == "DEMREVID029"
 copy rsp_supplier_material_ratio = filtered21
 sort rsp_supplier_material_ratio unstable by TIME asc, ACCOUNT asc, MATCONN asc
+// Select the records required by this business block; retain their original signs and dimensions.
 filter filtered23 = input_data as f24 where f24.DEMREVID_KFS == "DEMREVID030"
 copy rsp_supplier_gl_ratio = filtered23
 sort rsp_supplier_gl_ratio unstable by ACCOUNT asc, TIME asc
+// Select the records required by this business block; retain their original signs and dimensions.
 filter filtered25 = input_data as f26 where f26.DEMREVID_KFS == "DEMREVID032"
 copy cal_supplier_gl_ratio = filtered25
 sort cal_supplier_gl_ratio unstable by ACCOUNT asc, TIME asc
+// Select the records required by this business block; retain their original signs and dimensions.
 filter filtered27 = input_data as f28 where f28.DEMREVID_KFS == "DEMREVID031"
 copy cal_supplier_conn_seg_ratio = filtered27
 sort cal_supplier_conn_seg_ratio unstable by CONN_REG_SPLIT asc, TIME asc
@@ -87,7 +118,9 @@ publish rsp_supplier_material_ratio as "RSP_SUPPLIER_MATERIAL_RATIO"
 publish rsp_supplier_gl_ratio as "RSP_SUPPLIER_GL_RATIO"
 publish cal_supplier_gl_ratio as "CAL_SUPPLIER_GL_RATIO"
 publish cal_supplier_conn_seg_ratio as "CAL_SUPPLIER_CONN_SEG_RATIO"
+// Sum signed amounts using the stated include/exclude dimension list and the original grouping semantics.
 group group29 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
 defaults group29 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
 sort group29 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc
+// Display a bounded sample for review; source totals and complete SAP working datasets remain separate.
 show group29 as "CONTROL_TOTALS"

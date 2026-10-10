@@ -1,32 +1,57 @@
 script version 2 compact
+// DEMREVID003 business-rule notes
+// Recognize billing already split by geography
+// Use RSP billing with product type and document types RS, AD and AC. Exclude TBD and unassigned UFB
+// reporting categories. Group the original dimensions and apply the same reporting mappings.
+// Check: Reconcile included billing and excluded document/reporting categories.
+// Complete working tables stay in SAP; displayed previews are not calculation inputs.
+
+// Read the complete INPUT_DATA working table retained by step_01.
 dataset input_data = "step_01" named "INPUT_DATA"
+// Read the complete NEW_DATA working table retained by step_05.
 dataset new_data = "step_05" named "NEW_DATA"
+// Select the records required by this business block; retain their original signs and dimensions.
 filter filtered1 = input_data as f2 where f2.DEMREVID_KFS == "DEMREVID019" and is_in(f2.DOC_TYP, ["RS","AD","AC"]) and f2.UFB_DR_ID != "UFBDRID006" and f2.UFB_DR_ID != "UFB_DR_ID_NA"
+// Sum signed amounts using the stated include/exclude dimension list and the original grouping semantics.
 group group3 = filtered1 exclude ["DOC_TYP","UFB_DR_ID","LFC_WIN_SUPPLIER"]
+// Fill initial dimensions with their original NA members; GEO_DRIVERS uses GDRVS_NA.
 defaults group3 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
+// Preserve the original sort keys and tie behavior used by subsequent lookups.
 sort group3 unstable by DOC_TYP asc, UFB_DR_ID asc, LFC_WIN_SUPPLIER asc
 for replace4 in group3
 replace4.DEMREVID_KFS = "DEMREVID016"
 replace4.AUDITTRAIL = "DEMREVID_CALC"
 end
+// Read the complete CONN_REG_SPLIT working table retained by step_01.
 dataset conn_reg_split = "step_01" named "CONN_REG_SPLIT"
+// Read the complete L1_L2_MAPPING working table retained by step_01.
 dataset l1_l2_mapping = "step_01" named "L1_L2_MAPPING"
+// Read the complete MAT_GROUP_MAPPING working table retained by step_01.
 dataset mat_group_mapping = "step_01" named "MAT_GROUP_MAPPING"
+// Read the complete PRODUCT_MEMBERS working table retained by step_01.
 dataset product_members = "step_01" named "PRODUCT_MEMBERS"
+// Read the complete MATERIAL_MEMBERS working table retained by step_01.
 dataset material_members = "step_01" named "MATERIAL_MEMBERS"
+// Read the complete GROUP_MEMBERS working table retained by step_01.
 dataset group_members = "step_01" named "GROUP_MEMBERS"
+// Select the records required by this business block; retain their original signs and dimensions.
 filter filtered5 = input_data as f6 where f6.DEMREVID_KFS == "DEMREVID036"
+// Select the records required by this business block; retain their original signs and dimensions.
 filter filtered7 = input_data as f8 where f8.DEMREVID_KFS == "DEMREVID037"
+// Select the records required by this business block; retain their original signs and dimensions.
 filter filtered9 = input_data as f10 where f10.DEMREVID_KFS == "DEMREVID014"
 sort filtered5 unstable by TIME asc, ACCOUNT asc, MATCONN asc
 sort filtered7 unstable by TIME asc, MATCONN asc, MAT_GROUP_ID asc
 sort filtered9 unstable by TIME asc, MATCONN asc
+// Index the complete working table; matching rows and first-match lookup precedence remain explicit.
 index ix14 = product_members by ["ID"] many
 index ix21 = material_members by ["ID"] many
 index ix25 = group_members by ["ID"] many
 for revenue11 in group3
+// A missing lookup returns initial values; the following found checks and fallback branches control the outcome.
 find found12 = filtered9 where TIME = revenue11.TIME and MATCONN = revenue11.MATCONN search binary missing initial
 if found(found12)
+// Format the numeric mapping as the original three-digit product code, then check the stored member table.
 lookup found13 = ix14 where ID = concat("PRODUCT_TYPE_", numeric_text(found12.SIGNEDDATA,3)) policy first missing initial
 if found(found13)
 revenue11.PRODUCT_TYPE = found13.ID
@@ -48,6 +73,7 @@ find found18 = filtered5 where TIME = revenue11.TIME and ACCOUNT = revenue11.ACC
 if found(found18)
 revenue11.MATREMAP = found18.MATREMAP
 else
+// This lookup uses the default account member; keep its position in the original lookup waterfall.
 find found19 = filtered5 where TIME = revenue11.TIME and ACCOUNT = "ACCOUNT_NA" and MATCONN = revenue11.MATCONN search binary missing initial
 if found(found19)
 revenue11.MATREMAP = found19.MATREMAP
@@ -69,6 +95,7 @@ if found(found22)
 revenue11.MAT_GROUP_ID = found22.MAT_GROUP_ID
 end
 else
+// Look up the default material member; surrounding found checks determine when this branch is used.
 find found23 = mat_group_mapping where TIME = revenue11.TIME and MATCONN = "MATCONN_NA" and ACCOUNT = revenue11.ACCOUNT search binary missing initial
 if found(found23)
 revenue11.MAT_GROUP_ID = found23.MAT_GROUP_ID
@@ -89,8 +116,11 @@ end
 end
 end
 append new_data from group3
+// Retain complete native datasets for downstream stages; publication here does not post financial data.
 publish new_data as "NEW_DATA"
+// Sum signed amounts using the stated include/exclude dimension list and the original grouping semantics.
 group group28 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
 defaults group28 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
 sort group28 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc
+// Display a bounded sample for review; source totals and complete SAP working datasets remain separate.
 show group28 as "CONTROL_TOTALS"

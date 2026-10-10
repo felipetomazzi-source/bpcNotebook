@@ -1,11 +1,26 @@
 script version 2 compact
+// DEMREVID003 business-rule notes
+// Resolve geography percentages
+// Load all geography rows from the chosen source. For material ratios, explicit location overwrite wins
+// over normal RSP billing. Keep original geography members and amounts.
+// Check: Check the selected method, overwrite trail and resulting ratio rows. Report unexpected totals; do
+// not silently normalize.
+// Complete working tables stay in SAP; displayed previews are not calculation inputs.
+
+// Read the complete NEW_DATA working table retained by step_04.
 dataset new_data = "step_04" named "NEW_DATA"
 empty rsp_split_ratios = new_data
+// Read the complete RSP_LOCATION_MATERIAL_RATIO working table retained by step_01.
 dataset rsp_location_material_ratio = "step_01" named "RSP_LOCATION_MATERIAL_RATIO"
+// Read the complete RSP_LOCATION_GL_RATIO working table retained by step_01.
 dataset rsp_location_gl_ratio = "step_01" named "RSP_LOCATION_GL_RATIO"
+// Read the complete CAL_LOCATION_GL_RATIO working table retained by step_01.
 dataset cal_location_gl_ratio = "step_01" named "CAL_LOCATION_GL_RATIO"
+// Read the complete CAL_LOCATION_CONN_SEG_RATIO working table retained by step_01.
 dataset cal_location_conn_seg_ratio = "step_01" named "CAL_LOCATION_CONN_SEG_RATIO"
+// Select the records required by this business block; retain their original signs and dimensions.
 filter filtered1 = new_data as f2 where f2.DEMREVID_KFS == "DEMREVID009"
+// Index the complete working table; matching rows and first-match lookup precedence remain explicit.
 index ix6 = rsp_location_material_ratio by ["TIME","MATCONN","AUDITTRAIL"] many
 index ix10 = rsp_location_gl_ratio by ["ACCOUNT","TIME"] many
 index ix14 = cal_location_gl_ratio by ["ACCOUNT","TIME"] many
@@ -13,6 +28,7 @@ index ix18 = cal_location_conn_seg_ratio by ["CONN_REG_SPLIT","TIME"] many
 for selected3 in filtered1 copy
 selected3.DEMREVID_KFS = "DEMREVID015"
 if integer(selected3.SIGNEDDATA) == 1
+// A missing lookup returns initial values; the following found checks and fallback branches control the outcome.
 find found4 = rsp_location_material_ratio where TIME = selected3.TIME and MATCONN = selected3.MATCONN and AUDITTRAIL = "DEMREVID_LOC_RATIO_OVERWRITE" search linear missing initial
 let trail5 = "DEMREVID_RSP_BILLING"
 if found(found4)
@@ -55,9 +71,14 @@ end
 end
 end
 append new_data from rsp_split_ratios
+// Retain complete native datasets for downstream stages; publication here does not post financial data.
 publish new_data as "NEW_DATA"
 publish rsp_split_ratios as "RSP_SPLIT_RATIOS"
+// Sum signed amounts using the stated include/exclude dimension list and the original grouping semantics.
 group group22 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
+// Fill initial dimensions with their original NA members; GEO_DRIVERS uses GDRVS_NA.
 defaults group22 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
+// Preserve the original sort keys and tie behavior used by subsequent lookups.
 sort group22 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc
+// Display a bounded sample for review; source totals and complete SAP working datasets remain separate.
 show group22 as "CONTROL_TOTALS"

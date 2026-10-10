@@ -1,15 +1,30 @@
 script version 2 compact
+// DEMREVID003 business-rule notes
+// Calculate material FFLAS ratios and skipped flags
+// Build SAP revenue denominators; create DEMREVID052 flags for suppressed material groups before excluding
+// them. Divide allocated FFLAS revenue by the remaining base, assign residual to non-FFLAS, and add
+// rounding discrepancy to the same existing row selected by the original ordering.
+// Check: Ratios reconcile to one for nonzero eligible bases. Suppressed combinations have flags rather than
+// ratios. Test rounding, negative bases, zero bases and both suppression settings.
+// Complete working tables stay in SAP; displayed previews are not calculation inputs.
+
+// Read the complete SAP_REVENUES working table retained by step_02.
 dataset sap_revenues = "step_02" named "SAP_REVENUES"
+// Read the complete NEW_DATA working table retained by step_16.
 dataset new_data = "step_16" named "NEW_DATA"
 empty fflas_ratios = new_data
 empty skipped_materials = new_data
+// Sum signed amounts using the stated include/exclude dimension list and the original grouping semantics.
 group group1 = sap_revenues include ["CATEGORY","TIME","ACCOUNT","MATCONN","MAT_GROUP_ID"]
+// Fill initial dimensions with their original NA members; GEO_DRIVERS uses GDRVS_NA.
 defaults group1 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
+// Preserve the original sort keys and tie behavior used by subsequent lookups.
 sort group1 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, MAT_GROUP_ID asc
 for replace2 in group1
 replace2.AUDITTRAIL = "DEMREVID_CALC"
 replace2.DEMREVID_KFS = "DEMREVID047"
 end
+// Display a bounded sample for review; source totals and complete SAP working datasets remain separate.
 show group1 as "RATIO_BASE_BEFORE_EXCLUSIONS"
 let raw3 = input("FFLASMATGROUPSID")
 let parts4 = split(raw3,",")
@@ -51,6 +66,7 @@ row skip_member like skip_members
 let skip_position = 0
 for skip_id in range5
 skip_position = skip_position + 1
+// A missing lookup returns initial values; the following found checks and fallback branches control the outcome.
 find found13 = positioned_flags where POSITION = integer(skip_position) search linear missing initial
 if found(found13)
 if not initial(found13.FLAG)
@@ -78,10 +94,13 @@ end
 end
 show skipped_materials as "SKIPPED_MATERIAL_FLAGS"
 show group1 as "RATIO_BASE_AFTER_EXCLUSIONS"
+// Sum signed amounts using the stated include/exclude dimension list and the original grouping semantics.
 group group17 = group1 exclude ["MAT_GROUP_ID"]
 defaults group17 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
 sort group17 unstable by MAT_GROUP_ID asc
+// Select the records required by this business block; retain their original signs and dimensions.
 filter filtered18 = new_data as f19 where f19.DEMREVID_KFS == "DEMREVID023"
+// Sum signed amounts using the stated include/exclude dimension list and the original grouping semantics.
 group group20 = filtered18 include ["CATEGORY","TIME","ACCOUNT","MATCONN","FFLAS","MAT_GROUP_ID"]
 defaults group20 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
 sort group20 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, FFLAS asc, MAT_GROUP_ID asc
@@ -89,6 +108,7 @@ for replace21 in group20
 replace21.AUDITTRAIL = "DEMREVID_CALC"
 replace21.DEMREVID_KFS = "DEMREVID047"
 end
+// Index the complete working table; matching rows and first-match lookup precedence remain explicit.
 index ix22 = group20 by ["TIME","ACCOUNT","MATCONN"] many
 show group20 as "FFLAS_REVENUE_NUMERATORS"
 for denominator in group17 copy
@@ -113,9 +133,11 @@ end
 end
 end
 show fflas_ratios as "RATIOS_BEFORE_ROUNDING"
+// Sum signed amounts using the stated include/exclude dimension list and the original grouping semantics.
 group group25 = fflas_ratios exclude ["FFLAS","MAT_GROUP_ID"]
 defaults group25 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
 sort group25 unstable by FFLAS asc, MAT_GROUP_ID asc
+// Select the records required by this business block; retain their original signs and dimensions.
 filter filtered26 = group25 as f27 where f27.SIGNEDDATA != 1
 sort fflas_ratios unstable by TIME asc, ACCOUNT asc, MATCONN asc
 for ratio_sum in filtered26
@@ -128,7 +150,9 @@ end
 append fflas_ratios from skipped_materials
 show fflas_ratios as "RATIOS_AND_FLAGS"
 append new_data from fflas_ratios
+// Retain complete native datasets for downstream stages; publication here does not post financial data.
 publish new_data as "NEW_DATA"
+// Sum signed amounts using the stated include/exclude dimension list and the original grouping semantics.
 group group29 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
 defaults group29 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
 sort group29 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc

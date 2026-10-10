@@ -1,8 +1,20 @@
 script version 2 compact
+// DEMREVID003 business-rule notes
+// Allocate unbilled revenue by geography
+// Apply the selected geography ratios to SAP unbilled/accrual revenue and retain the original key-figure
+// tags and signed arithmetic.
+// Check: Trace a positive and a negative accrual. Check missing driver behavior against the original.
+// Complete working tables stay in SAP; displayed previews are not calculation inputs.
+
+// Read the complete NEW_DATA working table retained by step_07.
 dataset new_data = "step_07" named "NEW_DATA"
+// Read the complete SAP_REVENUES working table retained by step_02.
 dataset sap_revenues = "step_02" named "SAP_REVENUES"
+// Read the complete RSP_SPLIT_RATIOS working table retained by step_05.
 dataset rsp_split_ratios = "step_05" named "RSP_SPLIT_RATIOS"
+// Select the records required by this business block; retain their original signs and dimensions.
 filter filtered1 = sap_revenues as f2 where f2.DEMREVID_KFS == "DEMREVID007"
+// Index the complete working table; matching rows and first-match lookup precedence remain explicit.
 index ix4 = rsp_split_ratios by ["MATCONN","ACCOUNT","TIME"] many
 for revenue3 in filtered1 copy
 if not initial(revenue3.SIGNEDDATA)
@@ -16,8 +28,13 @@ append new_data row row7
 end
 end
 end
+// Retain complete native datasets for downstream stages; publication here does not post financial data.
 publish new_data as "NEW_DATA"
+// Sum signed amounts using the stated include/exclude dimension list and the original grouping semantics.
 group group8 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
+// Fill initial dimensions with their original NA members; GEO_DRIVERS uses GDRVS_NA.
 defaults group8 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
+// Preserve the original sort keys and tie behavior used by subsequent lookups.
 sort group8 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc
+// Display a bounded sample for review; source totals and complete SAP working datasets remain separate.
 show group8 as "CONTROL_TOTALS"

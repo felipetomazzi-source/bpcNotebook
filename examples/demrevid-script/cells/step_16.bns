@@ -1,7 +1,20 @@
 script version 2 compact
+// DEMREVID003 business-rule notes
+// Reallocate HSNS premium revenue
+// Credit the original HSNS allocation, rebuild from uploaded billing, map bandwidth to the associated
+// access/rental group, and split accrual using material-level billing ratios before material-group
+// fallback. Apply configured supplier exclusions at the original stage.
+// Check: Reconcile credits/replacement revenue. Verify a material with only ID-only billing does not
+// acquire PQ through a blended group fallback.
+// Complete working tables stay in SAP; displayed previews are not calculation inputs.
+
+// Read the complete NEW_DATA working table retained by step_15.
 dataset new_data = "step_15" named "NEW_DATA"
+// Read the complete INPUT_DATA working table retained by step_01.
 dataset input_data = "step_01" named "INPUT_DATA"
+// Read the complete SAP_REVENUES working table retained by step_02.
 dataset sap_revenues = "step_02" named "SAP_REVENUES"
+// Select the records required by this business block; retain their original signs and dimensions.
 filter filtered1 = new_data as f2 where f2.DEMREVID_KFS == "DEMREVID023" and f2.ACCOUNT == "001054200" and is_in(f2.PRODUCT_TYPE,["PRODUCT_TYPE_001","PRODUCT_TYPE_004"])
 for replace3 in filtered1
 replace3.AUDITTRAIL = "DEMREVID_CALC_HSNS_CREDIT"
@@ -10,32 +23,48 @@ for credit_row in filtered1
 credit_row.SIGNEDDATA = credit_row.SIGNEDDATA * -1
 end
 append new_data from filtered1
+// Select the records required by this business block; retain their original signs and dimensions.
 filter filtered4 = input_data as f5 where f5.DEMREVID_KFS == "DEMREVID045"
 for replace6 in filtered4
 replace6.AUDITTRAIL = "DEMREVID_CALC_HSNS"
 replace6.DEMREVID_KFS = "DEMREVID006"
 end
+// Sum signed amounts using the stated include/exclude dimension list and the original grouping semantics.
 group group7 = filtered4 exclude ["UFB_DR_ID"]
+// Fill initial dimensions with their original NA members; GEO_DRIVERS uses GDRVS_NA.
 defaults group7 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
+// Preserve the original sort keys and tie behavior used by subsequent lookups.
 sort group7 unstable by UFB_DR_ID asc
+// Read the complete CONN_REG_SPLIT working table retained by step_01.
 dataset conn_reg_split = "step_01" named "CONN_REG_SPLIT"
+// Read the complete L1_L2_MAPPING working table retained by step_01.
 dataset l1_l2_mapping = "step_01" named "L1_L2_MAPPING"
+// Read the complete MAT_GROUP_MAPPING working table retained by step_01.
 dataset mat_group_mapping = "step_01" named "MAT_GROUP_MAPPING"
+// Read the complete PRODUCT_MEMBERS working table retained by step_01.
 dataset product_members = "step_01" named "PRODUCT_MEMBERS"
+// Read the complete MATERIAL_MEMBERS working table retained by step_01.
 dataset material_members = "step_01" named "MATERIAL_MEMBERS"
+// Read the complete GROUP_MEMBERS working table retained by step_01.
 dataset group_members = "step_01" named "GROUP_MEMBERS"
+// Select the records required by this business block; retain their original signs and dimensions.
 filter filtered8 = input_data as f9 where f9.DEMREVID_KFS == "DEMREVID036"
+// Select the records required by this business block; retain their original signs and dimensions.
 filter filtered10 = input_data as f11 where f11.DEMREVID_KFS == "DEMREVID037"
+// Select the records required by this business block; retain their original signs and dimensions.
 filter filtered12 = input_data as f13 where f13.DEMREVID_KFS == "DEMREVID014"
 sort filtered8 unstable by TIME asc, ACCOUNT asc, MATCONN asc
 sort filtered10 unstable by TIME asc, MATCONN asc, MAT_GROUP_ID asc
 sort filtered12 unstable by TIME asc, MATCONN asc
+// Index the complete working table; matching rows and first-match lookup precedence remain explicit.
 index ix17 = product_members by ["ID"] many
 index ix24 = material_members by ["ID"] many
 index ix28 = group_members by ["ID"] many
 for revenue14 in group7
+// A missing lookup returns initial values; the following found checks and fallback branches control the outcome.
 find found15 = filtered12 where TIME = revenue14.TIME and MATCONN = revenue14.MATCONN search binary missing initial
 if found(found15)
+// Format the numeric mapping as the original three-digit product code, then check the stored member table.
 lookup found16 = ix17 where ID = concat("PRODUCT_TYPE_", numeric_text(found15.SIGNEDDATA,3)) policy first missing initial
 if found(found16)
 revenue14.PRODUCT_TYPE = found16.ID
@@ -57,6 +86,7 @@ find found21 = filtered8 where TIME = revenue14.TIME and ACCOUNT = revenue14.ACC
 if found(found21)
 revenue14.MATREMAP = found21.MATREMAP
 else
+// This lookup uses the default account member; keep its position in the original lookup waterfall.
 find found22 = filtered8 where TIME = revenue14.TIME and ACCOUNT = "ACCOUNT_NA" and MATCONN = revenue14.MATCONN search binary missing initial
 if found(found22)
 revenue14.MATREMAP = found22.MATREMAP
@@ -78,6 +108,7 @@ if found(found25)
 revenue14.MAT_GROUP_ID = found25.MAT_GROUP_ID
 end
 else
+// Look up the default material member; surrounding found checks determine when this branch is used.
 find found26 = mat_group_mapping where TIME = revenue14.TIME and MATCONN = "MATCONN_NA" and ACCOUNT = revenue14.ACCOUNT search binary missing initial
 if found(found26)
 revenue14.MAT_GROUP_ID = found26.MAT_GROUP_ID
@@ -107,12 +138,14 @@ bandwidth_row.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
 end
 end
 end
+// Sum signed amounts using the stated include/exclude dimension list and the original grouping semantics.
 group group32 = group7 all
 append new_data from group32
 copy hsns_fflas_allocation = group32
 for replace33 in hsns_fflas_allocation
 replace33.DEMREVID_KFS = "DEMREVID023"
 end
+// Sum signed amounts using the stated include/exclude dimension list and the original grouping semantics.
 group group34 = hsns_fflas_allocation all
 let raw35 = input("HSNS_REALLOC_LOCATIONS")
 let parts36 = split(raw35,",")
@@ -139,16 +172,20 @@ end
 end
 end
 end
+// Sum signed amounts using the stated include/exclude dimension list and the original grouping semantics.
 group group41 = eligible include ["TIME","MATCONN","FFLAS","LFC_WIN_SUPPLIER"]
 defaults group41 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
 sort group41 unstable by TIME asc, MATCONN asc, FFLAS asc, LFC_WIN_SUPPLIER asc
+// Sum signed amounts using the stated include/exclude dimension list and the original grouping semantics.
 group group42 = group41 include ["TIME","MATCONN"]
 defaults group42 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
 sort group42 unstable by TIME asc, MATCONN asc
 for divide43 in group41
 find found44 = group42 where TIME = divide43.TIME and MATCONN = divide43.MATCONN search binary missing initial
+// Use the original floating-point division; a zero denominator leaves the numerator unchanged.
 divide divide43.SIGNEDDATA by found44.SIGNEDDATA using float onzero keep
 end
+// Sum signed amounts using the stated include/exclude dimension list and the original grouping semantics.
 group group45 = group41 include ["TIME","MATCONN"]
 defaults group45 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
 sort group45 unstable by TIME asc, MATCONN asc
@@ -157,13 +194,16 @@ for sum46 in group45
 if sum46.SIGNEDDATA != 1 and not initial(sum46.SIGNEDDATA)
 find found47 = group41 where TIME = sum46.TIME and MATCONN = sum46.MATCONN search linear missing initial
 if found(found47)
+// Apply the remaining ratio difference to the selected first row, preserving the original rounding correction.
 found47.SIGNEDDATA = found47.SIGNEDDATA + (1 - sum46.SIGNEDDATA)
 end
 end
 end
+// Sum signed amounts using the stated include/exclude dimension list and the original grouping semantics.
 group group48 = eligible include ["TIME","MAT_GROUP_ID","FFLAS","LFC_WIN_SUPPLIER"]
 defaults group48 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
 sort group48 unstable by TIME asc, MAT_GROUP_ID asc, FFLAS asc, LFC_WIN_SUPPLIER asc
+// Sum signed amounts using the stated include/exclude dimension list and the original grouping semantics.
 group group49 = group48 include ["TIME","MAT_GROUP_ID"]
 defaults group49 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
 sort group49 unstable by TIME asc, MAT_GROUP_ID asc
@@ -171,6 +211,7 @@ for divide50 in group48
 find found51 = group49 where TIME = divide50.TIME and MAT_GROUP_ID = divide50.MAT_GROUP_ID search binary missing initial
 divide divide50.SIGNEDDATA by found51.SIGNEDDATA using float onzero keep
 end
+// Sum signed amounts using the stated include/exclude dimension list and the original grouping semantics.
 group group52 = group48 include ["TIME","MAT_GROUP_ID"]
 defaults group52 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
 sort group52 unstable by TIME asc, MAT_GROUP_ID asc
@@ -183,6 +224,7 @@ found54.SIGNEDDATA = found54.SIGNEDDATA + (1 - sum53.SIGNEDDATA)
 end
 end
 end
+// Select the records required by this business block; retain their original signs and dimensions.
 filter filtered55 = sap_revenues as f56 where f56.ACCOUNT == "001054200" and is_in(f56.PRODUCT_TYPE,["PRODUCT_TYPE_001","PRODUCT_TYPE_004"]) and f56.DEMREVID_KFS == "DEMREVID007"
 for replace57 in filtered55
 replace57.AUDITTRAIL = "DEMREVID_CALC_HSNS"
@@ -217,10 +259,14 @@ append group34 from accrual_allocation
 for replace67 in group34
 replace67.DEMREVID_KFS = "DEMREVID023"
 end
+// Sum signed amounts using the stated include/exclude dimension list and the original grouping semantics.
 group group68 = group34 all
 append new_data from group68
+// Retain complete native datasets for downstream stages; publication here does not post financial data.
 publish new_data as "NEW_DATA"
+// Sum signed amounts using the stated include/exclude dimension list and the original grouping semantics.
 group group69 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
 defaults group69 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
 sort group69 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc
+// Display a bounded sample for review; source totals and complete SAP working datasets remain separate.
 show group69 as "CONTROL_TOTALS"
