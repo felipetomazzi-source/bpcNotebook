@@ -43,7 +43,14 @@ CLASS zcl_bn_context DEFINITION PUBLIC FINAL CREATE PUBLIC.
     DATA fixture_mode TYPE abap_bool READ-ONLY.
     METHODS compare_results IMPORTING name TYPE string original TYPE ANY TABLE notebook TYPE ANY TABLE
       preview_rows TYPE i DEFAULT 100 RETURNING VALUE(summary) TYPE ty_comparison RAISING zcx_bn.
-    METHODS enable_fixtures IMPORTING fixtures TYPE tt_fixtures RAISING zcx_bn.
+    METHODS enable_fixtures IMPORTING fixtures TYPE tt_fixtures
+      dimensions TYPE zcl_bn_bpc=>tt_dimension_fixtures OPTIONAL
+      metadata TYPE ANY TABLE OPTIONAL
+      freeze_metadata TYPE abap_bool DEFAULT abap_false RAISING zcx_bn.
+    METHODS snapshot_identifier RETURNING VALUE(result) TYPE string RAISING zcx_bn.
+    DATA metadata_fixture_mode TYPE abap_bool READ-ONLY.
+    METHODS fixture_dimension IMPORTING model_name TYPE string dimension TYPE string
+      RETURNING VALUE(result) TYPE zcl_bn_bpc=>ty_dimension_fixture RAISING zcx_bn.
     METHODS fixture_copy IMPORTING cell_id TYPE string
       RETURNING VALUE(result) TYPE REF TO zcl_bn_context RAISING zcx_bn.
     METHODS include_fixture_outputs IMPORTING context TYPE REF TO zcl_bn_context prefix TYPE string RAISING zcx_bn.
@@ -111,6 +118,7 @@ CLASS zcl_bn_context DEFINITION PUBLIC FINAL CREATE PUBLIC.
     METHODS reserve_dataset IMPORTING row_count TYPE i byte_count TYPE i RAISING zcx_bn.
     METHODS dataset_budget RETURNING VALUE(maximum) TYPE i RAISING zcx_bn.
     DATA mt_fixtures TYPE tt_fixtures.
+    DATA mt_dimension_fixtures TYPE zcl_bn_bpc=>tt_dimension_fixtures.
     DATA mv_run_id TYPE string.
     DATA mv_started TYPE timestampl.
     DATA mv_cancel_polled TYPE timestampl.
@@ -201,7 +209,7 @@ CLASS zcl_bn_context IMPLEMENTATION.
   METHOD bpc_dimension.
     check_logic_model( model_name ).
     " Stored member properties are calculation reference inputs, not historical values.
-    check_data_snapshot( ).
+    IF metadata_fixture_mode <> abap_true. check_data_snapshot( ). ENDIF.
     adapter = NEW zcl_bn_bpc( environment = CONV #( environment )
       model = COND #( WHEN model_name IS INITIAL THEN CONV string( model ) ELSE model_name )
       dimension = name inputs = mt_inputs scope = mt_scope diagnostics = me ).
@@ -358,6 +366,7 @@ CLASS zcl_bn_context IMPLEMENTATION.
     rows = dataset-rows.
   ENDMETHOD.
   METHOD check_data_snapshot.
+    IF metadata_fixture_mode = abap_true AND fixture_mode = abap_true. RETURN. ENDIF.
     IF mv_fixture_required = abap_true AND fixture_mode <> abap_true.
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MODE' detail = 'Enable the retained fixtures before any model read in this validation stage'.
     ENDIF.
@@ -709,7 +718,59 @@ CLASS zcl_bn_context IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MODE'
         detail = 'Fixtures require a fresh DEV preview context, 1 to 10 model tables, and cannot be enabled in Script Logic'.
     ENDIF.
-    check_budget( ).
+    check_budget( force_poll = abap_true ).
+    DATA bundles TYPE zcl_bn_bpc=>tt_dimension_fixtures. bundles = dimensions.
+    IF metadata IS SUPPLIED.
+      IF dimensions IS NOT INITIAL.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_METADATA' detail = 'Choose bundles or retained packets, not both'.
+      ENDIF.
+      DATA expected_packets TYPE zcl_bn_bpc=>tt_dimension_packets.
+      DATA(actual_schema) = zcl_bn_bpc=>describe_table( table = REF #( metadata ) source = 'fixture' ).
+      DATA(expected_schema) = zcl_bn_bpc=>describe_table( table = REF #( expected_packets ) source = 'fixture' ).
+      IF actual_schema <> expected_schema.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_METADATA' detail = 'Metadata must use the native flat dimension packet schema'.
+      ENDIF.
+      expected_packets = CORRESPONDING #( metadata ).
+      bundles = zcl_bn_bpc=>unpack_dimensions( packets = expected_packets max_bytes = dataset_budget( ) ).
+    ENDIF.
+    DATA dimension_copies TYPE zcl_bn_bpc=>tt_dimension_fixtures.
+    IF bundles IS NOT INITIAL OR freeze_metadata = abap_true.
+      IF bundles IS INITIAL OR lines( bundles ) > 50.
+        RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_METADATA' detail = 'Frozen metadata requires 1 to 50 dimension bundles'.
+      ENDIF.
+      DATA snapshot_id TYPE string.
+      DATA metadata_bytes TYPE int8.
+      LOOP AT bundles INTO DATA(dimension).
+        IF dimension-environment <> environment OR NOT line_exists( fixtures[ model = dimension-model ] ) OR
+           line_exists( dimension_copies[ model = dimension-model dimension = dimension-dimension ] ).
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_METADATA' detail = 'Unique dimension bundles must belong to fixture models'.
+        ENDIF.
+        IF snapshot_id IS INITIAL. snapshot_id = dimension-snapshot_id. ENDIF.
+        IF dimension-snapshot_id <> snapshot_id.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_METADATA' detail = 'All metadata bundles require the same capture identifier'.
+        ENDIF.
+        IF mv_run_id IS INITIAL.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_METADATA' detail = 'Metadata fixtures require a persisted preview run'.
+        ENDIF.
+        IF snapshot_id <> mv_run_id AND dataset_reads IS INITIAL.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATA_SNAPSHOT' detail = 'Historical metadata requires retained dependency datasets'.
+        ENDIF.
+        LOOP AT dataset_reads INTO DATA(retained_read) WHERE run_id <> snapshot_id.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATA_SNAPSHOT' detail = 'Fact and metadata fixture datasets must share the capture run'.
+        ENDLOOP.
+        LOOP AT mt_bindings INTO DATA(retained_binding) WHERE run_id <> snapshot_id.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATA_SNAPSHOT' detail = 'Mixed run bindings cannot enable frozen metadata'.
+        ENDLOOP.
+        DATA(dimension_copy) = zcl_bn_bpc=>copy_dimension( dimension ).
+        FIELD-SYMBOLS <dimension_rows> TYPE STANDARD TABLE. ASSIGN dimension_copy-rows->* TO <dimension_rows>.
+        check_rows( lines( <dimension_rows> ) ).
+        DATA(packet) = zcl_bn_dataset=>freeze( name = 'METADATA' rows = <dimension_rows> max_bytes = dataset_budget( ) ).
+        metadata_bytes = metadata_bytes + packet-memory_bytes + strlen( packet-content ) * cl_abap_char_utilities=>charsize +
+          strlen( zcl_bn_types=>json( dimension_copy-children ) ) * cl_abap_char_utilities=>charsize.
+        check_working_bytes( metadata_bytes ).
+        APPEND dimension_copy TO dimension_copies.
+      ENDLOOP.
+    ENDIF.
     DATA copies TYPE tt_fixtures.
     LOOP AT fixtures INTO DATA(fixture).
       IF fixture-rows IS NOT BOUND OR fixture-environment <> environment OR fixture-model IS INITIAL
@@ -730,7 +791,8 @@ CLASS zcl_bn_context IMPLEMENTATION.
       APPEND copy TO copies.
       check_budget( ).
     ENDLOOP.
-    mt_fixtures = copies. fixture_mode = abap_true.
+    mt_fixtures = copies. fixture_mode = abap_true. mt_dimension_fixtures = dimension_copies.
+    metadata_fixture_mode = xsdbool( dimension_copies IS NOT INITIAL ).
     message( 'FIXTURE MODE: in-memory inputs only; no live model reads or allocation result publication' ).
   ENDMETHOD.
   METHOD fixture_copy.
@@ -741,7 +803,23 @@ CLASS zcl_bn_context IMPLEMENTATION.
       cell_id = cell_id environment = CONV #( environment ) model = CONV #( model ) run_id = mv_run_id
       scope = mt_scope logic_parameters = mt_logic_parameters ).
     result->mv_started = mv_started.
-    result->enable_fixtures( mt_fixtures ).
+    result->enable_fixtures( fixtures = mt_fixtures dimensions = mt_dimension_fixtures freeze_metadata = metadata_fixture_mode ).
+  ENDMETHOD.
+  METHOD snapshot_identifier.
+    IF mv_run_id IS INITIAL OR mv_logic_call = abap_true.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MODE' detail = 'Metadata capture identifier requires a persisted DEV preview run'.
+    ENDIF.
+    result = mv_run_id.
+  ENDMETHOD.
+  METHOD fixture_dimension.
+    IF metadata_fixture_mode <> abap_true OR fixture_mode <> abap_true.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MODE' detail = 'Frozen dimension access requires metadata fixture mode'.
+    ENDIF.
+    READ TABLE mt_dimension_fixtures INTO DATA(fixture) WITH KEY model = model_name dimension = dimension.
+    IF sy-subrc <> 0.
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'FIXTURE_MISSING' detail = 'Dimension was not captured; live enrichment prohibited'.
+    ENDIF.
+    result = zcl_bn_bpc=>copy_dimension( fixture ).
   ENDMETHOD.
   METHOD include_fixture_outputs.
     IF fixture_mode <> abap_true OR context IS NOT BOUND OR prefix IS INITIAL OR
