@@ -8,7 +8,8 @@ APPEND products->capture_dimension( snapshot_id = io->snapshot_identifier( ) ) T
 DATA(audit) = io->bpc_dimension( 'AUDITTRAIL' ).
 APPEND audit->capture_dimension( snapshot_id = io->snapshot_identifier( )
  hierarchy_reads = VALUE #( ( hierarchy = 'PARENTH1' member = 'DEMREVID_OUTPUT' ) ) ) TO bundles.
-FIELD-SYMBOLS <members> TYPE STANDARD TABLE. ASSIGN bundles[ 1 ]-rows->* TO <members>.
+DATA(member_ref) = bundles[ 1 ]-rows.
+FIELD-SYMBOLS <members> TYPE STANDARD TABLE. ASSIGN member_ref->* TO <members>.
 READ TABLE <members> ASSIGNING FIELD-SYMBOL(<member>) INDEX 1.
 IF sy-subrc <> 0. RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'METADATA_TEST' detail = 'Authorized nonempty member fixture required'. ENDIF.
 ASSIGN COMPONENT 'EVDESCRIPTION' OF STRUCTURE <member> TO FIELD-SYMBOL(<description>).
@@ -58,7 +59,7 @@ CATCH zcx_bn INTO DATA(error). IF error->code <> 'FIXTURE_MISSING'. RAISE EXCEPT
 TRY. original_context->bpc_dimension( 'MATCONN' ).
  RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'METADATA_TEST' detail = 'Uncaptured dimension fell back to live'.
 CATCH zcx_bn INTO error. IF error->code <> 'FIXTURE_MISSING'. RAISE EXCEPTION error. ENDIF. ENDTRY.
-TRY. products->member_data( VALUE #( ( 'UNRETAINED_PLATFORM_MEMBER' ) ) ).
+TRY. products->member_data( VALUE #( ( CONV string( 'UNRETAINED_PLATFORM_MEMBER' ) ) ) ).
  RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'METADATA_TEST' detail = 'Uncaptured member fell back to live'.
 CATCH zcx_bn INTO error. IF error->code <> 'FIXTURE_MISSING'. RAISE EXCEPTION error. ENDIF. ENDTRY.
 TRY. products->capture_dimension( snapshot_id = io->snapshot_identifier( ) ).

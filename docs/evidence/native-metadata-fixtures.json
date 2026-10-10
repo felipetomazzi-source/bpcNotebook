@@ -1,0 +1,62 @@
+{
+  "at": "2026-10-10T04:12:55.000Z",
+  "financialPosting": false,
+  "passed": true,
+  "runId": "E82AEA36D1571FE1B18C1B969E102CB2",
+  "state": "succeeded",
+  "error": {
+    "code": "",
+    "message": ""
+  },
+  "messages": [
+    {
+      "cellId": "capture",
+      "severity": "Information",
+      "text": "FIXTURE MODE: in-memory inputs only; no live model reads or allocation result publication"
+    },
+    {
+      "cellId": "script",
+      "severity": "Information",
+      "text": "FIXTURE MODE: in-memory inputs only; no live model reads or allocation result publication"
+    },
+    {
+      "cellId": "verify",
+      "severity": "Information",
+      "text": "FIXTURE MODE: in-memory inputs only; no live model reads or allocation result publication"
+    },
+    {
+      "cellId": "verify",
+      "severity": "Information",
+      "text": "METADATA_FIXTURE_OK: native manifest, private copies, original context, captured hierarchy, no enrichment, snapshot guard"
+    }
+  ],
+  "results": [
+    {
+      "cellId": "capture",
+      "runId": "E82AEA36D1571FE1B18C1B969E102CB2",
+      "revision": 1,
+      "rowCount": 2,
+      "durationMs": 345,
+      "checksum": "F4C3D49B41D139D5D02176CEDB5F54E1745B7B8F289A501178D03BED8541A82B",
+      "createdAt": "2026-10-10T04:12:54,4372870Z"
+    },
+    {
+      "cellId": "script",
+      "runId": "E82AEA36D1571FE1B18C1B969E102CB2",
+      "revision": 1,
+      "rowCount": 9,
+      "durationMs": 140,
+      "checksum": "E439A57E0A54A6FB1D76610DF58A6B65B1277229F510404A3597F074ABF42234",
+      "createdAt": "2026-10-10T04:12:54,6411210Z"
+    },
+    {
+      "cellId": "verify",
+      "runId": "E82AEA36D1571FE1B18C1B969E102CB2",
+      "revision": 1,
+      "rowCount": 0,
+      "durationMs": 131,
+      "checksum": "DCDB5E8A7A86A20A517DE021DE4D983BEF5E8676B125FE7A35573BA26A130F07",
+      "createdAt": "2026-10-10T04:12:54,8245090Z"
+    }
+  ]
+}
