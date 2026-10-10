@@ -44,7 +44,13 @@ CLASS zcl_bn_bw IMPLEMENTATION.
           IF sy-subrc <> 0.
             RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BW_FIELDS' detail = 'Invalid DDIC element name'.
           ENDIF.
-          DATA(element) = CAST cl_abap_elemdescr( cl_abap_typedescr=>describe_by_name( field-ddic_type ) ).
+          DATA descriptor TYPE REF TO cl_abap_typedescr.
+          cl_abap_typedescr=>describe_by_name( EXPORTING p_name = field-ddic_type
+            RECEIVING p_descr_ref = descriptor EXCEPTIONS type_not_found = 1 OTHERS = 2 ).
+          IF sy-subrc <> 0.
+            RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BW_FIELDS' detail = 'DDIC element does not exist'.
+          ENDIF.
+          DATA(element) = CAST cl_abap_elemdescr( descriptor ).
           IF element->is_ddic_type( ) = abap_false OR element->type_kind = cl_abap_typedescr=>typekind_string OR
              element->type_kind = cl_abap_typedescr=>typekind_xstring.
             RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BW_FIELDS' detail = 'Flat DDIC InfoObject element required'.
@@ -69,7 +75,7 @@ CLASS zcl_bn_bw IMPLEMENTATION.
         ENDLOOP.
         DATA(table_type) = cl_abap_tabledescr=>create( p_line_type = cl_abap_structdescr=>create( components ) ).
         CREATE DATA result TYPE HANDLE table_type.
-      CATCH cx_sy_type_not_found cx_sy_move_cast_error cx_sy_struct_creation cx_sy_table_creation INTO DATA(schema_error).
+      CATCH cx_sy_move_cast_error cx_sy_struct_creation cx_sy_table_creation INTO DATA(schema_error).
         RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BW_FIELDS' detail = schema_error->get_text( ).
     ENDTRY.
     IF lines( filters ) > 100.
