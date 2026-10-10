@@ -119,7 +119,7 @@ publish rows as "VERIFIED"`;
   {name:'REFERENCE_TIME',type:'range',dimension:'TIME',hierarchy:'PARENTH1',required:true,purpose:'reference',selected:['TIME_NA'],lookbackFrom:'TIME',lookbackSteps:1}];
  await check('dimension reference snapshot boundary',[
   {id:'seed',script:'script version 2\ndimension categories = DEMREVID-CATEGORY\nmembers rows = categories ["Actual"]\npublish rows as "MEMBERS"'},
-  {id:'consumer',script:'script version 2\ndataset retained = "seed" named "MEMBERS"\ndimension categories = DEMREVID-CATEGORY\nmembers fresh = categories ["Actual"]\ncompare summary = retained with fresh as "METADATA_SNAPSHOT"',dependencies:['seed']}
+  {id:'consumer',script:'script version 2\ndataset retained = "seed" named "MEMBERS"\ndimension categories = DEMREVID-CATEGORY\nmembers fresh = categories ["Actual"]\ncompare summary = retained with fresh as "METADATA_SNAPSHOT" ordered',dependencies:['seed']}
  ],'succeeded',[],{environment:'CH_PLANNING',model:'DEMREVID'});
  const fixtureSeed=`DATA(adapter) = NEW zcl_bn_bpc( environment = CONV string( io->environment ) model = CONV string( io->model ) ).
 DATA(periods) = io->range( 'TIME' ).

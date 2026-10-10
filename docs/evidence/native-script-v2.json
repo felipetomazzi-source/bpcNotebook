@@ -1,0 +1,713 @@
+{
+  "at": "2026-10-10T03:16:27.908Z",
+  "system": "NPL",
+  "client": "001",
+  "sourceCommit": "74c4dc512ffe0ff7c9e5dbdfff33bff2f45ccee5",
+  "financialPosting": false,
+  "cases": [
+    {
+      "name": "native operations",
+      "notebookId": "E82AEA36D1571FE1B18B1F5C8A504B87",
+      "runId": "E82AEA36D1571FE1B18B1F5C8A50EB87",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "results": [
+        {
+          "cellId": "native",
+          "runId": "E82AEA36D1571FE1B18B1F5C8A50EB87",
+          "revision": 1,
+          "rowCount": 3,
+          "durationMs": 683,
+          "checksum": "9898B670721A87646D26027052F506C65B340A09BF59507E0F386249087C6EA8",
+          "createdAt": "2026-10-10T03:16:29,4111980Z"
+        }
+      ],
+      "messages": [
+        {
+          "cellId": "native",
+          "severity": "Information",
+          "text": "NATIVE_SCRIPT_OK"
+        }
+      ]
+    },
+    {
+      "name": "legacy changeset",
+      "notebookId": "E82AEA36D1571FE1B18B1F9A92398B87",
+      "runId": "E82AEA36D1571FE1B18B1F9A923A2B87",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "results": [
+        {
+          "cellId": "oracle",
+          "runId": "E82AEA36D1571FE1B18B1F9A923A2B87",
+          "revision": 1,
+          "rowCount": 5,
+          "durationMs": 55,
+          "checksum": "EFA5E06F97FBD60C41EC86B862EEB73A70FFDA981C2C4774984767427C4A4D49",
+          "createdAt": "2026-10-10T03:16:31,2484180Z"
+        }
+      ],
+      "messages": [
+        {
+          "cellId": "oracle",
+          "severity": "Information",
+          "text": "UJ_SIGNEDDATA kind=P bytes=11 decimals=7"
+        },
+        {
+          "cellId": "oracle",
+          "severity": "Information",
+          "text": "DELTA_ORACLE_OK"
+        }
+      ]
+    },
+    {
+      "name": "unique index rejects duplicates",
+      "notebookId": "E82AEA36D1571FE1B18B1FC09BA80B87",
+      "runId": "E82AEA36D1571FE1B18B1FC09BA8AB87",
+      "state": "failed",
+      "error": {
+        "code": "SCRIPT_CARDINALITY",
+        "message": "Index keys are not unique"
+      },
+      "results": [],
+      "messages": []
+    },
+    {
+      "name": "unique lookup rejects duplicates",
+      "notebookId": "E82AEA36D1571FE1B18B1FE4D57C0B87",
+      "runId": "E82AEA36D1571FE1B18B1FE4D57CAB87",
+      "state": "failed",
+      "error": {
+        "code": "SCRIPT_CARDINALITY",
+        "message": "Lookup expected one matching row"
+      },
+      "results": [],
+      "messages": []
+    },
+    {
+      "name": "strict changes rejects duplicates",
+      "notebookId": "E82AEA36D1571FE1B18B2008494E0B87",
+      "runId": "E82AEA36D1571FE1B18B2008494EAB87",
+      "state": "failed",
+      "error": {
+        "code": "SCRIPT_CARDINALITY",
+        "message": "Index keys are not unique"
+      },
+      "results": [],
+      "messages": []
+    },
+    {
+      "name": "explicit native result boundary",
+      "notebookId": "E82AEA36D1571FE1B18B202E1E9CCB87",
+      "runId": "E82AEA36D1571FE1B18B202E1E9D6B87",
+      "state": "failed",
+      "error": {
+        "code": "SCRIPT_BOUNDARY",
+        "message": "Explicitly cast SIGNEDDATA to signed at the calculation boundary"
+      },
+      "results": [],
+      "messages": []
+    },
+    {
+      "name": "full shared tables",
+      "notebookId": "E82AEA36D1571FE1B18B205772698B87",
+      "runId": "E82AEA36D1571FE1B18B2057726AAB87",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "results": [
+        {
+          "cellId": "seed",
+          "runId": "E82AEA36D1571FE1B18B2057726AAB87",
+          "revision": 1,
+          "rowCount": 12003,
+          "durationMs": 40,
+          "checksum": "5978FCF7EA7DEA8E8041FDCC7226353A5969FD14B7D49A9F8224DC6C0BB03459",
+          "createdAt": "2026-10-10T03:16:41,2753370Z"
+        },
+        {
+          "cellId": "mutate",
+          "runId": "E82AEA36D1571FE1B18B2057726AAB87",
+          "revision": 1,
+          "rowCount": 12003,
+          "durationMs": 50,
+          "checksum": "EC2B2114847F607307CDFE7C5123CCE34CA88013B2E83C0953827122E6671A35",
+          "createdAt": "2026-10-10T03:16:41,3890950Z"
+        },
+        {
+          "cellId": "verify",
+          "runId": "E82AEA36D1571FE1B18B2057726AAB87",
+          "revision": 1,
+          "rowCount": 12004,
+          "durationMs": 73,
+          "checksum": "2676D0E1147EF5615EA1A7663089BB33FC462492F8D0AE3F38E6FBCB5266D517",
+          "createdAt": "2026-10-10T03:16:41,5164070Z"
+        }
+      ],
+      "messages": []
+    },
+    {
+      "name": "single-cell execution using valid complete predecessors",
+      "runId": "E82AEA36D1571FE1B18B2080EE564B87",
+      "state": "succeeded"
+    },
+    {
+      "name": "stale predecessors rejected",
+      "state": "rejected"
+    },
+    {
+      "name": "working table budget fails explicitly",
+      "notebookId": "E82AEA36D1571FE1B18B20A4BA248B87",
+      "runId": "E82AEA36D1571FE1B18B20A4BA252B87",
+      "state": "failed",
+      "error": {
+        "code": "DATASET_BUDGET",
+        "message": "Script working table exceeds DATASET_BYTES; calculation was not truncated"
+      },
+      "results": [],
+      "messages": []
+    },
+    {
+      "name": "dimension reference snapshot boundary",
+      "notebookId": "E82AEA36D1571FE1B18B20CE6EE40B87",
+      "runId": "E82AEA36D1571FE1B18B20CE6EE66B87",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "results": [
+        {
+          "cellId": "seed",
+          "runId": "E82AEA36D1571FE1B18B20CE6EE66B87",
+          "revision": 1,
+          "rowCount": 1,
+          "durationMs": 99,
+          "checksum": "493AA63D086301F93C2086368D35E5D931767A2EC6627149E030DD0B94AA821D",
+          "createdAt": "2026-10-10T03:16:48,5032390Z"
+        },
+        {
+          "cellId": "consumer",
+          "runId": "E82AEA36D1571FE1B18B20CE6EE66B87",
+          "revision": 1,
+          "rowCount": 1,
+          "durationMs": 136,
+          "checksum": "176B5E885897628295C9BA99F272A49D5BEFA4B2A35DC50EC87B986EBFBFB7EA",
+          "createdAt": "2026-10-10T03:16:48,6893300Z"
+        }
+      ],
+      "messages": []
+    },
+    {
+      "name": "fresh dimension properties blocked with prior-run datasets",
+      "runId": "E82AEA36D1571FE1B18B21134104CB87",
+      "state": "failed",
+      "error": {
+        "code": "DATA_SNAPSHOT",
+        "message": "A cell reusing prior-run datasets cannot read fresh model facts; run through the read stages instead"
+      }
+    },
+    {
+      "name": "shared authorized fixtures and frozen scopes",
+      "notebookId": "E82AEA36D1571FE1B18B21134105EB87",
+      "runId": "E82AEA36D1571FE1B18B216504A64B87",
+      "state": "succeeded",
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "results": [
+        {
+          "cellId": "seed",
+          "runId": "E82AEA36D1571FE1B18B216504A64B87",
+          "revision": 1,
+          "rowCount": 3,
+          "durationMs": 2604,
+          "checksum": "1F7A4D0CDDC65A94A8DB072DCA94F9D6D83B21FA21AF39940FBE51D4297EC19B",
+          "createdAt": "2026-10-10T03:16:57,7582810Z"
+        },
+        {
+          "cellId": "left",
+          "runId": "E82AEA36D1571FE1B18B216504A64B87",
+          "revision": 1,
+          "rowCount": 3,
+          "durationMs": 512,
+          "checksum": "DBF3AAA2630ADD2E13582C22D34530EA81CD03919B2B26A46085029E0DB1C5EF",
+          "createdAt": "2026-10-10T03:16:58,3305690Z"
+        },
+        {
+          "cellId": "right",
+          "runId": "E82AEA36D1571FE1B18B216504A64B87",
+          "revision": 1,
+          "rowCount": 3,
+          "durationMs": 500,
+          "checksum": "E54918145FBC7961C0940B428DABA16C17E5BCA49F30742FC79097B44DA91D6C",
+          "createdAt": "2026-10-10T03:16:58,9146980Z"
+        },
+        {
+          "cellId": "compare",
+          "runId": "E82AEA36D1571FE1B18B216504A64B87",
+          "revision": 1,
+          "rowCount": 1,
+          "durationMs": 562,
+          "checksum": "1173A45742339D2CFAF52BE3C2C96E8613A87621BF1013C6361374E0F3168086",
+          "createdAt": "2026-10-10T03:16:59,5418720Z"
+        }
+      ],
+      "messages": [
+        {
+          "cellId": "seed",
+          "severity": "Information",
+          "text": "FIXTURE MODE: in-memory inputs only; no live model reads or allocation result publication"
+        },
+        {
+          "cellId": "left",
+          "severity": "Information",
+          "text": "FIXTURE MODE: in-memory inputs only; no live model reads or allocation result publication"
+        },
+        {
+          "cellId": "left",
+          "severity": "Information",
+          "text": "Actual"
+        },
+        {
+          "cellId": "left",
+          "severity": "Information",
+          "text": "Actual"
+        },
+        {
+          "cellId": "left",
+          "severity": "Information",
+          "text": "Actual"
+        },
+        {
+          "cellId": "right",
+          "severity": "Information",
+          "text": "FIXTURE MODE: in-memory inputs only; no live model reads or allocation result publication"
+        },
+        {
+          "cellId": "right",
+          "severity": "Information",
+          "text": "Actual"
+        },
+        {
+          "cellId": "right",
+          "severity": "Information",
+          "text": "Actual"
+        },
+        {
+          "cellId": "right",
+          "severity": "Information",
+          "text": "Actual"
+        },
+        {
+          "cellId": "compare",
+          "severity": "Information",
+          "text": "FIXTURE MODE: in-memory inputs only; no live model reads or allocation result publication"
+        }
+      ]
+    },
+    {
+      "name": "undeclared reference period is rejected",
+      "notebookId": "E82AEA36D1571FE1B18B21EBD7C84B8A",
+      "runId": "E82AEA36D1571FE1B18B221805DFCB8A",
+      "state": "failed",
+      "error": {
+        "code": "BPC_FILTER",
+        "message": "Filter conflicts with the frozen run selection"
+      },
+      "results": [
+        {
+          "cellId": "seed",
+          "runId": "E82AEA36D1571FE1B18B221805DFCB8A",
+          "revision": 1,
+          "rowCount": 3,
+          "durationMs": 2563,
+          "checksum": "BCF93B8627FE2182B746600257CF7A64F8D90F8FAA8F8AB243BE2EC1F1CCA53D",
+          "createdAt": "2026-10-10T03:17:07,0958570Z"
+        }
+      ],
+      "messages": [
+        {
+          "cellId": "seed",
+          "severity": "Information",
+          "text": "FIXTURE MODE: in-memory inputs only; no live model reads or allocation result publication"
+        }
+      ]
+    },
+    {
+      "name": "fixture financial result publication is blocked",
+      "notebookId": "E82AEA36D1571FE1B18B228B3C770B8A",
+      "runId": "E82AEA36D1571FE1B18B22B3081D8B8A",
+      "state": "failed",
+      "error": {
+        "code": "FIXTURE_POSTING",
+        "message": "Fixture executions cannot publish BPC allocation results"
+      },
+      "results": [
+        {
+          "cellId": "seed",
+          "runId": "E82AEA36D1571FE1B18B22B3081D8B8A",
+          "revision": 1,
+          "rowCount": 3,
+          "durationMs": 2453,
+          "checksum": "FAE724F1E6A6407E78FFDF62CEFD19FB070E1C32C4948A0CB5D4F66640C94B40",
+          "createdAt": "2026-10-10T03:17:15,0685910Z"
+        }
+      ],
+      "messages": [
+        {
+          "cellId": "seed",
+          "severity": "Information",
+          "text": "FIXTURE MODE: in-memory inputs only; no live model reads or allocation result publication"
+        }
+      ]
+    }
+  ],
+  "passed": true,
+  "readDiagnostics": {
+    "summary": {
+      "runId": "E82AEA36D1571FE1B18B216504A64B87",
+      "cellId": "left",
+      "revision": 1,
+      "total": 1,
+      "sourceTotal": 1,
+      "offset": 0,
+      "limit": 100,
+      "truncated": false,
+      "tableName": "READ_1/SUMMARY",
+      "tables": [
+        {
+          "name": "READ_1/SUMMARY",
+          "rowCount": 1,
+          "totalCount": 1,
+          "truncated": false,
+          "elapsedUs": 0
+        },
+        {
+          "name": "READ_1/FILTERS_AND_PERIODS",
+          "rowCount": 5,
+          "totalCount": 5,
+          "truncated": false,
+          "elapsedUs": 0
+        },
+        {
+          "name": "READ_2/SUMMARY",
+          "rowCount": 1,
+          "totalCount": 1,
+          "truncated": false,
+          "elapsedUs": 0
+        },
+        {
+          "name": "READ_2/FILTERS_AND_PERIODS",
+          "rowCount": 5,
+          "totalCount": 5,
+          "truncated": false,
+          "elapsedUs": 0
+        },
+        {
+          "name": "READ_3/SUMMARY",
+          "rowCount": 1,
+          "totalCount": 1,
+          "truncated": false,
+          "elapsedUs": 0
+        },
+        {
+          "name": "READ_3/FILTERS_AND_PERIODS",
+          "rowCount": 5,
+          "totalCount": 5,
+          "truncated": false,
+          "elapsedUs": 0
+        },
+        {
+          "name": "READ_4/SUMMARY",
+          "rowCount": 1,
+          "totalCount": 1,
+          "truncated": false,
+          "elapsedUs": 0
+        },
+        {
+          "name": "READ_4/FILTERS_AND_PERIODS",
+          "rowCount": 7,
+          "totalCount": 7,
+          "truncated": false,
+          "elapsedUs": 0
+        },
+        {
+          "name": "DATASET/TRANSFORMED",
+          "rowCount": 3,
+          "totalCount": 3,
+          "truncated": false,
+          "elapsedUs": 0
+        }
+      ],
+      "partial": false,
+      "schema": [
+        {
+          "name": "environment",
+          "type": "string"
+        },
+        {
+          "name": "model",
+          "type": "string"
+        },
+        {
+          "name": "scope",
+          "type": "string"
+        },
+        {
+          "name": "source",
+          "type": "string"
+        },
+        {
+          "name": "security",
+          "type": "string"
+        },
+        {
+          "name": "state",
+          "type": "string"
+        },
+        {
+          "name": "row_count",
+          "type": "decimal"
+        },
+        {
+          "name": "packages",
+          "type": "decimal"
+        },
+        {
+          "name": "max_rows",
+          "type": "decimal"
+        },
+        {
+          "name": "error_code",
+          "type": "string"
+        }
+      ],
+      "rows": [
+        {
+          "values": [
+            "CH_PLANNING",
+            "DEMREVID",
+            "calculation",
+            "fixture",
+            "MEMBER_AUTH_ON; NO_QUERY",
+            "succeeded",
+            "1",
+            "0",
+            "100",
+            ""
+          ]
+        }
+      ]
+    },
+    "selection": {
+      "runId": "E82AEA36D1571FE1B18B216504A64B87",
+      "cellId": "left",
+      "revision": 1,
+      "total": 5,
+      "sourceTotal": 5,
+      "offset": 0,
+      "limit": 100,
+      "truncated": false,
+      "tableName": "READ_1/FILTERS_AND_PERIODS",
+      "tables": [
+        {
+          "name": "READ_1/SUMMARY",
+          "rowCount": 1,
+          "totalCount": 1,
+          "truncated": false,
+          "elapsedUs": 0
+        },
+        {
+          "name": "READ_1/FILTERS_AND_PERIODS",
+          "rowCount": 5,
+          "totalCount": 5,
+          "truncated": false,
+          "elapsedUs": 0
+        },
+        {
+          "name": "READ_2/SUMMARY",
+          "rowCount": 1,
+          "totalCount": 1,
+          "truncated": false,
+          "elapsedUs": 0
+        },
+        {
+          "name": "READ_2/FILTERS_AND_PERIODS",
+          "rowCount": 5,
+          "totalCount": 5,
+          "truncated": false,
+          "elapsedUs": 0
+        },
+        {
+          "name": "READ_3/SUMMARY",
+          "rowCount": 1,
+          "totalCount": 1,
+          "truncated": false,
+          "elapsedUs": 0
+        },
+        {
+          "name": "READ_3/FILTERS_AND_PERIODS",
+          "rowCount": 5,
+          "totalCount": 5,
+          "truncated": false,
+          "elapsedUs": 0
+        },
+        {
+          "name": "READ_4/SUMMARY",
+          "rowCount": 1,
+          "totalCount": 1,
+          "truncated": false,
+          "elapsedUs": 0
+        },
+        {
+          "name": "READ_4/FILTERS_AND_PERIODS",
+          "rowCount": 7,
+          "totalCount": 7,
+          "truncated": false,
+          "elapsedUs": 0
+        },
+        {
+          "name": "DATASET/TRANSFORMED",
+          "rowCount": 3,
+          "totalCount": 3,
+          "truncated": false,
+          "elapsedUs": 0
+        }
+      ],
+      "partial": false,
+      "schema": [
+        {
+          "name": "purpose",
+          "type": "string"
+        },
+        {
+          "name": "dimension",
+          "type": "string"
+        },
+        {
+          "name": "member",
+          "type": "string"
+        }
+      ],
+      "rows": [
+        {
+          "values": [
+            "effective filter",
+            "CATEGORY",
+            "Actual"
+          ]
+        },
+        {
+          "values": [
+            "effective filter",
+            "TIME",
+            "2026.006"
+          ]
+        },
+        {
+          "values": [
+            "output period",
+            "TIME",
+            "2026.006"
+          ]
+        },
+        {
+          "values": [
+            "declared reference period",
+            "TIME",
+            "2026.005"
+          ]
+        },
+        {
+          "values": [
+            "declared reference period",
+            "TIME",
+            "TIME_NA"
+          ]
+        }
+      ]
+    }
+  },
+  "frozenSelections": [
+    {
+      "name": "PREVIEW_ROWS",
+      "type": "number",
+      "value": "3",
+      "dimension": "",
+      "hierarchy": "",
+      "required": false,
+      "selected": [],
+      "resolved": []
+    },
+    {
+      "name": "CATEGORY",
+      "type": "member",
+      "value": "",
+      "dimension": "CATEGORY",
+      "hierarchy": "",
+      "required": true,
+      "selected": [
+        "Actual"
+      ],
+      "resolved": [
+        "Actual"
+      ]
+    },
+    {
+      "name": "TIME",
+      "type": "range",
+      "value": "",
+      "dimension": "TIME",
+      "hierarchy": "PARENTH1",
+      "required": true,
+      "selected": [
+        "2026.006"
+      ],
+      "resolved": [
+        "2026.006"
+      ]
+    },
+    {
+      "name": "REFERENCE_TIME",
+      "type": "range",
+      "value": "",
+      "dimension": "TIME",
+      "hierarchy": "PARENTH1",
+      "required": true,
+      "selected": [
+        "TIME_NA"
+      ],
+      "resolved": [
+        "2026.005",
+        "TIME_NA"
+      ],
+      "purpose": "reference",
+      "lookbackFrom": "TIME",
+      "lookbackSteps": 1,
+      "fiscalLinks": [
+        {
+          "dimension": "TIME",
+          "member": "2026.005",
+          "prior": "2026.004",
+          "next": "2026.006"
+        },
+        {
+          "dimension": "TIME",
+          "member": "2026.006",
+          "prior": "2026.005",
+          "next": "2026.007"
+        }
+      ]
+    }
+  ]
+}
