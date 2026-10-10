@@ -236,7 +236,8 @@ sap.ui.define([], function () {
     }
     function query(table, required) {
       var probe=rowLike("_query" + serial,table),fields=[],assignments=[];take("where");
-      do { var n=name().toUpperCase();take("=");var v=expression(2);var f=field(probe,n);emit(f.code + " = " + v.code + ".");fields.push(n);assignments.push(n + " = " + f.code);
+      do { var n=name().toUpperCase();take("=");var v=expression(2);var f=field(probe,n);emit(f.code + " = " + v.code + ".");fields.push(n);
+        var keyName=fresh();emit("DATA(" + keyName + ") = CONV string( " + literal(n) + " ).");assignments.push("(" + keyName + ") = " + f.code);
         if(peek()!=="and"){break;}take("and");
       }while(true);
       if(new Set(fields).size !== fields.length || required && (fields.length!==required.length || required.some(function (n){return fields.indexOf(n)<0;}))){failure(line,"Query must specify each index key exactly once");}
