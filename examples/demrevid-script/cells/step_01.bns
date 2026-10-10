@@ -1,0 +1,214 @@
+script version 2
+reference model source_model = DEMREVID
+data raw_source = source_model limit 1000000
+project complete_source_data = raw_source fields ["ACCOUNT","AUDITTRAIL","CATEGORY","COSTCENTRE","DEMREVID_KFS","FFLAS","FFLAS_SUBSET","MATCONN","TIME","PRODUCT_TYPE","GEO_DRIVERS","DOC_TYP","CONN_REG_SPLIT","LFC_WIN_SUPPLIER","MAT_GROUP_ID","REG_FFLAS_SERV","UFB_DR_ID","MATREMAP","RSP_SERVICE_ID","REV_ID_GROUP","SIGNEDDATA"]
+dimension dim_product_members = DEMREVID-PRODUCT_TYPE
+members product_members = dim_product_members
+publish product_members as "PRODUCT_MEMBERS"
+dimension dim_material_members = DEMREVID-MATCONN
+members material_members = dim_material_members
+publish material_members as "MATERIAL_MEMBERS"
+dimension dim_group_members = DEMREVID-MAT_GROUP_ID
+members group_members = dim_group_members
+publish group_members as "GROUP_MEMBERS"
+dimension audits = DEMREVID-AUDITTRAIL
+dimension measures = DEMREVID-DEMREVID_KFS
+let input_ids = children(audits, "DEMREVID_INPUT", "PARENTH1")
+let output_ids = children(audits, "DEMREVID_OUTPUT", "PARENTH1")
+let revenue_ids = children(measures, "DEMREVID004", "PARENTH1")
+filter filtered1 = complete_source_data as f2 where (is_in(f2.TIME, range("TIME")) or f2.TIME == "TIME_NA") and f2.CATEGORY == member("CATEGORY")
+filter input_data = filtered1 as source_input where is_in(source_input.AUDITTRAIL, input_ids)
+filter output_data = filtered1 as source_output where is_in(source_output.AUDITTRAIL, output_ids)
+empty new_data = complete_source_data
+filter filtered3 = input_data as f4 where is_in(f4.DEMREVID_KFS, revenue_ids)
+group group5 = filtered3 exclude ["COSTCENTRE","DOC_TYP","AUDITTRAIL"]
+for g6 in group5
+if initial(g6.ACCOUNT)
+g6.ACCOUNT = "ACCOUNT_NA"
+end
+if initial(g6.AUDITTRAIL)
+g6.AUDITTRAIL = "AUDITTRAIL_NA"
+end
+if initial(g6.CATEGORY)
+g6.CATEGORY = "CATEGORY_NA"
+end
+if initial(g6.COSTCENTRE)
+g6.COSTCENTRE = "COSTCENTRE_NA"
+end
+if initial(g6.DEMREVID_KFS)
+g6.DEMREVID_KFS = "DEMREVID_KFS_NA"
+end
+if initial(g6.FFLAS)
+g6.FFLAS = "FFLAS_NA"
+end
+if initial(g6.FFLAS_SUBSET)
+g6.FFLAS_SUBSET = "FFLAS_SUBSET_NA"
+end
+if initial(g6.MATCONN)
+g6.MATCONN = "MATCONN_NA"
+end
+if initial(g6.TIME)
+g6.TIME = "TIME_NA"
+end
+if initial(g6.PRODUCT_TYPE)
+g6.PRODUCT_TYPE = "PRODUCT_TYPE_NA"
+end
+if initial(g6.GEO_DRIVERS)
+g6.GEO_DRIVERS = "GDRVS_NA"
+end
+if initial(g6.DOC_TYP)
+g6.DOC_TYP = "DOC_TYP_NA"
+end
+if initial(g6.CONN_REG_SPLIT)
+g6.CONN_REG_SPLIT = "CONN_REG_SPLIT_NA"
+end
+if initial(g6.LFC_WIN_SUPPLIER)
+g6.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
+end
+if initial(g6.MAT_GROUP_ID)
+g6.MAT_GROUP_ID = "MAT_GROUP_ID_NA"
+end
+if initial(g6.REG_FFLAS_SERV)
+g6.REG_FFLAS_SERV = "REG_FFLAS_SERV_NA"
+end
+if initial(g6.UFB_DR_ID)
+g6.UFB_DR_ID = "UFB_DR_ID_NA"
+end
+if initial(g6.MATREMAP)
+g6.MATREMAP = "MATREMAP_NA"
+end
+if initial(g6.RSP_SERVICE_ID)
+g6.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
+end
+if initial(g6.REV_ID_GROUP)
+g6.REV_ID_GROUP = "REV_ID_GROUP_NA"
+end
+end
+sort group5 unstable by COSTCENTRE asc, DOC_TYP asc, AUDITTRAIL asc
+for replace7 in group5
+replace7.AUDITTRAIL = "DEMREVID_CALC"
+end
+copy sap_revenues = group5
+filter filtered8 = input_data as f9 where f9.DEMREVID_KFS == "DEMREVID008"
+copy conn_reg_split = filtered8
+sort conn_reg_split unstable by TIME asc, ACCOUNT asc
+filter filtered10 = input_data as f11 where f11.DEMREVID_KFS == "DEMREVID027"
+copy l1_l2_mapping = filtered10
+sort l1_l2_mapping unstable by TIME asc, ACCOUNT asc
+filter filtered12 = input_data as f13 where f13.DEMREVID_KFS == "DEMREVID035"
+copy mat_group_mapping = filtered12
+sort mat_group_mapping unstable by TIME asc, MATCONN asc, ACCOUNT asc
+filter filtered14 = input_data as f15 where f15.DEMREVID_KFS == "DEMREVID010"
+copy rsp_location_material_ratio = filtered14
+sort rsp_location_material_ratio unstable by TIME asc, MATCONN asc
+filter filtered16 = input_data as f17 where f17.DEMREVID_KFS == "DEMREVID011"
+copy rsp_location_gl_ratio = filtered16
+sort rsp_location_gl_ratio unstable by TIME asc, ACCOUNT asc
+filter filtered18 = input_data as f19 where f19.DEMREVID_KFS == "DEMREVID012"
+copy cal_location_gl_ratio = filtered18
+sort cal_location_gl_ratio unstable by TIME asc, ACCOUNT asc
+filter filtered20 = input_data as f21 where f21.DEMREVID_KFS == "DEMREVID013"
+copy cal_location_conn_seg_ratio = filtered20
+sort cal_location_conn_seg_ratio unstable by TIME asc, CONN_REG_SPLIT asc
+filter filtered22 = input_data as f23 where f23.DEMREVID_KFS == "DEMREVID029"
+copy rsp_supplier_material_ratio = filtered22
+sort rsp_supplier_material_ratio unstable by TIME asc, ACCOUNT asc, MATCONN asc
+filter filtered24 = input_data as f25 where f25.DEMREVID_KFS == "DEMREVID030"
+copy rsp_supplier_gl_ratio = filtered24
+sort rsp_supplier_gl_ratio unstable by ACCOUNT asc, TIME asc
+filter filtered26 = input_data as f27 where f27.DEMREVID_KFS == "DEMREVID032"
+copy cal_supplier_gl_ratio = filtered26
+sort cal_supplier_gl_ratio unstable by ACCOUNT asc, TIME asc
+filter filtered28 = input_data as f29 where f29.DEMREVID_KFS == "DEMREVID031"
+copy cal_supplier_conn_seg_ratio = filtered28
+sort cal_supplier_conn_seg_ratio unstable by CONN_REG_SPLIT asc, TIME asc
+dimension products = DEMREVID-PRODUCT_TYPE
+let access_ids = children(products, "PRODUCT_TYPE_ACCESS", "PARENTH1")
+table access_members columns ID member
+row access_row like access_members
+for access_id in access_ids
+access_row.ID = access_id
+append access_members row access_row
+end
+publish access_members as "ACCESS_MEMBERS"
+publish complete_source_data as "COMPLETE_SOURCE_DATA"
+publish input_data as "INPUT_DATA"
+publish output_data as "OUTPUT_DATA"
+publish new_data as "NEW_DATA"
+publish sap_revenues as "SAP_REVENUES"
+publish conn_reg_split as "CONN_REG_SPLIT"
+publish l1_l2_mapping as "L1_L2_MAPPING"
+publish mat_group_mapping as "MAT_GROUP_MAPPING"
+publish rsp_location_material_ratio as "RSP_LOCATION_MATERIAL_RATIO"
+publish rsp_location_gl_ratio as "RSP_LOCATION_GL_RATIO"
+publish cal_location_gl_ratio as "CAL_LOCATION_GL_RATIO"
+publish cal_location_conn_seg_ratio as "CAL_LOCATION_CONN_SEG_RATIO"
+publish rsp_supplier_material_ratio as "RSP_SUPPLIER_MATERIAL_RATIO"
+publish rsp_supplier_gl_ratio as "RSP_SUPPLIER_GL_RATIO"
+publish cal_supplier_gl_ratio as "CAL_SUPPLIER_GL_RATIO"
+publish cal_supplier_conn_seg_ratio as "CAL_SUPPLIER_CONN_SEG_RATIO"
+group group30 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
+for g31 in group30
+if initial(g31.ACCOUNT)
+g31.ACCOUNT = "ACCOUNT_NA"
+end
+if initial(g31.AUDITTRAIL)
+g31.AUDITTRAIL = "AUDITTRAIL_NA"
+end
+if initial(g31.CATEGORY)
+g31.CATEGORY = "CATEGORY_NA"
+end
+if initial(g31.COSTCENTRE)
+g31.COSTCENTRE = "COSTCENTRE_NA"
+end
+if initial(g31.DEMREVID_KFS)
+g31.DEMREVID_KFS = "DEMREVID_KFS_NA"
+end
+if initial(g31.FFLAS)
+g31.FFLAS = "FFLAS_NA"
+end
+if initial(g31.FFLAS_SUBSET)
+g31.FFLAS_SUBSET = "FFLAS_SUBSET_NA"
+end
+if initial(g31.MATCONN)
+g31.MATCONN = "MATCONN_NA"
+end
+if initial(g31.TIME)
+g31.TIME = "TIME_NA"
+end
+if initial(g31.PRODUCT_TYPE)
+g31.PRODUCT_TYPE = "PRODUCT_TYPE_NA"
+end
+if initial(g31.GEO_DRIVERS)
+g31.GEO_DRIVERS = "GDRVS_NA"
+end
+if initial(g31.DOC_TYP)
+g31.DOC_TYP = "DOC_TYP_NA"
+end
+if initial(g31.CONN_REG_SPLIT)
+g31.CONN_REG_SPLIT = "CONN_REG_SPLIT_NA"
+end
+if initial(g31.LFC_WIN_SUPPLIER)
+g31.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
+end
+if initial(g31.MAT_GROUP_ID)
+g31.MAT_GROUP_ID = "MAT_GROUP_ID_NA"
+end
+if initial(g31.REG_FFLAS_SERV)
+g31.REG_FFLAS_SERV = "REG_FFLAS_SERV_NA"
+end
+if initial(g31.UFB_DR_ID)
+g31.UFB_DR_ID = "UFB_DR_ID_NA"
+end
+if initial(g31.MATREMAP)
+g31.MATREMAP = "MATREMAP_NA"
+end
+if initial(g31.RSP_SERVICE_ID)
+g31.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
+end
+if initial(g31.REV_ID_GROUP)
+g31.REV_ID_GROUP = "REV_ID_GROUP_NA"
+end
+end
+sort group30 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc
+show group30 as "CONTROL_TOTALS"

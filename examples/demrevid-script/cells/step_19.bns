@@ -1,0 +1,101 @@
+script version 2
+dataset input_data = "step_01" named "INPUT_DATA"
+dataset new_data = "step_18" named "NEW_DATA"
+dataset transposed_revenues = "step_18" named "TRANSPOSED_REVENUES"
+dataset access_members = "step_01" named "ACCESS_MEMBERS"
+filter filtered1 = input_data as f2 where f2.DEMREVID_KFS == "DEMREVID002"
+filter filtered3 = input_data as f4 where f4.DEMREVID_KFS == "DEMREVID036"
+sort filtered1 unstable by TIME asc, MATCONN asc
+sort filtered3 unstable by TIME asc, MATREMAP asc
+empty conn_prices = new_data
+for access_revenue in transposed_revenues copy
+find found5 = access_members where ID = access_revenue.PRODUCT_TYPE search linear missing initial
+if found(found5)
+find found6 = filtered3 where TIME = access_revenue.TIME and MATREMAP = access_revenue.MATREMAP search binary missing initial
+if not initial(found6.MATCONN)
+find found7 = filtered1 where TIME = access_revenue.TIME and MATCONN = found6.MATCONN search binary missing initial
+access_revenue.DEMREVID_KFS = "DEMREVID044"
+access_revenue.SIGNEDDATA = found7.SIGNEDDATA
+append conn_prices row access_revenue
+append conn_prices row access_revenue
+end
+find found8 = filtered1 where TIME = access_revenue.TIME and MATCONN = access_revenue.MATREMAP search binary missing initial
+access_revenue.DEMREVID_KFS = "DEMREVID042"
+access_revenue.SIGNEDDATA = found8.SIGNEDDATA
+append conn_prices row access_revenue
+end
+end
+for replace9 in conn_prices
+if replace9.MAT_GROUP_ID != "MAT_GROUP_ID_NA"
+replace9.MATREMAP = "MATREMAP_NA"
+end
+end
+sort conn_prices unstable by TIME asc, FFLAS asc, DEMREVID_KFS asc, MATREMAP asc, MAT_GROUP_ID asc, SIGNEDDATA desc
+deduplicate conn_prices adjacent by ["TIME","FFLAS","DEMREVID_KFS","MATREMAP","MAT_GROUP_ID"]
+append new_data from conn_prices
+publish new_data as "NEW_DATA"
+group group10 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
+for g11 in group10
+if initial(g11.ACCOUNT)
+g11.ACCOUNT = "ACCOUNT_NA"
+end
+if initial(g11.AUDITTRAIL)
+g11.AUDITTRAIL = "AUDITTRAIL_NA"
+end
+if initial(g11.CATEGORY)
+g11.CATEGORY = "CATEGORY_NA"
+end
+if initial(g11.COSTCENTRE)
+g11.COSTCENTRE = "COSTCENTRE_NA"
+end
+if initial(g11.DEMREVID_KFS)
+g11.DEMREVID_KFS = "DEMREVID_KFS_NA"
+end
+if initial(g11.FFLAS)
+g11.FFLAS = "FFLAS_NA"
+end
+if initial(g11.FFLAS_SUBSET)
+g11.FFLAS_SUBSET = "FFLAS_SUBSET_NA"
+end
+if initial(g11.MATCONN)
+g11.MATCONN = "MATCONN_NA"
+end
+if initial(g11.TIME)
+g11.TIME = "TIME_NA"
+end
+if initial(g11.PRODUCT_TYPE)
+g11.PRODUCT_TYPE = "PRODUCT_TYPE_NA"
+end
+if initial(g11.GEO_DRIVERS)
+g11.GEO_DRIVERS = "GDRVS_NA"
+end
+if initial(g11.DOC_TYP)
+g11.DOC_TYP = "DOC_TYP_NA"
+end
+if initial(g11.CONN_REG_SPLIT)
+g11.CONN_REG_SPLIT = "CONN_REG_SPLIT_NA"
+end
+if initial(g11.LFC_WIN_SUPPLIER)
+g11.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
+end
+if initial(g11.MAT_GROUP_ID)
+g11.MAT_GROUP_ID = "MAT_GROUP_ID_NA"
+end
+if initial(g11.REG_FFLAS_SERV)
+g11.REG_FFLAS_SERV = "REG_FFLAS_SERV_NA"
+end
+if initial(g11.UFB_DR_ID)
+g11.UFB_DR_ID = "UFB_DR_ID_NA"
+end
+if initial(g11.MATREMAP)
+g11.MATREMAP = "MATREMAP_NA"
+end
+if initial(g11.RSP_SERVICE_ID)
+g11.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
+end
+if initial(g11.REV_ID_GROUP)
+g11.REV_ID_GROUP = "REV_ID_GROUP_NA"
+end
+end
+sort group10 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc
+show group10 as "CONTROL_TOTALS"

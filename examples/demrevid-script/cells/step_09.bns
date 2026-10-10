@@ -1,0 +1,107 @@
+script version 2
+dataset input_data = "step_01" named "INPUT_DATA"
+dataset new_data = "step_08" named "NEW_DATA"
+dataset sap_revenues_consol = "step_03" named "SAP_REVENUES_CONSOL"
+empty fflas_month_ratio = new_data
+filter filtered1 = input_data as f2 where is_in(f2.DEMREVID_KFS,["DEMREVID021","DEMREVID022"])
+sort filtered1 unstable by MATCONN asc, ACCOUNT asc, DEMREVID_KFS asc, TIME asc
+for revenue in sap_revenues_consol
+find found3 = filtered1 where MATCONN = revenue.MATCONN and ACCOUNT = "ACCOUNT_NA" and DEMREVID_KFS = "DEMREVID021" and TIME = revenue.TIME search binary missing initial
+if found(found3)
+copy row4 = revenue
+row4.DEMREVID_KFS = found3.DEMREVID_KFS
+row4.SIGNEDDATA = found3.SIGNEDDATA
+append new_data row row4
+find found5 = filtered1 where MATCONN = revenue.MATCONN and ACCOUNT = "ACCOUNT_NA" and DEMREVID_KFS = "DEMREVID022" and TIME = revenue.TIME search binary missing initial
+if found(found5)
+copy row6 = revenue
+row6.DEMREVID_KFS = found5.DEMREVID_KFS
+row6.SIGNEDDATA = found5.SIGNEDDATA
+append new_data row row6
+append fflas_month_ratio row row6
+end
+else
+find found7 = filtered1 where MATCONN = "MATCONN_NA" and ACCOUNT = revenue.ACCOUNT and DEMREVID_KFS = "DEMREVID021" and TIME = revenue.TIME search binary missing initial
+if found(found7)
+copy row8 = revenue
+row8.DEMREVID_KFS = found7.DEMREVID_KFS
+row8.SIGNEDDATA = found7.SIGNEDDATA
+append new_data row row8
+find found9 = filtered1 where MATCONN = "MATCONN_NA" and ACCOUNT = revenue.ACCOUNT and DEMREVID_KFS = "DEMREVID022" and TIME = revenue.TIME search binary missing initial
+if found(found9)
+copy row10 = revenue
+row10.DEMREVID_KFS = found9.DEMREVID_KFS
+row10.SIGNEDDATA = found9.SIGNEDDATA
+append new_data row row10
+append fflas_month_ratio row row10
+end
+end
+end
+end
+publish new_data as "NEW_DATA"
+publish fflas_month_ratio as "FFLAS_MONTH_RATIO"
+group group11 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
+for g12 in group11
+if initial(g12.ACCOUNT)
+g12.ACCOUNT = "ACCOUNT_NA"
+end
+if initial(g12.AUDITTRAIL)
+g12.AUDITTRAIL = "AUDITTRAIL_NA"
+end
+if initial(g12.CATEGORY)
+g12.CATEGORY = "CATEGORY_NA"
+end
+if initial(g12.COSTCENTRE)
+g12.COSTCENTRE = "COSTCENTRE_NA"
+end
+if initial(g12.DEMREVID_KFS)
+g12.DEMREVID_KFS = "DEMREVID_KFS_NA"
+end
+if initial(g12.FFLAS)
+g12.FFLAS = "FFLAS_NA"
+end
+if initial(g12.FFLAS_SUBSET)
+g12.FFLAS_SUBSET = "FFLAS_SUBSET_NA"
+end
+if initial(g12.MATCONN)
+g12.MATCONN = "MATCONN_NA"
+end
+if initial(g12.TIME)
+g12.TIME = "TIME_NA"
+end
+if initial(g12.PRODUCT_TYPE)
+g12.PRODUCT_TYPE = "PRODUCT_TYPE_NA"
+end
+if initial(g12.GEO_DRIVERS)
+g12.GEO_DRIVERS = "GDRVS_NA"
+end
+if initial(g12.DOC_TYP)
+g12.DOC_TYP = "DOC_TYP_NA"
+end
+if initial(g12.CONN_REG_SPLIT)
+g12.CONN_REG_SPLIT = "CONN_REG_SPLIT_NA"
+end
+if initial(g12.LFC_WIN_SUPPLIER)
+g12.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
+end
+if initial(g12.MAT_GROUP_ID)
+g12.MAT_GROUP_ID = "MAT_GROUP_ID_NA"
+end
+if initial(g12.REG_FFLAS_SERV)
+g12.REG_FFLAS_SERV = "REG_FFLAS_SERV_NA"
+end
+if initial(g12.UFB_DR_ID)
+g12.UFB_DR_ID = "UFB_DR_ID_NA"
+end
+if initial(g12.MATREMAP)
+g12.MATREMAP = "MATREMAP_NA"
+end
+if initial(g12.RSP_SERVICE_ID)
+g12.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
+end
+if initial(g12.REV_ID_GROUP)
+g12.REV_ID_GROUP = "REV_ID_GROUP_NA"
+end
+end
+sort group11 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc
+show group11 as "CONTROL_TOTALS"

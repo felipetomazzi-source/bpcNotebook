@@ -1,0 +1,87 @@
+script version 2
+dataset new_data = "step_13" named "NEW_DATA"
+dataset supplier_ratios = "step_13" named "SUPPLIER_RATIOS"
+empty supplier_allocated = new_data
+index ix2 = supplier_ratios by ["TIME","ACCOUNT","MATCONN"] many
+for original in new_data
+if original.DEMREVID_KFS == "DEMREVID023" and original.FFLAS == "FFLASID"
+find found1 = supplier_ratios where TIME = original.TIME and ACCOUNT = original.ACCOUNT and MATCONN = original.MATCONN search binary missing initial
+if found(found1)
+match matches3 = ix2 where TIME = original.TIME and ACCOUNT = original.ACCOUNT and MATCONN = original.MATCONN
+for supplier_row in matches3
+copy row4 = original
+row4.SIGNEDDATA = original.SIGNEDDATA * supplier_row.SIGNEDDATA
+row4.LFC_WIN_SUPPLIER = supplier_row.LFC_WIN_SUPPLIER
+append supplier_allocated row row4
+end
+delete original
+end
+end
+end
+append new_data from supplier_allocated
+publish new_data as "NEW_DATA"
+group group5 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
+for g6 in group5
+if initial(g6.ACCOUNT)
+g6.ACCOUNT = "ACCOUNT_NA"
+end
+if initial(g6.AUDITTRAIL)
+g6.AUDITTRAIL = "AUDITTRAIL_NA"
+end
+if initial(g6.CATEGORY)
+g6.CATEGORY = "CATEGORY_NA"
+end
+if initial(g6.COSTCENTRE)
+g6.COSTCENTRE = "COSTCENTRE_NA"
+end
+if initial(g6.DEMREVID_KFS)
+g6.DEMREVID_KFS = "DEMREVID_KFS_NA"
+end
+if initial(g6.FFLAS)
+g6.FFLAS = "FFLAS_NA"
+end
+if initial(g6.FFLAS_SUBSET)
+g6.FFLAS_SUBSET = "FFLAS_SUBSET_NA"
+end
+if initial(g6.MATCONN)
+g6.MATCONN = "MATCONN_NA"
+end
+if initial(g6.TIME)
+g6.TIME = "TIME_NA"
+end
+if initial(g6.PRODUCT_TYPE)
+g6.PRODUCT_TYPE = "PRODUCT_TYPE_NA"
+end
+if initial(g6.GEO_DRIVERS)
+g6.GEO_DRIVERS = "GDRVS_NA"
+end
+if initial(g6.DOC_TYP)
+g6.DOC_TYP = "DOC_TYP_NA"
+end
+if initial(g6.CONN_REG_SPLIT)
+g6.CONN_REG_SPLIT = "CONN_REG_SPLIT_NA"
+end
+if initial(g6.LFC_WIN_SUPPLIER)
+g6.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
+end
+if initial(g6.MAT_GROUP_ID)
+g6.MAT_GROUP_ID = "MAT_GROUP_ID_NA"
+end
+if initial(g6.REG_FFLAS_SERV)
+g6.REG_FFLAS_SERV = "REG_FFLAS_SERV_NA"
+end
+if initial(g6.UFB_DR_ID)
+g6.UFB_DR_ID = "UFB_DR_ID_NA"
+end
+if initial(g6.MATREMAP)
+g6.MATREMAP = "MATREMAP_NA"
+end
+if initial(g6.RSP_SERVICE_ID)
+g6.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
+end
+if initial(g6.REV_ID_GROUP)
+g6.REV_ID_GROUP = "REV_ID_GROUP_NA"
+end
+end
+sort group5 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc
+show group5 as "CONTROL_TOTALS"

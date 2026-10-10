@@ -1,0 +1,80 @@
+script version 2
+dataset input_data = "step_01" named "INPUT_DATA"
+dataset new_data = "step_14" named "NEW_DATA"
+dataset sap_revenues_consol = "step_03" named "SAP_REVENUES_CONSOL"
+filter filtered1 = input_data as f2 where f2.DEMREVID_KFS == "DEMREVID002"
+sort filtered1 unstable by TIME asc, MATCONN asc
+for revenue in sap_revenues_consol copy
+find found3 = filtered1 where TIME = revenue.TIME and MATCONN = revenue.MATCONN search binary missing initial
+if found(found3)
+revenue.DEMREVID_KFS = found3.DEMREVID_KFS
+revenue.SIGNEDDATA = found3.SIGNEDDATA
+append new_data row revenue
+end
+end
+publish new_data as "NEW_DATA"
+group group4 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
+for g5 in group4
+if initial(g5.ACCOUNT)
+g5.ACCOUNT = "ACCOUNT_NA"
+end
+if initial(g5.AUDITTRAIL)
+g5.AUDITTRAIL = "AUDITTRAIL_NA"
+end
+if initial(g5.CATEGORY)
+g5.CATEGORY = "CATEGORY_NA"
+end
+if initial(g5.COSTCENTRE)
+g5.COSTCENTRE = "COSTCENTRE_NA"
+end
+if initial(g5.DEMREVID_KFS)
+g5.DEMREVID_KFS = "DEMREVID_KFS_NA"
+end
+if initial(g5.FFLAS)
+g5.FFLAS = "FFLAS_NA"
+end
+if initial(g5.FFLAS_SUBSET)
+g5.FFLAS_SUBSET = "FFLAS_SUBSET_NA"
+end
+if initial(g5.MATCONN)
+g5.MATCONN = "MATCONN_NA"
+end
+if initial(g5.TIME)
+g5.TIME = "TIME_NA"
+end
+if initial(g5.PRODUCT_TYPE)
+g5.PRODUCT_TYPE = "PRODUCT_TYPE_NA"
+end
+if initial(g5.GEO_DRIVERS)
+g5.GEO_DRIVERS = "GDRVS_NA"
+end
+if initial(g5.DOC_TYP)
+g5.DOC_TYP = "DOC_TYP_NA"
+end
+if initial(g5.CONN_REG_SPLIT)
+g5.CONN_REG_SPLIT = "CONN_REG_SPLIT_NA"
+end
+if initial(g5.LFC_WIN_SUPPLIER)
+g5.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
+end
+if initial(g5.MAT_GROUP_ID)
+g5.MAT_GROUP_ID = "MAT_GROUP_ID_NA"
+end
+if initial(g5.REG_FFLAS_SERV)
+g5.REG_FFLAS_SERV = "REG_FFLAS_SERV_NA"
+end
+if initial(g5.UFB_DR_ID)
+g5.UFB_DR_ID = "UFB_DR_ID_NA"
+end
+if initial(g5.MATREMAP)
+g5.MATREMAP = "MATREMAP_NA"
+end
+if initial(g5.RSP_SERVICE_ID)
+g5.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
+end
+if initial(g5.REV_ID_GROUP)
+g5.REV_ID_GROUP = "REV_ID_GROUP_NA"
+end
+end
+sort group4 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc
+show group4 as "CONTROL_TOTALS"

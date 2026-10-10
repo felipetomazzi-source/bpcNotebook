@@ -1,0 +1,120 @@
+script version 2
+dataset new_data = "step_12" named "NEW_DATA"
+empty supplier_ratios = new_data
+dataset rsp_supplier_material_ratio = "step_01" named "RSP_SUPPLIER_MATERIAL_RATIO"
+dataset rsp_supplier_gl_ratio = "step_01" named "RSP_SUPPLIER_GL_RATIO"
+dataset cal_supplier_gl_ratio = "step_01" named "CAL_SUPPLIER_GL_RATIO"
+dataset cal_supplier_conn_seg_ratio = "step_01" named "CAL_SUPPLIER_CONN_SEG_RATIO"
+filter filtered1 = new_data as f2 where f2.DEMREVID_KFS == "DEMREVID028"
+index ix4 = rsp_supplier_material_ratio by ["TIME","ACCOUNT","MATCONN"] many
+index ix8 = rsp_supplier_gl_ratio by ["ACCOUNT","TIME"] many
+index ix12 = cal_supplier_gl_ratio by ["ACCOUNT","TIME"] many
+index ix16 = cal_supplier_conn_seg_ratio by ["CONN_REG_SPLIT","TIME"] many
+for selected3 in filtered1 copy
+selected3.DEMREVID_KFS = "DEMREVID033"
+if integer(selected3.SIGNEDDATA) == 1
+match matches5 = ix4 where TIME = selected3.TIME and ACCOUNT = selected3.ACCOUNT and MATCONN = selected3.MATCONN
+for ratio6 in matches5
+copy row7 = selected3
+row7.LFC_WIN_SUPPLIER = ratio6.LFC_WIN_SUPPLIER
+row7.SIGNEDDATA = ratio6.SIGNEDDATA
+append supplier_ratios row row7
+end
+end
+if integer(selected3.SIGNEDDATA) == 2
+match matches9 = ix8 where ACCOUNT = selected3.ACCOUNT and TIME = selected3.TIME
+for ratio10 in matches9
+copy row11 = selected3
+row11.LFC_WIN_SUPPLIER = ratio10.LFC_WIN_SUPPLIER
+row11.SIGNEDDATA = ratio10.SIGNEDDATA
+append supplier_ratios row row11
+end
+end
+if integer(selected3.SIGNEDDATA) == 3
+match matches13 = ix12 where ACCOUNT = selected3.ACCOUNT and TIME = selected3.TIME
+for ratio14 in matches13
+copy row15 = selected3
+row15.LFC_WIN_SUPPLIER = ratio14.LFC_WIN_SUPPLIER
+row15.SIGNEDDATA = ratio14.SIGNEDDATA
+append supplier_ratios row row15
+end
+end
+if integer(selected3.SIGNEDDATA) == 4
+match matches17 = ix16 where CONN_REG_SPLIT = selected3.CONN_REG_SPLIT and TIME = selected3.TIME
+for ratio18 in matches17
+copy row19 = selected3
+row19.LFC_WIN_SUPPLIER = ratio18.LFC_WIN_SUPPLIER
+row19.SIGNEDDATA = ratio18.SIGNEDDATA
+append supplier_ratios row row19
+end
+end
+end
+sort supplier_ratios unstable by TIME asc, ACCOUNT asc, MATCONN asc
+append new_data from supplier_ratios
+publish new_data as "NEW_DATA"
+publish supplier_ratios as "SUPPLIER_RATIOS"
+group group20 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
+for g21 in group20
+if initial(g21.ACCOUNT)
+g21.ACCOUNT = "ACCOUNT_NA"
+end
+if initial(g21.AUDITTRAIL)
+g21.AUDITTRAIL = "AUDITTRAIL_NA"
+end
+if initial(g21.CATEGORY)
+g21.CATEGORY = "CATEGORY_NA"
+end
+if initial(g21.COSTCENTRE)
+g21.COSTCENTRE = "COSTCENTRE_NA"
+end
+if initial(g21.DEMREVID_KFS)
+g21.DEMREVID_KFS = "DEMREVID_KFS_NA"
+end
+if initial(g21.FFLAS)
+g21.FFLAS = "FFLAS_NA"
+end
+if initial(g21.FFLAS_SUBSET)
+g21.FFLAS_SUBSET = "FFLAS_SUBSET_NA"
+end
+if initial(g21.MATCONN)
+g21.MATCONN = "MATCONN_NA"
+end
+if initial(g21.TIME)
+g21.TIME = "TIME_NA"
+end
+if initial(g21.PRODUCT_TYPE)
+g21.PRODUCT_TYPE = "PRODUCT_TYPE_NA"
+end
+if initial(g21.GEO_DRIVERS)
+g21.GEO_DRIVERS = "GDRVS_NA"
+end
+if initial(g21.DOC_TYP)
+g21.DOC_TYP = "DOC_TYP_NA"
+end
+if initial(g21.CONN_REG_SPLIT)
+g21.CONN_REG_SPLIT = "CONN_REG_SPLIT_NA"
+end
+if initial(g21.LFC_WIN_SUPPLIER)
+g21.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
+end
+if initial(g21.MAT_GROUP_ID)
+g21.MAT_GROUP_ID = "MAT_GROUP_ID_NA"
+end
+if initial(g21.REG_FFLAS_SERV)
+g21.REG_FFLAS_SERV = "REG_FFLAS_SERV_NA"
+end
+if initial(g21.UFB_DR_ID)
+g21.UFB_DR_ID = "UFB_DR_ID_NA"
+end
+if initial(g21.MATREMAP)
+g21.MATREMAP = "MATREMAP_NA"
+end
+if initial(g21.RSP_SERVICE_ID)
+g21.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
+end
+if initial(g21.REV_ID_GROUP)
+g21.REV_ID_GROUP = "REV_ID_GROUP_NA"
+end
+end
+sort group20 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc
+show group20 as "CONTROL_TOTALS"

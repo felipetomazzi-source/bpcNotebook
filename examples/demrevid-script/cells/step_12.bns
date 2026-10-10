@@ -1,0 +1,103 @@
+script version 2
+dataset sap_revenues_consol = "step_03" named "SAP_REVENUES_CONSOL"
+dataset new_data = "step_11" named "NEW_DATA"
+dataset rsp_supplier_material_ratio = "step_01" named "RSP_SUPPLIER_MATERIAL_RATIO"
+dataset rsp_supplier_gl_ratio = "step_01" named "RSP_SUPPLIER_GL_RATIO"
+dataset cal_supplier_gl_ratio = "step_01" named "CAL_SUPPLIER_GL_RATIO"
+dataset cal_supplier_conn_seg_ratio = "step_01" named "CAL_SUPPLIER_CONN_SEG_RATIO"
+for base1 in sap_revenues_consol copy
+base1.DEMREVID_KFS = "DEMREVID028"
+let method2 = 5
+if method2 == 5
+find found3 = rsp_supplier_material_ratio where TIME = base1.TIME and ACCOUNT = base1.ACCOUNT and MATCONN = base1.MATCONN search binary missing initial
+if found(found3)
+method2 = 1
+end
+end
+if method2 == 5
+find found4 = rsp_supplier_gl_ratio where TIME = base1.TIME and ACCOUNT = base1.ACCOUNT search binary missing initial
+if found(found4)
+method2 = 2
+end
+end
+if method2 == 5
+find found5 = cal_supplier_gl_ratio where TIME = base1.TIME and ACCOUNT = base1.ACCOUNT search binary missing initial
+if found(found5)
+method2 = 3
+end
+end
+if method2 == 5
+find found6 = cal_supplier_conn_seg_ratio where TIME = base1.TIME and CONN_REG_SPLIT = base1.CONN_REG_SPLIT search binary missing initial
+if found(found6)
+method2 = 4
+end
+end
+base1.SIGNEDDATA = integer(method2)
+append new_data row base1
+end
+publish new_data as "NEW_DATA"
+group group7 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
+for g8 in group7
+if initial(g8.ACCOUNT)
+g8.ACCOUNT = "ACCOUNT_NA"
+end
+if initial(g8.AUDITTRAIL)
+g8.AUDITTRAIL = "AUDITTRAIL_NA"
+end
+if initial(g8.CATEGORY)
+g8.CATEGORY = "CATEGORY_NA"
+end
+if initial(g8.COSTCENTRE)
+g8.COSTCENTRE = "COSTCENTRE_NA"
+end
+if initial(g8.DEMREVID_KFS)
+g8.DEMREVID_KFS = "DEMREVID_KFS_NA"
+end
+if initial(g8.FFLAS)
+g8.FFLAS = "FFLAS_NA"
+end
+if initial(g8.FFLAS_SUBSET)
+g8.FFLAS_SUBSET = "FFLAS_SUBSET_NA"
+end
+if initial(g8.MATCONN)
+g8.MATCONN = "MATCONN_NA"
+end
+if initial(g8.TIME)
+g8.TIME = "TIME_NA"
+end
+if initial(g8.PRODUCT_TYPE)
+g8.PRODUCT_TYPE = "PRODUCT_TYPE_NA"
+end
+if initial(g8.GEO_DRIVERS)
+g8.GEO_DRIVERS = "GDRVS_NA"
+end
+if initial(g8.DOC_TYP)
+g8.DOC_TYP = "DOC_TYP_NA"
+end
+if initial(g8.CONN_REG_SPLIT)
+g8.CONN_REG_SPLIT = "CONN_REG_SPLIT_NA"
+end
+if initial(g8.LFC_WIN_SUPPLIER)
+g8.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
+end
+if initial(g8.MAT_GROUP_ID)
+g8.MAT_GROUP_ID = "MAT_GROUP_ID_NA"
+end
+if initial(g8.REG_FFLAS_SERV)
+g8.REG_FFLAS_SERV = "REG_FFLAS_SERV_NA"
+end
+if initial(g8.UFB_DR_ID)
+g8.UFB_DR_ID = "UFB_DR_ID_NA"
+end
+if initial(g8.MATREMAP)
+g8.MATREMAP = "MATREMAP_NA"
+end
+if initial(g8.RSP_SERVICE_ID)
+g8.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
+end
+if initial(g8.REV_ID_GROUP)
+g8.REV_ID_GROUP = "REV_ID_GROUP_NA"
+end
+end
+sort group7 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc
+show group7 as "CONTROL_TOTALS"

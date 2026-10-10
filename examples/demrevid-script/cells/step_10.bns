@@ -1,0 +1,168 @@
+script version 2
+dataset new_data = "step_09" named "NEW_DATA"
+filter filtered1 = new_data as f2 where f2.DEMREVID_KFS >= "DEMREVID016" and f2.DEMREVID_KFS <= "DEMREVID018"
+for replace3 in filtered1
+replace3.DEMREVID_KFS = "DEMREVID023"
+end
+for replace4 in filtered1
+if replace4.GEO_DRIVERS >= "GDRVS_002" and replace4.GEO_DRIVERS <= "GDRVS_003"
+replace4.FFLAS = "FFLASPQ"
+end
+end
+for replace5 in filtered1
+if replace5.GEO_DRIVERS == "GDRVS_001"
+replace5.FFLAS = "FFLASID"
+end
+end
+group group6 = filtered1 all
+filter filtered7 = new_data as f8 where f8.DEMREVID_KFS == "DEMREVID022"
+sort filtered7 unstable by TIME asc, ACCOUNT asc, MATCONN asc
+copy allocated = group6
+for allocated_row in allocated
+find found9 = filtered7 where TIME = allocated_row.TIME and ACCOUNT = allocated_row.ACCOUNT and MATCONN = allocated_row.MATCONN search binary missing initial
+allocated_row.SIGNEDDATA = allocated_row.SIGNEDDATA * found9.SIGNEDDATA
+end
+filter filtered10 = allocated as f11 where not initial(f11.SIGNEDDATA)
+group group12 = filtered10 exclude ["FFLAS"]
+for g13 in group12
+if initial(g13.ACCOUNT)
+g13.ACCOUNT = "ACCOUNT_NA"
+end
+if initial(g13.AUDITTRAIL)
+g13.AUDITTRAIL = "AUDITTRAIL_NA"
+end
+if initial(g13.CATEGORY)
+g13.CATEGORY = "CATEGORY_NA"
+end
+if initial(g13.COSTCENTRE)
+g13.COSTCENTRE = "COSTCENTRE_NA"
+end
+if initial(g13.DEMREVID_KFS)
+g13.DEMREVID_KFS = "DEMREVID_KFS_NA"
+end
+if initial(g13.FFLAS)
+g13.FFLAS = "FFLAS_NA"
+end
+if initial(g13.FFLAS_SUBSET)
+g13.FFLAS_SUBSET = "FFLAS_SUBSET_NA"
+end
+if initial(g13.MATCONN)
+g13.MATCONN = "MATCONN_NA"
+end
+if initial(g13.TIME)
+g13.TIME = "TIME_NA"
+end
+if initial(g13.PRODUCT_TYPE)
+g13.PRODUCT_TYPE = "PRODUCT_TYPE_NA"
+end
+if initial(g13.GEO_DRIVERS)
+g13.GEO_DRIVERS = "GDRVS_NA"
+end
+if initial(g13.DOC_TYP)
+g13.DOC_TYP = "DOC_TYP_NA"
+end
+if initial(g13.CONN_REG_SPLIT)
+g13.CONN_REG_SPLIT = "CONN_REG_SPLIT_NA"
+end
+if initial(g13.LFC_WIN_SUPPLIER)
+g13.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
+end
+if initial(g13.MAT_GROUP_ID)
+g13.MAT_GROUP_ID = "MAT_GROUP_ID_NA"
+end
+if initial(g13.REG_FFLAS_SERV)
+g13.REG_FFLAS_SERV = "REG_FFLAS_SERV_NA"
+end
+if initial(g13.UFB_DR_ID)
+g13.UFB_DR_ID = "UFB_DR_ID_NA"
+end
+if initial(g13.MATREMAP)
+g13.MATREMAP = "MATREMAP_NA"
+end
+if initial(g13.RSP_SERVICE_ID)
+g13.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
+end
+if initial(g13.REV_ID_GROUP)
+g13.REV_ID_GROUP = "REV_ID_GROUP_NA"
+end
+end
+sort group12 unstable by FFLAS asc
+sort group12 unstable by TIME asc, ACCOUNT asc, MATCONN asc, GEO_DRIVERS asc
+copy residual = group6
+sort residual unstable by TIME asc, ACCOUNT asc, MATCONN asc, GEO_DRIVERS asc
+for residual_row in residual
+find found14 = group12 where TIME = residual_row.TIME and ACCOUNT = residual_row.ACCOUNT and MATCONN = residual_row.MATCONN and GEO_DRIVERS = residual_row.GEO_DRIVERS search binary missing initial
+if found(found14)
+residual_row.SIGNEDDATA = residual_row.SIGNEDDATA - found14.SIGNEDDATA
+end
+residual_row.FFLAS = "FFLASNON"
+end
+filter filtered15 = residual as f16 where not initial(f16.SIGNEDDATA)
+append new_data from filtered10
+append new_data from filtered15
+publish new_data as "NEW_DATA"
+group group17 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
+for g18 in group17
+if initial(g18.ACCOUNT)
+g18.ACCOUNT = "ACCOUNT_NA"
+end
+if initial(g18.AUDITTRAIL)
+g18.AUDITTRAIL = "AUDITTRAIL_NA"
+end
+if initial(g18.CATEGORY)
+g18.CATEGORY = "CATEGORY_NA"
+end
+if initial(g18.COSTCENTRE)
+g18.COSTCENTRE = "COSTCENTRE_NA"
+end
+if initial(g18.DEMREVID_KFS)
+g18.DEMREVID_KFS = "DEMREVID_KFS_NA"
+end
+if initial(g18.FFLAS)
+g18.FFLAS = "FFLAS_NA"
+end
+if initial(g18.FFLAS_SUBSET)
+g18.FFLAS_SUBSET = "FFLAS_SUBSET_NA"
+end
+if initial(g18.MATCONN)
+g18.MATCONN = "MATCONN_NA"
+end
+if initial(g18.TIME)
+g18.TIME = "TIME_NA"
+end
+if initial(g18.PRODUCT_TYPE)
+g18.PRODUCT_TYPE = "PRODUCT_TYPE_NA"
+end
+if initial(g18.GEO_DRIVERS)
+g18.GEO_DRIVERS = "GDRVS_NA"
+end
+if initial(g18.DOC_TYP)
+g18.DOC_TYP = "DOC_TYP_NA"
+end
+if initial(g18.CONN_REG_SPLIT)
+g18.CONN_REG_SPLIT = "CONN_REG_SPLIT_NA"
+end
+if initial(g18.LFC_WIN_SUPPLIER)
+g18.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
+end
+if initial(g18.MAT_GROUP_ID)
+g18.MAT_GROUP_ID = "MAT_GROUP_ID_NA"
+end
+if initial(g18.REG_FFLAS_SERV)
+g18.REG_FFLAS_SERV = "REG_FFLAS_SERV_NA"
+end
+if initial(g18.UFB_DR_ID)
+g18.UFB_DR_ID = "UFB_DR_ID_NA"
+end
+if initial(g18.MATREMAP)
+g18.MATREMAP = "MATREMAP_NA"
+end
+if initial(g18.RSP_SERVICE_ID)
+g18.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
+end
+if initial(g18.REV_ID_GROUP)
+g18.REV_ID_GROUP = "REV_ID_GROUP_NA"
+end
+end
+sort group17 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc
+show group17 as "CONTROL_TOTALS"

@@ -1,0 +1,154 @@
+script version 2
+dataset new_data = "step_06" named "NEW_DATA"
+dataset sap_revenues = "step_02" named "SAP_REVENUES"
+dataset rsp_split_ratios = "step_05" named "RSP_SPLIT_RATIOS"
+filter filtered1 = new_data as f2 where f2.DEMREVID_KFS == "DEMREVID016"
+group group3 = filtered1 exclude ["GEO_DRIVERS"]
+for g4 in group3
+if initial(g4.ACCOUNT)
+g4.ACCOUNT = "ACCOUNT_NA"
+end
+if initial(g4.AUDITTRAIL)
+g4.AUDITTRAIL = "AUDITTRAIL_NA"
+end
+if initial(g4.CATEGORY)
+g4.CATEGORY = "CATEGORY_NA"
+end
+if initial(g4.COSTCENTRE)
+g4.COSTCENTRE = "COSTCENTRE_NA"
+end
+if initial(g4.DEMREVID_KFS)
+g4.DEMREVID_KFS = "DEMREVID_KFS_NA"
+end
+if initial(g4.FFLAS)
+g4.FFLAS = "FFLAS_NA"
+end
+if initial(g4.FFLAS_SUBSET)
+g4.FFLAS_SUBSET = "FFLAS_SUBSET_NA"
+end
+if initial(g4.MATCONN)
+g4.MATCONN = "MATCONN_NA"
+end
+if initial(g4.TIME)
+g4.TIME = "TIME_NA"
+end
+if initial(g4.PRODUCT_TYPE)
+g4.PRODUCT_TYPE = "PRODUCT_TYPE_NA"
+end
+if initial(g4.GEO_DRIVERS)
+g4.GEO_DRIVERS = "GDRVS_NA"
+end
+if initial(g4.DOC_TYP)
+g4.DOC_TYP = "DOC_TYP_NA"
+end
+if initial(g4.CONN_REG_SPLIT)
+g4.CONN_REG_SPLIT = "CONN_REG_SPLIT_NA"
+end
+if initial(g4.LFC_WIN_SUPPLIER)
+g4.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
+end
+if initial(g4.MAT_GROUP_ID)
+g4.MAT_GROUP_ID = "MAT_GROUP_ID_NA"
+end
+if initial(g4.REG_FFLAS_SERV)
+g4.REG_FFLAS_SERV = "REG_FFLAS_SERV_NA"
+end
+if initial(g4.UFB_DR_ID)
+g4.UFB_DR_ID = "UFB_DR_ID_NA"
+end
+if initial(g4.MATREMAP)
+g4.MATREMAP = "MATREMAP_NA"
+end
+if initial(g4.RSP_SERVICE_ID)
+g4.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
+end
+if initial(g4.REV_ID_GROUP)
+g4.REV_ID_GROUP = "REV_ID_GROUP_NA"
+end
+end
+sort group3 unstable by GEO_DRIVERS asc
+sort group3 unstable by TIME asc, ACCOUNT asc, MATCONN asc
+filter filtered5 = sap_revenues as f6 where f6.DEMREVID_KFS == "DEMREVID006"
+index ix9 = rsp_split_ratios by ["MATCONN","ACCOUNT","TIME"] many
+for revenue7 in filtered5 copy
+find found8 = group3 where TIME = revenue7.TIME and ACCOUNT = revenue7.ACCOUNT and MATCONN = revenue7.MATCONN search binary missing initial
+if found(found8)
+revenue7.SIGNEDDATA = revenue7.SIGNEDDATA - found8.SIGNEDDATA
+end
+if not initial(revenue7.SIGNEDDATA)
+match matches10 = ix9 where MATCONN = revenue7.MATCONN and ACCOUNT = revenue7.ACCOUNT and TIME = revenue7.TIME
+for ratio11 in matches10
+copy row12 = revenue7
+row12.DEMREVID_KFS = "DEMREVID017"
+row12.GEO_DRIVERS = ratio11.GEO_DRIVERS
+row12.SIGNEDDATA = row12.SIGNEDDATA * ratio11.SIGNEDDATA
+append new_data row row12
+end
+end
+end
+publish new_data as "NEW_DATA"
+group group13 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
+for g14 in group13
+if initial(g14.ACCOUNT)
+g14.ACCOUNT = "ACCOUNT_NA"
+end
+if initial(g14.AUDITTRAIL)
+g14.AUDITTRAIL = "AUDITTRAIL_NA"
+end
+if initial(g14.CATEGORY)
+g14.CATEGORY = "CATEGORY_NA"
+end
+if initial(g14.COSTCENTRE)
+g14.COSTCENTRE = "COSTCENTRE_NA"
+end
+if initial(g14.DEMREVID_KFS)
+g14.DEMREVID_KFS = "DEMREVID_KFS_NA"
+end
+if initial(g14.FFLAS)
+g14.FFLAS = "FFLAS_NA"
+end
+if initial(g14.FFLAS_SUBSET)
+g14.FFLAS_SUBSET = "FFLAS_SUBSET_NA"
+end
+if initial(g14.MATCONN)
+g14.MATCONN = "MATCONN_NA"
+end
+if initial(g14.TIME)
+g14.TIME = "TIME_NA"
+end
+if initial(g14.PRODUCT_TYPE)
+g14.PRODUCT_TYPE = "PRODUCT_TYPE_NA"
+end
+if initial(g14.GEO_DRIVERS)
+g14.GEO_DRIVERS = "GDRVS_NA"
+end
+if initial(g14.DOC_TYP)
+g14.DOC_TYP = "DOC_TYP_NA"
+end
+if initial(g14.CONN_REG_SPLIT)
+g14.CONN_REG_SPLIT = "CONN_REG_SPLIT_NA"
+end
+if initial(g14.LFC_WIN_SUPPLIER)
+g14.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
+end
+if initial(g14.MAT_GROUP_ID)
+g14.MAT_GROUP_ID = "MAT_GROUP_ID_NA"
+end
+if initial(g14.REG_FFLAS_SERV)
+g14.REG_FFLAS_SERV = "REG_FFLAS_SERV_NA"
+end
+if initial(g14.UFB_DR_ID)
+g14.UFB_DR_ID = "UFB_DR_ID_NA"
+end
+if initial(g14.MATREMAP)
+g14.MATREMAP = "MATREMAP_NA"
+end
+if initial(g14.RSP_SERVICE_ID)
+g14.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
+end
+if initial(g14.REV_ID_GROUP)
+g14.REV_ID_GROUP = "REV_ID_GROUP_NA"
+end
+end
+sort group13 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc
+show group13 as "CONTROL_TOTALS"

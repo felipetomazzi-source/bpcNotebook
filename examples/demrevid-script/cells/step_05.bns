@@ -1,0 +1,124 @@
+script version 2
+dataset new_data = "step_04" named "NEW_DATA"
+empty rsp_split_ratios = new_data
+dataset rsp_location_material_ratio = "step_01" named "RSP_LOCATION_MATERIAL_RATIO"
+dataset rsp_location_gl_ratio = "step_01" named "RSP_LOCATION_GL_RATIO"
+dataset cal_location_gl_ratio = "step_01" named "CAL_LOCATION_GL_RATIO"
+dataset cal_location_conn_seg_ratio = "step_01" named "CAL_LOCATION_CONN_SEG_RATIO"
+filter filtered1 = new_data as f2 where f2.DEMREVID_KFS == "DEMREVID009"
+index ix6 = rsp_location_material_ratio by ["TIME","MATCONN","AUDITTRAIL"] many
+index ix10 = rsp_location_gl_ratio by ["ACCOUNT","TIME"] many
+index ix14 = cal_location_gl_ratio by ["ACCOUNT","TIME"] many
+index ix18 = cal_location_conn_seg_ratio by ["CONN_REG_SPLIT","TIME"] many
+for selected3 in filtered1 copy
+selected3.DEMREVID_KFS = "DEMREVID015"
+if integer(selected3.SIGNEDDATA) == 1
+find found4 = rsp_location_material_ratio where TIME = selected3.TIME and MATCONN = selected3.MATCONN and AUDITTRAIL = "DEMREVID_LOC_RATIO_OVERWRITE" search linear missing initial
+let trail5 = "DEMREVID_RSP_BILLING"
+if found(found4)
+trail5 = "DEMREVID_LOC_RATIO_OVERWRITE"
+end
+match matches7 = ix6 where TIME = selected3.TIME and MATCONN = selected3.MATCONN and AUDITTRAIL = trail5
+for ratio8 in matches7
+copy row9 = selected3
+row9.GEO_DRIVERS = ratio8.GEO_DRIVERS
+row9.SIGNEDDATA = ratio8.SIGNEDDATA
+append rsp_split_ratios row row9
+end
+end
+if integer(selected3.SIGNEDDATA) == 2
+match matches11 = ix10 where ACCOUNT = selected3.ACCOUNT and TIME = selected3.TIME
+for ratio12 in matches11
+copy row13 = selected3
+row13.GEO_DRIVERS = ratio12.GEO_DRIVERS
+row13.SIGNEDDATA = ratio12.SIGNEDDATA
+append rsp_split_ratios row row13
+end
+end
+if integer(selected3.SIGNEDDATA) == 3
+match matches15 = ix14 where ACCOUNT = selected3.ACCOUNT and TIME = selected3.TIME
+for ratio16 in matches15
+copy row17 = selected3
+row17.GEO_DRIVERS = ratio16.GEO_DRIVERS
+row17.SIGNEDDATA = ratio16.SIGNEDDATA
+append rsp_split_ratios row row17
+end
+end
+if integer(selected3.SIGNEDDATA) == 4
+match matches19 = ix18 where CONN_REG_SPLIT = selected3.CONN_REG_SPLIT and TIME = selected3.TIME
+for ratio20 in matches19
+copy row21 = selected3
+row21.GEO_DRIVERS = ratio20.GEO_DRIVERS
+row21.SIGNEDDATA = ratio20.SIGNEDDATA
+append rsp_split_ratios row row21
+end
+end
+end
+append new_data from rsp_split_ratios
+publish new_data as "NEW_DATA"
+publish rsp_split_ratios as "RSP_SPLIT_RATIOS"
+group group22 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
+for g23 in group22
+if initial(g23.ACCOUNT)
+g23.ACCOUNT = "ACCOUNT_NA"
+end
+if initial(g23.AUDITTRAIL)
+g23.AUDITTRAIL = "AUDITTRAIL_NA"
+end
+if initial(g23.CATEGORY)
+g23.CATEGORY = "CATEGORY_NA"
+end
+if initial(g23.COSTCENTRE)
+g23.COSTCENTRE = "COSTCENTRE_NA"
+end
+if initial(g23.DEMREVID_KFS)
+g23.DEMREVID_KFS = "DEMREVID_KFS_NA"
+end
+if initial(g23.FFLAS)
+g23.FFLAS = "FFLAS_NA"
+end
+if initial(g23.FFLAS_SUBSET)
+g23.FFLAS_SUBSET = "FFLAS_SUBSET_NA"
+end
+if initial(g23.MATCONN)
+g23.MATCONN = "MATCONN_NA"
+end
+if initial(g23.TIME)
+g23.TIME = "TIME_NA"
+end
+if initial(g23.PRODUCT_TYPE)
+g23.PRODUCT_TYPE = "PRODUCT_TYPE_NA"
+end
+if initial(g23.GEO_DRIVERS)
+g23.GEO_DRIVERS = "GDRVS_NA"
+end
+if initial(g23.DOC_TYP)
+g23.DOC_TYP = "DOC_TYP_NA"
+end
+if initial(g23.CONN_REG_SPLIT)
+g23.CONN_REG_SPLIT = "CONN_REG_SPLIT_NA"
+end
+if initial(g23.LFC_WIN_SUPPLIER)
+g23.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
+end
+if initial(g23.MAT_GROUP_ID)
+g23.MAT_GROUP_ID = "MAT_GROUP_ID_NA"
+end
+if initial(g23.REG_FFLAS_SERV)
+g23.REG_FFLAS_SERV = "REG_FFLAS_SERV_NA"
+end
+if initial(g23.UFB_DR_ID)
+g23.UFB_DR_ID = "UFB_DR_ID_NA"
+end
+if initial(g23.MATREMAP)
+g23.MATREMAP = "MATREMAP_NA"
+end
+if initial(g23.RSP_SERVICE_ID)
+g23.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
+end
+if initial(g23.REV_ID_GROUP)
+g23.REV_ID_GROUP = "REV_ID_GROUP_NA"
+end
+end
+sort group22 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc
+show group22 as "CONTROL_TOTALS"
