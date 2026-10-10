@@ -15,6 +15,8 @@ show working as "WORKING_PREVIEW"
 
 `dataset` reads the complete native SAP dataset from a declared preceding cell dependency, with the run/source/revision/input/resource checks of `io->read_dataset`. `publish` persists the complete flat native table on SAP; empty schemas survive. Each consumer receives a private copy. `show` produces a bounded browser preview and is never a calculation input. Multiple named datasets can be published by one cell. Running one cell requires valid predecessor datasets; running through a cell executes its predecessors. Checkpoints are inspection boundaries, not arbitrary mid-cell resumability. Historical retries use the frozen snapshot and retained input datasets; live reads must follow the existing retry/data-snapshot contract, never silently blend old inputs with fresh references.
 
+Stored dimension properties and hierarchies are reference inputs too. Adapter dimension access rejects a context using prior-run datasets. Publish the required member/property/hierarchy tables at the read boundary and consume those retained native datasets for independent later steps. Direct adapter property access returns current authorized metadata, not historical property values. A new run through the read stages establishes a new data snapshot.
+
 ## Tables, native types and arithmetic
 
 ```text

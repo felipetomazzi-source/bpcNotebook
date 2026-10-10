@@ -47,6 +47,11 @@ async function check(name,cells,expect='succeeded',inputs=[],context={}){
    await assert.rejects(api('/runs',{notebookId:saved.id,expectedRevision:saved.revision,scope:'one',cellId:'verify',idempotencyKey:randomUUID()}),/STALE_DEPENDENCY/);
    evidence.cases.push({name:'stale predecessors rejected',state:'rejected'});
   }
+  if(name==='dimension reference snapshot boundary'){
+   const one=await run(n,'one','consumer');
+   assert.equal(one.state,'failed',JSON.stringify(one.error));assert.equal(one.error.code,'DATA_SNAPSHOT');
+   evidence.cases.push({name:'fresh dimension properties blocked with prior-run datasets',runId:one.id,state:one.state,error:one.error});
+  }
   return {n,r};
  }finally{const current=await api('/notebook?id='+n.id,null,'GET');await api('/delete-notebook',{notebookId:n.id,expectedRevision:current.revision});}
 }
@@ -112,6 +117,10 @@ publish rows as "VERIFIED"`;
  const selections=[{name:'CATEGORY',type:'member',dimension:'CATEGORY',required:true,selected:['Actual']},
   {name:'TIME',type:'range',dimension:'TIME',hierarchy:'PARENTH1',required:true,selected:['2026.006']},
   {name:'REFERENCE_TIME',type:'range',dimension:'TIME',hierarchy:'PARENTH1',required:true,purpose:'reference',selected:['TIME_NA'],lookbackFrom:'TIME',lookbackSteps:1}];
+ await check('dimension reference snapshot boundary',[
+  {id:'seed',script:'script version 2\ndimension categories = DEMREVID-CATEGORY\nmembers rows = categories ["Actual"]\npublish rows as "MEMBERS"'},
+  {id:'consumer',script:'script version 2\ndataset retained = "seed" named "MEMBERS"\ndimension categories = DEMREVID-CATEGORY\nmembers fresh = categories ["Actual"]\ncompare summary = retained with fresh as "METADATA_SNAPSHOT"',dependencies:['seed']}
+ ],'succeeded',[],{environment:'CH_PLANNING',model:'DEMREVID'});
  const fixtureSeed=`DATA(adapter) = NEW zcl_bn_bpc( environment = CONV string( io->environment ) model = CONV string( io->model ) ).
 DATA(periods) = io->range( 'TIME' ).
 DATA(source) = adapter->read_data( filters = VALUE #( ( dimension = 'CATEGORY' members = VALUE #( ( CONV string( io->member( 'CATEGORY' ) ) ) ) )
