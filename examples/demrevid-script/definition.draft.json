@@ -106,7 +106,7 @@
     {
       "name": "DATASET_BYTES",
       "type": "number",
-      "value": "536870912"
+      "value": "268435456"
     },
     {
       "name": "WORK_ROWS",
