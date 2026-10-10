@@ -55,6 +55,7 @@ CLASS zcl_bn_context DEFINITION PUBLIC FINAL CREATE PUBLIC.
     METHODS check_budget RAISING zcx_bn.
     METHODS check_data_snapshot RAISING zcx_bn.
     METHODS check_rows IMPORTING count TYPE i RAISING zcx_bn.
+    METHODS check_working_bytes IMPORTING count TYPE int8 RAISING zcx_bn.
     DATA artifacts TYPE zcl_bn_dataset=>tt_headers READ-ONLY.
     DATA dataset_reads TYPE zcl_bn_dataset=>tt_access READ-ONLY.
     METHODS publish_dataset IMPORTING name TYPE string rows TYPE ANY TABLE RAISING zcx_bn.
@@ -362,6 +363,12 @@ CLASS zcl_bn_context IMPLEMENTATION.
         RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'RESOURCE_BUDGET' detail = 'DATASET_BYTES must be an integer from 1 to 268435456'.
       ENDIF.
       maximum = CONV i( value ).
+    ENDIF.
+  ENDMETHOD.
+  METHOD check_working_bytes.
+    check_budget( ).
+    IF count < 0 OR count > dataset_budget( ).
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'DATASET_BUDGET' detail = 'Script working table exceeds DATASET_BYTES; calculation was not truncated'.
     ENDIF.
   ENDMETHOD.
   METHOD reserve_dataset.
