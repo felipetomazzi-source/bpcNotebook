@@ -286,7 +286,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
     check_definition( notebook ).
     " Script saves must pass the native compiler before any immutable rows are written.
     LOOP AT notebook-cells INTO DATA(script_cell).
-      FIND REGEX '^\* BPC Notebook Script v1' IN script_cell-source.
+      FIND REGEX '^\* BPC Notebook Script v[12]' IN script_cell-source.
       IF sy-subrc <> 0. CONTINUE. ENDIF.
       zcl_bn_compiler=>compile( EXPORTING source = script_cell-source
         IMPORTING pool = DATA(script_pool) diagnostics = DATA(script_diagnostics) ).

@@ -1,6 +1,7 @@
 sap.ui.define([], function () {
   "use strict";
   var marker = "* BPC Notebook Script v1\n";
+  var marker2 = "* BPC Notebook Script v2\n";
   function failure(line, message) {
     var error = new Error("Script line " + line + ": " + message);
     error.line = line; throw error;
@@ -37,6 +38,7 @@ sap.ui.define([], function () {
   }
   function compile(text) {
     text = String(text);
+    var v2 = /^\s*script version 2(?:\r\n|\n|\r|$)/.test(text), sourceMarker = v2 ? marker2 : marker;
     var body = [], symbols = Object.create(null), blocks = [], serial = 0, line = 1, parts, at;
     function emit(code) { body.push(code); }
     function fresh() { return "bn_s" + (++serial); }
@@ -93,8 +95,8 @@ sap.ui.define([], function () {
     function expression(minimum) {
       minimum = minimum || 0;
       var token = take(), left;
-      if (token.type === "text") { left = {kind:"string", code:literal(token.value)}; }
-      else if (token.type === "number") { left = {kind:"number", code:"CONV decfloat34( " + literal(token.value) + " )"}; }
+      if (token.type === "text") { left = {kind:"string", code:literal(token.value),literal:token.value}; }
+      else if (token.type === "number") { left = {kind:"number", code:"CONV " + (v2 ? "uj_signeddata" : "decfloat34") + "( " + literal(token.value) + " )"}; }
       else if (token.value === "true" || token.value === "false") {
         left = {kind:"boolean", code:token.value === "true" ? "abap_true" : "abap_false"};
       } else if (token.value === "(") { left = expression(); take(")"); }
@@ -116,9 +118,40 @@ sap.ui.define([], function () {
         }
       } else if (token.type === "name") {
         var id = token.value;
-        if (peek() === "(" && ["input","member","range","selection","number","text","count","concat"].indexOf(id) >= 0) {
+        if (peek() === "(" && (["input","member","range","selection","number","text","count","concat"].concat(v2 ?
+["signed","decimal","float","integer","upper","lower","abs","initial","found","is_in","matches","slice","offset","children","hierarchies","round"] : [])).indexOf(id) >= 0) {
           take("(");
-          if (["input","member","range","selection"].indexOf(id) >= 0) {
+          if (v2 && ["found","initial","signed","decimal","float","integer","upper","lower","abs","is_in","matches","slice","offset","children","hierarchies","round"].indexOf(id) >= 0) {
+            var args = []; if (peek() !== ")") { do { args.push(expression()); if (peek() !== ",") { break; } take(","); } while (true); }
+            var arity = {found:1,initial:1,signed:1,decimal:1,float:1,integer:1,upper:1,lower:1,abs:1,is_in:2,matches:2,slice:3,offset:2,children:3,hierarchies:1,round:3};
+            if (args.length !== arity[id]) { failure(line,id + " requires " + arity[id] + " arguments"); }
+            var ac = args.map(function (arg) { return arg.code; });
+            if (id === "found") {
+              if (!args[0].foundCode) { failure(line,"found requires a lookup/find row"); }
+              left = {kind:"boolean",code:args[0].foundCode};
+            } else if (id === "initial") { left = {kind:"boolean",code:"xsdbool( " + ac[0] + " IS INITIAL )"}; }
+            else if (["signed","decimal","float","integer"].indexOf(id) >= 0) {
+              if (["number","string","field"].indexOf(args[0].kind) < 0) { failure(line,"Numeric conversion requires a scalar"); }
+              left = {kind:"number",code:"CONV " + ({signed:"uj_signeddata",decimal:"decfloat34",float:"f",integer:"i"}[id]) + "( " + ac[0] + " )"};
+            } else if (id === "upper" || id === "lower") { left = {kind:"string",code:(id === "upper" ? "to_upper" : "to_lower") + "( CONV string( " + ac[0] + " ) )"}; }
+            else if (id === "abs") { left = {kind:"number",code:"abs( " + ac[0] + " )"}; }
+            else if (id === "is_in") {
+              if (args[1].kind !== "ids") { failure(line,"is_in requires a member list"); }
+              var idsTemp=fresh();emit("DATA(" + idsTemp + ") = " + ac[1] + ".");
+              left = {kind:"boolean",code:"xsdbool( line_exists( " + idsTemp + "[ table_line = CONV string( " + ac[0] + " ) ] ) )"};
+            } else if (id === "matches") { left = {kind:"boolean",code:"xsdbool( " + ac[0] + " CP " + ac[1] + " )"}; }
+            else if (id === "slice") { left = {kind:"string",code:"substring( val = CONV string( " + ac[0] + " ) off = CONV i( " + ac[1] + " ) len = CONV i( " + ac[2] + " ) )"}; }
+            else if (id === "offset") { left = {kind:"string",code:"io->offset_period( member = CONV uj_dim_member( " + ac[0] + " ) offset_by = CONV i( " + ac[1] + " ) )"}; }
+            else if (id === "children" || id === "hierarchies") {
+              if (args[0].kind !== "dimension") { failure(line,"Hierarchy access requires a dimension adapter"); }
+              left = {kind:"ids",code:ac[0] + "->" + id + "( " + (id === "children" ? "member = " + ac[1] + " hierarchy = " + ac[2] : "") + " )"};
+            } else if (id === "round") {
+              var modes = {half_up:"round_half_up",half_even:"round_half_even",toward_zero:"round_down",away_from_zero:"round_up",ceil:"round_ceiling",floor:"round_floor"};
+              var modeToken = args[2].literal;
+              if (!modes[modeToken]) { failure(line,"round mode must be a quoted supported mode"); }
+              left = {kind:"number",code:"round( val = CONV decfloat34( " + ac[0] + " ) dec = CONV i( " + ac[1] + " ) mode = cl_abap_math=>" + modes[modeToken] + " )"};
+            }
+          } else if (["input","member","range","selection"].indexOf(id) >= 0) {
             var key = take(); if (key.type !== "text") { failure(line, "Parameter names must be quoted"); }
             left = {kind:id === "range" || id === "selection" ? "ids" : "string",code:"io->" + id + "( " + literal(key.value) + " )"};
             if (id === "range") {
@@ -135,7 +168,7 @@ sap.ui.define([], function () {
               left = {kind:"string",code:"CONV string( CONV string( " + argument.code + " ) && CONV string( " + second.code + " ) )"};
             } else {
               if (["table","ids","row","dimension","model"].indexOf(argument.kind) >= 0) { failure(line, "Convert a scalar value"); }
-              left = {kind:id === "number" ? "number" : "string",code:"CONV " + (id === "number" ? "decfloat34" : "string") + "( " + argument.code + " )"};
+              left = {kind:id === "number" ? "number" : "string",code:"CONV " + (id === "number" ? (v2 ? "uj_signeddata" : "decfloat34") : "string") + "( " + argument.code + " )"};
             }
           }
           take(")");
@@ -176,12 +209,153 @@ sap.ui.define([], function () {
       emit("ASSIGN " + reference + "->* TO " + item.code + ".");
       return item;
     }
+    function fieldNames() {
+      take("["); var values = [];
+      while (peek() !== "]") {
+        var token = take(); if (token.type !== "text" || !/^[A-Za-z][A-Za-z0-9_]{0,29}$/.test(token.value)) { failure(line,"Fields must be quoted native component names"); }
+        var value = token.value.toUpperCase(); if (values.indexOf(value) >= 0) { failure(line,"Duplicate field " + value); } values.push(value);
+        if (peek() !== ",") { break; } take(",");
+      }
+      take("]"); return values;
+    }
+    function idCode(values) { return "VALUE zcl_bn_types=>tt_ids( " + values.map(function (v) { return "( CONV string( " + literal(v) + " ) )"; }).join(" ") + " )"; }
+    function tableResult(id,call) { var reference=fresh();emit("DATA(" + reference + ") = " + call + ".");return dynamicTable(id,reference); }
+    function rowLike(id,table) {
+      var reference=fresh(),row=declare(id,"row","<" + fresh() + ">");row.reference=reference;
+      emit("DATA " + reference + " TYPE REF TO data.");emit("CREATE DATA " + reference + " LIKE LINE OF " + table.code + ".");
+      emit("FIELD-SYMBOLS " + row.code + " TYPE any.");emit("ASSIGN " + reference + "->* TO " + row.code + ".");return row;
+    }
+    function columns() {
+      var values=[];do { var n=name().toUpperCase(),kind=name();
+        if (!["signed","decimal","float","integer","text","member","boolean"].includes(kind) || !/^[A-Z][A-Z0-9_]{0,29}$/.test(n)) { failure(line,"Invalid working column/type"); }
+        values.push("( name = " + literal(n) + " kind = " + literal(kind) + " )");if(peek()!==","){break;}take(",");
+      }while(true);return "VALUE zcl_bn_table=>tt_columns( " + values.join(" ") + " )";
+    }
+    function mutation(table) {
+      if(blocks.some(function (b) {return b.kind === "for" && b.table === table.code;})){failure(line,"Do not structurally mutate a table being iterated; use a copy or delete current row");}
+    }
+    function query(table, required) {
+      var probe=rowLike("_query" + serial,table),fields=[],assignments=[];take("where");
+      do { var n=name().toUpperCase();take("=");var v=expression(2);var f=field(probe,n);emit(f.code + " = " + v.code + ".");fields.push(n);assignments.push(n + " = " + f.code);
+        if(peek()!=="and"){break;}take("and");
+      }while(true);
+      if(new Set(fields).size !== fields.length || required && (fields.length!==required.length || required.some(function (n){return fields.indexOf(n)<0;}))){failure(line,"Query must specify each index key exactly once");}
+      return {row:probe,fields:fields,assignments:assignments};
+    }
     text.split(/\r\n|\n|\r/).forEach(function (sourceLine, index) {
       line = index + 1; parts = tokens(sourceLine,line); at = 0;
       if (!parts.length) { return; }
       emit("* @bn-line " + line);
       var command = name(), id, value, item;
-      if (command === "dimension") {
+      if (command === "script" && v2) {
+        take("version");take("2"); if(index !== text.split(/\r\n|\n|\r/).findIndex(function (s){return s.trim();})){failure(line,"Version header must come first");}
+      } else if (v2 && command === "dataset") {
+        id=name();take("=");var dependency=take();take("named");var label=take();
+        if(dependency.type!=="text"||label.type!=="text"){failure(line,"Dataset dependency and name must be quoted");}
+        tableResult(id,"io->read_dataset( dependency = " + literal(dependency.value) + " name = " + literal(label.value) + " )");
+      } else if (v2 && command === "publish") {
+        item=lookup(name(),"table");take("as");label=take();if(label.type!=="text"){failure(line,"Dataset name must be quoted");}
+        emit("io->publish_dataset( name = " + literal(label.value) + " rows = " + item.code + " ).");
+      } else if (v2 && command === "reference") {
+        take("model");id=name();take("=");var model=name();item=declare(id,"model");item.resource=model;
+        emit("DATA(" + item.code + ") = io->reference_model( " + literal(model) + " ).");
+      } else if (v2 && (command === "copy" || command === "empty")) {
+        id=name();take("=");item=lookup(name());
+        if(item.kind==="table"){tableResult(id,"zcl_bn_table=>copy( io = io rows = " + item.code + " empty = " + (command==="empty" ? "abap_true" : "abap_false") + " )");}
+        else if(item.kind==="row" && command==="copy"){
+          var reference=fresh(),row=declare(id,"row","<"+fresh()+">");row.reference=reference;
+          emit("DATA " + reference + " TYPE REF TO data.");emit("CREATE DATA " + reference + " LIKE " + item.code + ".");
+          emit("FIELD-SYMBOLS " + row.code + " TYPE any.");emit("ASSIGN " + reference + "->* TO " + row.code + ".");emit(row.code + " = " + item.code + ".");
+        }else{failure(line,"copy/empty requires native table or copy row");}
+      } else if(v2 && command==="row"){
+        id=name();take("like");rowLike(id,lookup(name(),"table"));
+      } else if(v2 && command==="native"){
+        id=name();take("=");value=expression();if(value.kind!=="field"){failure(line,"native scalar requires a native row field");}
+        var reference=fresh();item=declare(id,"field","<"+fresh()+">");
+        emit("DATA " + reference + " TYPE REF TO data.");emit("CREATE DATA " + reference + " LIKE " + value.code + ".");
+        emit("FIELD-SYMBOLS " + item.code + " TYPE any.");emit("ASSIGN " + reference + "->* TO " + item.code + ".");emit(item.code + " = " + value.code + ".");
+      } else if(v2 && command==="group"){
+        id=name();take("=");item=lookup(name(),"table");var mode=name();if(!["include","exclude","all"].includes(mode)){failure(line,"group requires include/exclude/all");}
+        var fields=mode==="all"?[]:fieldNames();var amount="SIGNEDDATA";
+        if(peek()==="amount"){take("amount");var amountToken=take();amount=amountToken.value.toUpperCase();if(!/^[A-Z][A-Z0-9_]{0,29}$/.test(amount)){failure(line,"Invalid amount field");}}
+        tableResult(id,"zcl_bn_table=>group( io = io rows = " + item.code + " names = " + idCode(fields) + " mode = " + literal(mode) + " amount = " + literal(amount) + " )");
+      } else if(v2 && command==="sort"){
+        item=lookup(name(),"table");mutation(item);var stability=name();if(!["stable","unstable"].includes(stability)){failure(line,"Specify stable or unstable sort");}take("by");var order=[];
+        do{var n=name().toUpperCase(),direction=name();if(!["asc","desc"].includes(direction)){failure(line,"Sort field requires asc/desc");}
+          order.push("( name = " + literal(n) + " descending = " + (direction==="desc"?"abap_true":"abap_false") + " )");if(peek()!==","){break;}take(",");}while(true);
+        emit("zcl_bn_table=>sort( EXPORTING io = io order = VALUE #( " + order.join(" ") + " ) stable = " + (stability==="stable"?"abap_true":"abap_false") + " CHANGING rows = " + item.code + " ).");
+      } else if(v2 && command==="deduplicate"){
+        item=lookup(name(),"table");mutation(item);take("adjacent");take("by");var fields=fieldNames();if(!fields.length){failure(line,"Deduplication requires keys");}
+        emit("zcl_bn_table=>keys( rows = " + item.code + " names = " + idCode(fields) + " ).");
+        emit("DELETE ADJACENT DUPLICATES FROM " + item.code + " COMPARING " + fields.join(" ") + ".");
+      } else if(v2 && (command==="extend" || command==="cast")){
+        id=name();take("=");item=lookup(name(),"table");take("with");var cs=columns();
+        tableResult(id,"zcl_bn_table=>extend( io = io rows = " + item.code + " columns = " + cs + " replace = " + (command==="cast"?"abap_true":"abap_false") + " )");
+      } else if(v2 && command==="project"){
+        id=name();take("=");item=lookup(name(),"table");take("fields");var fields=fieldNames();
+        tableResult(id,"zcl_bn_table=>project( io = io rows = " + item.code + " names = " + idCode(fields) + " )");
+      } else if(v2 && command==="index"){
+        id=name();take("=");var table=lookup(name(),"table");take("by");var fields=fieldNames();var cardinality=name();if(!["many","unique"].includes(cardinality)){failure(line,"Index requires many/unique cardinality");}
+        item=declare(id,"index");item.source=table;item.fields=fields;
+        emit("DATA(" + item.code + ") = NEW zcl_bn_index( io = io rows = " + table.code + " names = " + idCode(fields) + " cardinality = " + literal(cardinality) + " ).");
+      } else if(v2 && (command==="lookup" || command==="match")){
+        id=name();take("=");var ix=lookup(name(),"index"),q=query(ix.source,ix.fields);
+        if(command==="match"){tableResult(id,ix.code + "->matches( " + q.row.code + " )");}
+        else{
+          take("policy");var policy=name();if(!["first","last","unique"].includes(policy)){failure(line,"Lookup requires first/last/unique policy");}
+          take("missing");var missing=name();if(!["initial","error"].includes(missing)){failure(line,"Lookup requires initial/error missing policy");}
+          var reference=fresh();emit("DATA(" + reference + ") = " + ix.code + "->lookup( pattern = " + q.row.code + " policy = " + literal(policy) + " missing = " + literal(missing) + " ).");
+          var row=declare(id,"row","<"+fresh()+">");row.reference=reference;row.foundCode=fresh();
+          emit("FIELD-SYMBOLS " + row.code + " TYPE any.");emit("ASSIGN " + reference + "->* TO " + row.code + ".");emit("DATA(" + row.foundCode + ") = " + ix.code + "->found.");
+        }
+      } else if(v2 && command==="find"){
+        id=name();take("=");var table=lookup(name(),"table"),q=query(table);take("search");var search=name();if(!["linear","binary"].includes(search)){failure(line,"find requires linear/binary search");}
+        take("missing");var missing=name();if(!["initial","error"].includes(missing)){failure(line,"find requires initial/error missing policy");}
+        var row=declare(id,"row","<"+fresh()+">");row.foundCode=fresh();emit("FIELD-SYMBOLS " + row.code + " TYPE any.");
+        emit("READ TABLE " + table.code + " ASSIGNING " + row.code + " WITH KEY " + q.assignments.join(" ") + (search==="binary"?" BINARY SEARCH":"") + ".");
+        emit("DATA(" + row.foundCode + ") = xsdbool( sy-subrc = 0 ).");emit("IF " + row.foundCode + " = abap_false.");
+        if(missing==="error"){emit("RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'SCRIPT_MISSING' detail = 'Required row not found'.");}
+        else{emit("CLEAR " + q.row.code + ".");emit("ASSIGN " + q.row.reference + "->* TO " + row.code + ".");}emit("ENDIF.");
+      } else if(v2 && command==="filter"){
+        id=name();take("=");var table=lookup(name(),"table");take("as");var alias=name();
+        var out=tableResult(id,"zcl_bn_table=>copy( io = io rows = " + table.code + " empty = abap_true )");
+        var row=rowLike(alias,table);emit("LOOP AT " + table.code + " INTO " + row.code + ".");emit("io->check_budget( ).");take("where");value=expression();
+        emit("IF " + condition(value) + ".");emit("APPEND " + row.code + " TO " + out.code + ".");emit("ENDIF.");emit("ENDLOOP.");delete symbols[alias];
+        emit("zcl_bn_table=>check( io = io rows = " + out.code + " ).");
+      } else if(v2 && command==="changes"){
+        id=name();take("=");var current=lookup(name(),"table");take("against");var previous=lookup(name(),"table");take("mode");var mode=name();if(!["legacy","unique"].includes(mode)){failure(line,"Change-set requires legacy/unique mode");}
+        tableResult(id,"zcl_bn_table=>changes( io = io rows = " + current.code + " previous = " + previous.code + " mode = " + literal(mode) + " )");
+      } else if(v2 && command==="result"){
+        item=lookup(name(),"table");take("as");label=take();take("kind");var kind=name();if(label.type!=="text"||!["replacement","delta"].includes(kind)){failure(line,"Result requires quoted name and replacement/delta kind");}
+        emit("zcl_bn_table=>signed_boundary( rows = " + item.code + " ).");
+        emit("io->allocation_result( name = " + literal(label.value) + " rows = " + item.code + " kind = " + literal(kind) + " ).");
+      } else if(v2 && command==="compare"){
+        id=name();take("=");var original=lookup(name(),"table");take("with");var port=lookup(name(),"table");take("as");label=take();if(label.type!=="text"){failure(line,"Comparison name must be quoted");}
+        item=declare(id,"row");emit("DATA(" + item.code + ") = io->compare_results( name = " + literal(label.value) + " original = " + original.code + " notebook = " + port.code + " ).");
+      } else if(v2 && command==="checkpoint"){
+        label=take();var state=name();if(label.type!=="text"||!["start","finish"].includes(state)){failure(line,"Checkpoint requires quoted name and start/finish");}
+        var inputs=[],outputs=[];if(peek()==="inputs"){take("inputs");inputs=fieldNames();}if(peek()==="outputs"){take("outputs");outputs=fieldNames();}
+        emit("io->checkpoint( name = " + literal(label.value) + " state = " + literal(state==="start"?"running":"succeeded") + " inputs = " + idCode(inputs) + " outputs = " + idCode(outputs) + " ).");
+      } else if(v2 && command==="assert"){
+        value=expression();take("message");label=take();if(label.type!=="text"){failure(line,"Assertion message must be quoted");}
+        emit("IF NOT ( " + condition(value) + " ).");emit("RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'SCRIPT_ASSERT' detail = " + literal(label.value) + ".");emit("ENDIF.");
+      } else if(v2 && command==="divide"){
+        var row=lookup(name(),"row");take(".");var target=field(row,name());take("by");value=expression();take("using");take("float");take("onzero");take("keep");var temp=fresh();
+        emit("TRY.");emit("DATA(" + temp + ") = CONV f( " + target.code + " ).");emit(temp + " = " + temp + " / " + value.code + ".");emit(target.code + " = " + temp + ".");emit("CATCH cx_sy_zerodivide.");emit("ENDTRY.");
+      } else if(v2 && command==="delete"){
+        var rowId=name(),loop=blocks.slice().reverse().find(function (b){return b.kind==="for";});
+        if(!loop || loop.id!==rowId || !loop.table){failure(line,"delete must target current innermost table row");}
+        emit("DELETE " + loop.table + " INDEX " + loop.position + ".");emit("CONTINUE.");
+      } else if(v2 && (command==="break" || command==="continue")){
+        if(!blocks.some(function (b){return b.kind==="for";})){failure(line,"Loop control requires a loop");}emit(command==="break"?"EXIT.":"CONTINUE.");
+      } else if(v2 && command==="clear"){
+        item=lookup(name());if(item.kind!=="row" && item.kind!=="field"){failure(line,"clear requires native row/scalar");}emit("CLEAR " + item.code + ".");
+      } else if(v2 && command==="fixture"){
+        item=lookup(name(),"table");take("model");label=take();if(label.type!=="text"){failure(line,"Fixture model name must be quoted");}
+        emit("io->enable_fixtures( VALUE #( ( environment = CONV string( io->environment ) model = " + literal(label.value) + " rows = REF #( " + item.code + " ) ) ) ).");
+      } else if(v2 && command==="properties"){
+        id=name();take("=");var dim=dimension(resource());var reference=fresh();emit("DATA(" + reference + ") = " + dim + "->properties( ).");item=declare(id,"table",reference);
+      } else if (command === "dimension") {
         id = name(); take("="); var values = resource();
         item = declare(id,"dimension",dimension(values)); item.resource = values;
       } else if (command === "model") {
@@ -212,13 +386,19 @@ sap.ui.define([], function () {
         }
         ref = fresh(); emit("DATA(" + ref + ") = " + adapter + "->read_data( filters = " + filters + " max_rows = " + limit + " )."); dynamicTable(id,ref);
       } else if (command === "table") {
-        item = declare(name(),"table"); emit("DATA " + item.code + " TYPE zcl_bn_context=>tt_rows.");
+        id=name();if(v2 && peek()==="columns"){take("columns");tableResult(id,"zcl_bn_table=>make( io = io columns = " + columns() + " )");}
+        else{item = declare(id,"table"); emit("DATA " + item.code + " TYPE zcl_bn_context=>tt_rows.");}
       } else if (command === "read") {
         id = name(); take("="); var dependency = take();
         if (dependency.type !== "text") { failure(line, "Dependency ID must be quoted"); }
         item = declare(id,"table"); emit("DATA(" + item.code + ") = io->read( " + literal(dependency.value) + " ).");
       } else if (command === "append") {
-        item = lookup(name(),"table"); take("key"); take("="); var keyValue = expression(); take("amount"); take("="); value = expression();
+        item = lookup(name(),"table");
+        if(v2 && peek()==="from"){mutation(item);take("from");var source=lookup(name(),"table");emit("zcl_bn_table=>append( EXPORTING io = io source = " + source.code + " CHANGING target = " + item.code +
+" ).");if(at!==parts.length){failure(line,"Unexpected " + peek());}return;}
+        if(v2 && peek()==="row"){mutation(item);take("row");var row=lookup(name(),"row");emit("zcl_bn_table=>append_row( EXPORTING io = io row = " + row.code + " CHANGING target = " + item.code +
+" ).");if(at!==parts.length){failure(line,"Unexpected " + peek());}return;}
+        take("key"); take("="); var keyValue = expression(); take("amount"); take("="); value = expression();
         if (keyValue.kind !== "string" || value.kind !== "number") { failure(line, "append requires a text key and numeric amount"); }
         emit("APPEND VALUE #( key = " + keyValue.code + " amount = " + value.code + " ) TO " + item.code + ".");
       } else if (command === "let") {
@@ -227,10 +407,17 @@ sap.ui.define([], function () {
         item = declare(id,value.kind);
         emit("DATA(" + item.code + ") = " + value.code + ".");
       } else if (command === "for") {
-        id = name(); take("in"); item = lookup(name(),"table");
-        var row = declare(id,"row","<" + fresh() + ">");
-        emit("FIELD-SYMBOLS " + row.code + " TYPE any."); emit("LOOP AT " + item.code + " ASSIGNING " + row.code + ".");
-        blocks.push({kind:"for",id:id,line:line});
+        id = name(); take("in"); item = v2 ? expression() : lookup(name(),"table");
+        if(v2 && item.kind==="ids"){
+          var idsTable=fresh();emit("DATA(" + idsTable + ") = " + item.code + ".");
+          var row=declare(id,"string");emit("LOOP AT " + idsTable + " INTO DATA(" + row.code + ").");emit("io->check_budget( ).");blocks.push({kind:"for",id:id,line:line});
+        }else{
+          if(item.kind!=="table"){failure(line,"for requires table or member list");}
+          var copying=v2 && peek()==="copy";if(copying){take("copy");var row=rowLike(id,item);emit("LOOP AT " + item.code + " INTO " + row.code + ".");}
+          else{var row=declare(id,"row","<"+fresh()+">");emit("FIELD-SYMBOLS " + row.code + " TYPE any.");emit("LOOP AT " + item.code + " ASSIGNING " + row.code + ".");}
+          var position;if(v2){position=fresh();emit("DATA(" + position + ") = sy-tabix.");emit("io->check_budget( ).");}
+          blocks.push({kind:"for",id:id,line:line,table:v2?item.code:undefined,position:position});
+        }
       } else if (command === "if") {
         value = expression(); emit("IF " + condition(value) + "."); blocks.push({kind:"if",line:line});
       } else if (command === "else") {
@@ -266,7 +453,7 @@ sap.ui.define([], function () {
     var bytes = new TextEncoder().encode(text), binary = "";
     bytes.forEach(function (b) { binary += String.fromCharCode(b); });
     var encoded = btoa(binary).match(/.{1,120}/g) || [""];
-    var output = marker + encoded.map(function (s) { return "* @bn-source " + s; }).join("\n") +
+    var output = sourceMarker + encoded.map(function (s) { return "* @bn-source " + s; }).join("\n") +
       "\n* @bn-generated\n" + body.join("\n");
     if (output.length > 60000) { failure(1,"Generated cell exceeds the 60000-character SAP source limit"); }
     // Wrap only generated ABAP between tokens, never inside literals or author text.
@@ -284,10 +471,11 @@ sap.ui.define([], function () {
     return output;
   }
   function unpack(source) {
-    if (source.slice(0,marker.length) !== marker) { return {language:"abap",text:source}; }
+    var sourceMarker = source.slice(0,marker2.length) === marker2 ? marker2 : marker;
+    if (source.slice(0,sourceMarker.length) !== sourceMarker) { return {language:"abap",text:source}; }
     var end = source.indexOf("\n* @bn-generated\n"), encoded = "";
     if (end < 0) { return {language:"abap",text:source}; }
-    var lines = source.slice(marker.length,end).split("\n");
+    var lines = source.slice(sourceMarker.length,end).split("\n");
     if (lines.some(function (s) { return !/^\* @bn-source [A-Za-z0-9+/=]*$/.test(s); })) { return {language:"abap",text:source}; }
     lines.forEach(function (s) { encoded += s.slice(13); });
     try {
