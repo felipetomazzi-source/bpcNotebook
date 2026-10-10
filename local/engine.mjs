@@ -77,7 +77,7 @@ export class Engine {
   persist() {
     if (!this.file) return;
     mkdirSync(dirname(this.file), {recursive: true});
-    writeFileSync(this.file + '.tmp', JSON.stringify(this.db)); renameSync(this.file + '.tmp', this.file);
+    writeFileSync(this.file + '.tmp', JSON.stringify(this.db), 'utf8'); renameSync(this.file + '.tmp', this.file);
   }
   audit(user, action, id) { this.db.audit.push({user, action, id, at: now()}); }
   owned(collection, id, user, includeDeleted = false) {
@@ -111,14 +111,52 @@ export class Engine {
       seen.add(c.id);
     }
   }
+  identityKey(data) { return hash([data.environment || '', data.model || '', data.technicalName]); }
+  validateIdentity(data) {
+    if (!/^[A-Z][A-Z0-9_]{0,29}$/.test(data.technicalName || '')) fail(400,'TECHNICAL_NAME','Technical name: 1 to 30 uppercase letters, digits or underscores; start with a letter');
+    if (typeof data.description !== 'string' || !data.description.trim() || data.description.length > 240 || /[\x00-\x1f\x7f]/.test(data.description)) fail(400,'DESCRIPTION','Single-line description required (maximum 240 characters)');
+  }
+  reserveIdentity(id,data) {
+    this.db.identityNames ||= {};
+    const key=this.identityKey(data), other=this.db.identityNames[key];
+    if(other && other!==id) fail(409,'NAME_TAKEN','Technical name is reserved in this environment/model');
+    this.db.identityNames[key]=id;
+  }
+  identity(id,user) { this.owned('notebooks',id,user);return copy(this.db.identities?.[id] || {technicalName:'',description:'',identityRevision:0}); }
+  view(id,user) { return {...this.get(id,user),...this.identity(id,user)}; }
+  assignIdentity(data,user) {
+    const n=this.owned('notebooks',data.notebookId,user), old=this.identity(n.id,user);
+    if(n.current!==data.expectedRevision || old.identityRevision!==data.expectedIdentityRevision) fail(409,'CONFLICT','Notebook or identity changed; reopen before assigning');
+    this.validateIdentity(data);
+    if(old.technicalName && old.technicalName!==data.technicalName) fail(409,'NAME_IMMUTABLE','Assigned technical names cannot be changed');
+    this.reserveIdentity(n.id,{...n.versions.at(-1),technicalName:data.technicalName});
+    const next={technicalName:data.technicalName,description:data.description,identityRevision:old.identityRevision+1};
+    this.db.identities ||= {};this.db.identities[n.id]=next;this.persist();return copy(next);
+  }
+  resolveIdentity(data,user) {
+    if(!Number.isInteger(data.approvedRevision) || data.approvedRevision<1) fail(400,'APPROVED_REVISION','An explicit saved revision is required');
+    const id=this.db.identityNames?.[this.identityKey(data)], n=this.owned('notebooks',id,user);
+    const version=n.versions.find(v=>v.revision===data.approvedRevision);
+    if(!version) fail(409,'INTEGRITY','Requested immutable revision is missing');
+    if((version.environment || '')!==(data.environment || '') || (version.model || '')!==(data.model || '') || this.identity(id,user).technicalName!==data.technicalName) fail(409,'IDENTITY_SCOPE','Saved revision does not match identity scope');
+    return {...copy(version),...this.identity(id,user)};
+  }
   create(data, user) {
-    const id = randomUUID(); this.validateDefinition(data);
+    data={...data,title:data.title || data.technicalName};
+    const id = randomUUID(); this.validateDefinition(data); this.validateIdentity(data);
+    this.reserveIdentity(id,data);
     const n = {id, owner: user, versions: [], current: 0}; this.db.notebooks[id] = n;
-    return this.save(id, {...data, expectedRevision: 0}, user);
+    this.db.identities ||= {}; this.db.identities[id]={technicalName:data.technicalName,description:data.description,identityRevision:1};
+    this.save(id, {...data, expectedRevision: 0}, user); return this.view(id,user);
   }
   save(id, data, user) {
     const n = this.owned('notebooks', id, user); this.validateDefinition(data);
     if (data.expectedRevision !== n.current) fail(409, 'CONFLICT', 'Notebook changed; reload before saving');
+    const identity=this.identity(id,user);
+    if(identity.technicalName){
+      if(data.technicalName && data.technicalName!==identity.technicalName) fail(409,'NAME_IMMUTABLE','Assigned technical names cannot be changed');
+      this.reserveIdentity(id,{...data,technicalName:identity.technicalName});
+    }
     const old = n.versions.at(-1);
     const cells = data.cells.map(c => {
       const previous = n.versions.flatMap(v=>v.cells).filter(p=>p.id===c.id).at(-1);
@@ -131,7 +169,7 @@ export class Engine {
     this.audit(user, 'SAVE', id); this.persist(); return this.get(id, user);
   }
   list(user) { return Object.values(this.db.notebooks).filter(n => n.owner === user && !n.deletedAt).map(n => {
-    const v = n.versions.at(-1); return {id: n.id, title: v.title, environment: v.environment, model: v.model, revision: v.revision, savedAt: v.savedAt};
+    const v = n.versions.at(-1); return {id: n.id, ...this.identity(n.id,user), title: v.title, explanation: v.explanation, environment: v.environment, model: v.model, revision: v.revision, savedAt: v.savedAt};
   }); }
   fingerprint(n, cellId) {
     const c = n.cells.find(c => c.id === cellId);

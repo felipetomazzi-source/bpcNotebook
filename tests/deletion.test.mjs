@@ -6,7 +6,7 @@ const user='alice';
 const request=n=>({notebookId:n.id,expectedRevision:n.revision,scope:'all',idempotencyKey:crypto.randomUUID()});
 
 test('notebook deletion checks ownership/revision/active runs and retains immutable history and outputs',async()=>{
- const e=new Engine({auto:false,delay:0}),n=e.create(demo(),user),run=e.submit(request(n),user);
+ const e=new Engine({auto:false,delay:0}),n=e.create({...demo(),technicalName:"TEST_ALLOCATION",description:"Test allocation"},user),run=e.submit(request(n),user);
  assert.throws(()=>e.deleteNotebook(n.id,1,'bob'),{code:'NOT_FOUND'});
  assert.throws(()=>e.deleteNotebook(n.id,0,user),{code:'CONFLICT'});
  assert.throws(()=>e.deleteNotebook(n.id,1,user),{code:'NOTEBOOK_BUSY'});
@@ -22,7 +22,7 @@ test('notebook deletion checks ownership/revision/active runs and retains immuta
 });
 
 test('removing cells in a saved revision retains old execution snapshots and rejects dangling dependencies',async()=>{
- const e=new Engine({auto:false,delay:0}),n=e.create(demo(),user),run=e.submit(request(n),user);
+ const e=new Engine({auto:false,delay:0}),n=e.create({...demo(),technicalName:"TEST_ALLOCATION",description:"Test allocation"},user),run=e.submit(request(n),user);
  await e.execute(run.id);
  assert.throws(()=>e.save(n.id,{...n,cells:[n.cells[1]],expectedRevision:1},user),{code:'DEPENDENCY_ORDER'});
  const saved=e.save(n.id,{...n,cells:[n.cells[0]],expectedRevision:1},user);
@@ -38,7 +38,7 @@ test('HTTP notebook deletion uses the write protections and hides only the delet
  const base='http://127.0.0.1:'+server.address().port;
  const post=(path,data,headers={})=>fetch(base+'/api'+path,{method:'POST',headers:{'Content-Type':'application/json','X-BPC-Notebook':'1',...headers},body:JSON.stringify(data)});
  try{
-  const n=await (await post('/notebooks',{demo:true})).json();
+  const n=await (await post('/notebooks',{demo:true,technicalName:"TEST_DEMO",description:"Demo test"})).json();
   assert.equal((await post('/delete-notebook',{notebookId:n.id,expectedRevision:1},{Origin:'https://foreign.example'})).status,403);
   assert.equal((await post('/delete-notebook',{notebookId:n.id,expectedRevision:0})).status,409);
   assert.equal((await post('/delete-notebook',{notebookId:n.id,expectedRevision:1})).status,200);

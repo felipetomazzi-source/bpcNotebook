@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Engine, demo } from '../local/engine.mjs';
 const user='alice';
-const fixture = () => { const e=new Engine({auto:false,delay:0}); const n=e.create(demo(),user); return {e,n}; };
+const fixture = () => { const e=new Engine({auto:false,delay:0}); const n=e.create({...demo(),technicalName:"TEST_ALLOCATION",description:"Test allocation"},user); return {e,n}; };
 const request = (n, extra={}) => ({notebookId:n.id,expectedRevision:n.revision,scope:'all',cellId:'',idempotencyKey:crypto.randomUUID(),...extra});
 test('immutable source history, checksums and optimistic saves',()=>{
   const {e,n}=fixture();const edit=structuredClone(n);edit.cells[0].source+='\n" change';
@@ -82,7 +82,7 @@ test('cancel, timeout and worker-loss recovery are terminal without implicit ret
   const {e,n}=fixture();const r=e.submit(request(n),user);e.cancel(r.id,user);await e.execute(r.id);assert.equal(e.run(r.id,user).state,'cancelled');
   const r2=e.submit(request(n),user);e.db.runs[r2.id].timeoutMs=-1;await e.execute(r2.id);assert.equal(e.run(r2.id,user).error.code,'TIMEOUT');
   const dir=mkdtempSync(join(tmpdir(),'bpc-notebook-'));try{
-    const path=join(dir,'store.json');const persistent=new Engine({file:path,auto:false});const notebook=persistent.create(demo(),user);
+    const path=join(dir,'store.json');const persistent=new Engine({file:path,auto:false});const notebook=persistent.create({...demo(),technicalName:"TEST_ALLOCATION",description:"Test allocation"},user);
     const req=request(notebook);const run=persistent.submit(req,user);const recovered=new Engine({file:path,auto:false});
     assert.equal(recovered.run(run.id,user).error.code,'WORKER_LOST');assert.equal(recovered.submit(req,user).id,run.id);
   }finally{rmSync(dir,{recursive:true,force:true});}

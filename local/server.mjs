@@ -26,9 +26,11 @@ export function createServer(engine = new Engine({file: resolve('.local/store.js
         if (path === '/folders' && req.method === 'GET') value = engine.organization(user);
         else if (path === '/folders' && req.method === 'PUT') value = engine.saveOrganization(body,user);
         else if (path === '/notebooks' && req.method === 'GET') value = engine.list(user);
-        else if (path === '/notebooks' && req.method === 'POST') value = engine.create(body.demo ? demo() : body,user);
-        else if (path === '/notebook' && req.method === 'GET') value = engine.get(p.get('id'),user);
-        else if (path === '/notebook' && req.method === 'PUT') value = engine.save(body.id,body,user);
+        else if (path === '/notebooks' && req.method === 'POST') value = engine.create(body.demo ? {...demo(),environment:body.environment,model:body.model,technicalName:body.technicalName,description:body.description} : body,user);
+        else if (path === '/notebook' && req.method === 'GET') value = engine.view(p.get('id'),user);
+        else if (path === '/notebook' && req.method === 'PUT') { engine.save(body.id,body,user); value = engine.view(body.id,user); }
+        else if (path === '/notebook-identity' && req.method === 'POST') value = engine.assignIdentity(body,user);
+        else if (path === '/notebook-resolve' && req.method === 'POST') value = engine.resolveIdentity(body,user);
         else if (path === '/delete-notebook' && req.method === 'POST') value = engine.deleteNotebook(body.notebookId,body.expectedRevision,user);
         else if (path === '/versions' && req.method === 'GET') value = engine.history(p.get('id'),user);
         else if (path === '/validate' && req.method === 'POST') value = engine.validate(body.notebookId,body.cellId,user);

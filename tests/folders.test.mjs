@@ -7,7 +7,7 @@ import {join} from 'node:path';
 
 test('folders persist privately without changing notebook revisions, history or execution snapshots',async()=>{
  const dir=mkdtempSync(join(tmpdir(),'bn-folders-'));try{
- const e=new Engine({file:join(dir,'store.json'),auto:false,delay:0});const n=e.create(demo(),'alice');
+ const e=new Engine({file:join(dir,'store.json'),auto:false,delay:0});const n=e.create({...demo(),technicalName:"TEST_ALLOCATION",description:"Test allocation"},'alice');
  const run=e.submit({notebookId:n.id,expectedRevision:n.revision,scope:'all',idempotencyKey:crypto.randomUUID()},'alice');await e.execute(run.id);
  const original=e.get(n.id,'alice'),history=e.history(n.id,'alice'),snapshot=e.run(run.id,'alice');
  const save=org=>e.saveOrganization({...org,expectedRevision:org.revision},'alice');

@@ -36,6 +36,7 @@ CLASS zcl_bn_service DEFINITION PUBLIC FINAL CREATE PUBLIC.
     TYPES: BEGIN OF ty_notebook_header,
              id TYPE string, title TYPE string, revision TYPE i, author TYPE string, saved_at TYPE string,
              environment TYPE string, model TYPE string, explanation TYPE string,
+             technical_name TYPE string, description TYPE string, identity_revision TYPE i,
            END OF ty_notebook_header,
            tt_notebook_headers TYPE STANDARD TABLE OF ty_notebook_header WITH DEFAULT KEY,
            BEGIN OF ty_run_header,
@@ -73,6 +74,7 @@ CLASS zcl_bn_service DEFINITION PUBLIC FINAL CREATE PUBLIC.
              id TYPE string, notebook_id TYPE string, expected_revision TYPE i,
              handler TYPE string, handler_revision TYPE i, execution_mode TYPE string,
              scope TYPE string, cell_id TYPE string, idempotency_key TYPE string,
+             technical_name TYPE string, description TYPE string, expected_identity_revision TYPE i, approved_revision TYPE i,
              title TYPE string, explanation TYPE string, cells TYPE zcl_bn_types=>tt_cells,
              inputs TYPE zcl_bn_types=>tt_inputs, demo TYPE abap_bool,
              retry_run_id TYPE string,
@@ -277,12 +279,15 @@ CLASS zcl_bn_service IMPLEMENTATION.
   ENDMETHOD.
   METHOD save.
     authorize( '02' ).
+    IF request-id IS INITIAL AND ( request-environment IS INITIAL OR request-model IS INITIAL ).
+      RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'BPC_CONTEXT' detail = 'Choose an environment and model before creating a notebook'.
+    ENDIF.
     notebook-id = request-id.
     IF notebook-id IS NOT INITIAL. zcl_bn_store=>lock_notebook( notebook-id ). ENDIF.
     IF notebook-id IS INITIAL.
       notebook-id = zcl_bn_types=>uuid( ).
     ENDIF.
-    notebook-title = request-title. notebook-cells = request-cells. notebook-explanation = request-explanation.
+    notebook-title = COND #( WHEN request-title IS INITIAL THEN request-technical_name ELSE request-title ). notebook-cells = request-cells. notebook-explanation = request-explanation.
     notebook-environment = request-environment. notebook-model = request-model.
     notebook-inputs = zcl_bn_types=>normalize_inputs( request-inputs ).
     check_definition( notebook ).
@@ -345,6 +350,17 @@ CLASS zcl_bn_service IMPLEMENTATION.
     notebook-author = sy-uname. notebook-saved_at = zcl_bn_types=>timestamp( ).
     notebook-checksum = zcl_bn_types=>hash( zcl_bn_types=>json( notebook ) ).
     zcl_bn_store=>write( kind = 'N' id = notebook-id payload = zcl_bn_types=>json( notebook ) expected = request-expected_revision ).
+    IF request-id IS INITIAL.
+      zcl_bn_identity=>assign( notebook = notebook technical_name = request-technical_name description = request-description expected = 0 ).
+    ELSE.
+      DATA(identity) = zcl_bn_identity=>get( notebook-id ).
+      IF identity-technical_name IS NOT INITIAL.
+        IF request-technical_name IS NOT INITIAL AND request-technical_name <> identity-technical_name.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'NAME_IMMUTABLE' detail = 'Use the identity dialog; technical names are immutable' status = 409.
+        ENDIF.
+        zcl_bn_identity=>reserve( notebook = notebook technical_name = identity-technical_name ).
+      ENDIF.
+    ENDIF.
   ENDMETHOD.
   METHOD is_current.
     IF dataset-logic_call = abap_true OR dataset-fixture_mode = abap_true. RETURN. ENDIF.
@@ -886,6 +902,18 @@ CLASS zcl_bn_service IMPLEMENTATION.
     DATA notebook TYPE zcl_bn_types=>ty_notebook.
     DATA run TYPE zcl_bn_types=>ty_run.
     CASE |{ method } { path }|.
+      WHEN 'POST /notebook-resolve'.
+        json = zcl_bn_types=>json( zcl_bn_identity=>view( zcl_bn_identity=>resolve( environment = request-environment
+          model = request-model technical_name = request-technical_name approved_revision = request-approved_revision ) ) ).
+      WHEN 'POST /notebook-identity'.
+        authorize( '02' ).
+        DATA(identity_notebook_revision) = zcl_bn_store=>lock_notebook( request-notebook_id ).
+        IF identity_notebook_revision <> request-expected_revision.
+          RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'CONFLICT' detail = 'Notebook changed; reopen before assigning identity' status = 409.
+        ENDIF.
+        notebook = get_notebook( request-notebook_id ).
+        json = zcl_bn_types=>json( zcl_bn_identity=>assign( notebook = notebook technical_name = request-technical_name
+          description = request-description expected = request-expected_identity_revision ) ).
       WHEN 'GET /folders'.
         json = zcl_bn_types=>json( organization( ) ).
       WHEN 'PUT /folders'.
@@ -911,16 +939,23 @@ CLASS zcl_bn_service IMPLEMENTATION.
           DATA listing TYPE ty_notebook_header.
           CLEAR listing.
           /ui2/cl_json=>deserialize( EXPORTING json = zcl_bn_types=>native_json( document-payload ) pretty_name = /ui2/cl_json=>pretty_mode-camel_case CHANGING data = listing ).
+          DATA(list_identity) = zcl_bn_identity=>get( listing-id ).
+          listing-technical_name = list_identity-technical_name. listing-description = list_identity-description.
+          listing-identity_revision = list_identity-identity_revision.
           APPEND listing TO notebooks.
         ENDLOOP.
         SORT notebooks BY saved_at DESCENDING id.
         json = zcl_bn_types=>json( notebooks ).
       WHEN 'POST /notebooks'.
-        IF request-demo = abap_true. request = demo( environment = request-environment model = request-model ). ENDIF.
+        IF request-demo = abap_true.
+          DATA(creation_name) = request-technical_name. DATA(creation_description) = request-description.
+          request = demo( environment = request-environment model = request-model ).
+          request-technical_name = creation_name. request-description = creation_description.
+        ENDIF.
         CLEAR: request-id, request-expected_revision.
-        json = zcl_bn_types=>json( save( request ) ).
+        json = zcl_bn_types=>json( zcl_bn_identity=>view( save( request ) ) ).
       WHEN 'PUT /notebook'.
-        json = zcl_bn_types=>json( save( request ) ).
+        json = zcl_bn_types=>json( zcl_bn_identity=>view( save( request ) ) ).
       WHEN 'GET /notebook'.
         notebook = get_notebook( id ).
         LOOP AT notebook-cells ASSIGNING FIELD-SYMBOL(<cell>).
@@ -930,7 +965,7 @@ CLASS zcl_bn_service IMPLEMENTATION.
               row_count = dataset-row_count stale = xsdbool( is_current( notebook = notebook dataset = dataset ) = abap_false ) ).
           ENDIF.
         ENDLOOP.
-        json = zcl_bn_types=>json( notebook ).
+        json = zcl_bn_types=>json( zcl_bn_identity=>view( notebook ) ).
       WHEN 'GET /versions'.
         DATA versions TYPE zcl_bn_types=>tt_notebooks.
         DO zcl_bn_store=>current( kind = 'N' id = id ) TIMES.

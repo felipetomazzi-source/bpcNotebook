@@ -113,3 +113,17 @@ SAP documents [bootstrap cache-buster configuration](https://help.sap.com/docs/S
 ## Notebook folders
 
 The left workspace supports private one-level folders, rename, move/unfile, collapse/expand and search across folders. Existing notebooks remain Unfiled until moved. Folder organization does not change source, notebook revisions, runs or handler bindings. See [folder usage and persistence](docs/notebook-folders.md).
+
+## Notebook technical identity
+
+SAP creation first selects the authorized BPC environment/model, then requires a technical name and description. The same requirement applies to New Notebook, demo creation and `POST /notebooks`; APIs must supply `technicalName` and `description`. A dimension is selected for each dimension input, not part of notebook identity. The local simulator has no SAP context picker and uses an explicit unassigned environment/model scope when these fields are empty.
+
+Technical names match `^[A-Z][A-Z0-9_]{0,29}$`: 1–30 uppercase ASCII letters, digits and underscores, starting with a letter. Names are unique across all users in the SAP client for the exact environment/model pair. A name is immutable after assignment. Reservations remain after deletion or a context move, preventing ambiguous reuse; a context move reserves the same name in the new scope and fails atomically if taken. Descriptions are required single-line Unicode text, at most 240 characters, and can be edited using **Notebook identity**. Names and descriptions appear in the header/list and are searchable.
+
+Existing notebooks show “Technical name not assigned”. Assign identity explicitly using the toolbar; no automatic names are invented. The UUID, source revisions, historical runs, datasets, checksums and unsaved editor drafts remain unchanged. Identity has its own optimistic revision and immutable sidecar history. Legacy notebooks can still be edited/executed by UUID until assigned. Calculation saves do not edit descriptions; use the identity endpoint/dialog.
+
+`POST /notebook-identity` takes `{notebookId, expectedRevision, expectedIdentityRevision, technicalName, description}`. `expectedIdentityRevision` is zero for first assignment. The endpoint returns `{technicalName, description, identityRevision}` and checks notebook ownership/current revision before assigning. Read/create/save/list responses include these identity fields; historical calculation snapshots remain in their original format.
+
+Future integration can resolve an explicitly pinned revision with `POST /notebook-resolve`: `{environment, model, technicalName, approvedRevision}`. The corresponding ABAP API is `zcl_bn_identity=>resolve( environment = ... model = ... technical_name = ... approved_revision = ... )`, returning the immutable notebook including its UUID/revision. It validates owner access, document integrity, deletion status and the exact context of that saved revision. There is no implicit latest revision, approval workflow or cross-user release. Old scope reservations can resolve only saved revisions actually using that scope.
+
+This resolution contract does not execute Script Logic or enable posting. Existing Script Logic handlers still use their separately registered pinned binding; an approved integration must resolve the technical name and explicitly bind/execute a reviewed revision. Financial output validation and transaction rules remain required.
