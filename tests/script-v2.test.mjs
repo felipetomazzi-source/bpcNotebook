@@ -19,6 +19,8 @@ r.MATCONN = "A"
 r.SIGNEDDATA = signed("0.3333334")
 append rows row r
 copy original = rows
+compare ordered = original with original as "DUPLICATE_COMPARE" ordered
+assert ordered.original_rows == 3 and ordered.unchanged == 3 and ordered.changed == 0 message "Ordered duplicate comparison"
 group sums = rows include ["CATEGORY", "TIME"]
 assert count(sums) == 1 message "Group count"
 for total in sums
@@ -56,6 +58,16 @@ divide correction.SIGNEDDATA by 0 using float onzero keep
 assert correction.SIGNEDDATA == signed("0.3333335") message "Zero divisor keeps native value"
 divide correction.SIGNEDDATA by 2 using float onzero keep
 assert correction.SIGNEDDATA == signed("0.1666668") message "Float then native assignment rounding"
+copy different = rows
+for difference in different
+  if difference.MATCONN == "A"
+    difference.CATEGORY = "Other"
+  else
+    difference.SIGNEDDATA = difference.SIGNEDDATA + signed("0.0000001")
+  end
+end
+compare differences = rows with different as "NATIVE_DIFFERENCES"
+assert differences.added == 1 and differences.missing == 1 and differences.changed == 1 message "All dimensions and exact signed amount comparison"
 extend working = rows with RATIO decimal, NOTE text, FLAG boolean
 for w in working
   w.RATIO = decimal("0.000000000000000000000000000000001")
@@ -88,8 +100,10 @@ end
 assert matches("Abcd", "A*") message "Pattern"
 assert slice("Abcd", 1, 2) == "bc" message "Slice"
 assert round(decimal("1.25"), 1, "half_even") == decimal("1.2") message "Explicit rounding mode"
+checkpoint "native operations" start outputs ["ORIGINAL", "EMPTY"]
 publish original as "ORIGINAL"
 publish accumulated as "EMPTY"
+checkpoint "native operations" finish outputs ["ORIGINAL", "EMPTY"]
 show working as "WORKING"
 message "NATIVE_SCRIPT_OK"`;
 test('v2 native table language compiles deterministically and preserves exact author text',()=>{
