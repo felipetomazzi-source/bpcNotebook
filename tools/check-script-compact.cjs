@@ -65,10 +65,31 @@ values = VALUE #( ( CONV string( '-1000' ) ) ( CONV string( '-999.5' ) ) ( CONV 
  ( CONV string( '-0.5' ) ) ( CONV string( '-0.4999999' ) ) ( CONV string( '0' ) ) ( CONV string( '0.5' ) )
  ( CONV string( '1.5' ) ) ( CONV string( '999' ) ) ( CONV string( '999.5' ) ) ( CONV string( '1000' ) ) ).
 LOOP AT values INTO DATA(text).
- DATA(amount) = CONV uj_signeddata( text ). DATA(expected) = CONV num03( amount ).
+ DATA(amount) = CONV uj_signeddata( text ).
+ DATA expected TYPE num03.
+ TRY. expected = CONV num03( amount ).
+ CATCH cx_sy_conversion_overflow.
+  TRY. DATA(overflow) = zcl_bn_table=>numeric_text( value = amount width = 3 ).
+   RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'NUMC_ORACLE' detail = 'Expected packed overflow'.
+  CATCH zcx_bn INTO DATA(packed_error).
+   IF packed_error->code <> 'SCRIPT_NUMERIC_TEXT'. RAISE EXCEPTION packed_error. ENDIF.
+  ENDTRY.
+  CONTINUE.
+ ENDTRY.
  DATA(actual) = zcl_bn_table=>numeric_text( value = amount width = 3 ).
  IF actual <> CONV string( expected ). RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'NUMC_ORACLE' detail = text. ENDIF.
- DATA(decimal) = CONV decfloat34( text ). expected = CONV num03( decimal ).
+ENDLOOP.
+LOOP AT values INTO text.
+ DATA(decimal) = CONV decfloat34( text ).
+ TRY. expected = CONV num03( decimal ).
+ CATCH cx_sy_conversion_overflow.
+  TRY. overflow = zcl_bn_table=>numeric_text( value = decimal width = 3 ).
+   RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'NUMC_ORACLE' detail = 'Expected decimal overflow'.
+  CATCH zcx_bn INTO DATA(decimal_error).
+   IF decimal_error->code <> 'SCRIPT_NUMERIC_TEXT'. RAISE EXCEPTION decimal_error. ENDIF.
+  ENDTRY.
+  CONTINUE.
+ ENDTRY.
  actual = zcl_bn_table=>numeric_text( value = decimal width = 3 ).
  IF actual <> CONV string( expected ). RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'NUMC_ORACLE' detail = text. ENDIF.
 ENDLOOP.

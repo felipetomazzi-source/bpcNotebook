@@ -1,68 +1,7 @@
-script version 2
+script version 2 compact
 dataset sap_revenues = "step_02" named "SAP_REVENUES"
 group group1 = sap_revenues exclude ["DEMREVID_KFS"]
-for g2 in group1
-if initial(g2.ACCOUNT)
-g2.ACCOUNT = "ACCOUNT_NA"
-end
-if initial(g2.AUDITTRAIL)
-g2.AUDITTRAIL = "AUDITTRAIL_NA"
-end
-if initial(g2.CATEGORY)
-g2.CATEGORY = "CATEGORY_NA"
-end
-if initial(g2.COSTCENTRE)
-g2.COSTCENTRE = "COSTCENTRE_NA"
-end
-if initial(g2.DEMREVID_KFS)
-g2.DEMREVID_KFS = "DEMREVID_KFS_NA"
-end
-if initial(g2.FFLAS)
-g2.FFLAS = "FFLAS_NA"
-end
-if initial(g2.FFLAS_SUBSET)
-g2.FFLAS_SUBSET = "FFLAS_SUBSET_NA"
-end
-if initial(g2.MATCONN)
-g2.MATCONN = "MATCONN_NA"
-end
-if initial(g2.TIME)
-g2.TIME = "TIME_NA"
-end
-if initial(g2.PRODUCT_TYPE)
-g2.PRODUCT_TYPE = "PRODUCT_TYPE_NA"
-end
-if initial(g2.GEO_DRIVERS)
-g2.GEO_DRIVERS = "GDRVS_NA"
-end
-if initial(g2.DOC_TYP)
-g2.DOC_TYP = "DOC_TYP_NA"
-end
-if initial(g2.CONN_REG_SPLIT)
-g2.CONN_REG_SPLIT = "CONN_REG_SPLIT_NA"
-end
-if initial(g2.LFC_WIN_SUPPLIER)
-g2.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
-end
-if initial(g2.MAT_GROUP_ID)
-g2.MAT_GROUP_ID = "MAT_GROUP_ID_NA"
-end
-if initial(g2.REG_FFLAS_SERV)
-g2.REG_FFLAS_SERV = "REG_FFLAS_SERV_NA"
-end
-if initial(g2.UFB_DR_ID)
-g2.UFB_DR_ID = "UFB_DR_ID_NA"
-end
-if initial(g2.MATREMAP)
-g2.MATREMAP = "MATREMAP_NA"
-end
-if initial(g2.RSP_SERVICE_ID)
-g2.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
-end
-if initial(g2.REV_ID_GROUP)
-g2.REV_ID_GROUP = "REV_ID_GROUP_NA"
-end
-end
+defaults group1 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
 sort group1 unstable by DEMREVID_KFS asc
 copy sap_revenues_consol = group1
 publish sap_revenues_consol as "SAP_REVENUES_CONSOL"

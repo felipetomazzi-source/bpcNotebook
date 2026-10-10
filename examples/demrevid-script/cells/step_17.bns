@@ -1,117 +1,46 @@
-script version 2
+script version 2 compact
 dataset sap_revenues = "step_02" named "SAP_REVENUES"
 dataset new_data = "step_16" named "NEW_DATA"
 empty fflas_ratios = new_data
 empty skipped_materials = new_data
 group group1 = sap_revenues include ["CATEGORY","TIME","ACCOUNT","MATCONN","MAT_GROUP_ID"]
-for g2 in group1
-if initial(g2.ACCOUNT)
-g2.ACCOUNT = "ACCOUNT_NA"
-end
-if initial(g2.AUDITTRAIL)
-g2.AUDITTRAIL = "AUDITTRAIL_NA"
-end
-if initial(g2.CATEGORY)
-g2.CATEGORY = "CATEGORY_NA"
-end
-if initial(g2.COSTCENTRE)
-g2.COSTCENTRE = "COSTCENTRE_NA"
-end
-if initial(g2.DEMREVID_KFS)
-g2.DEMREVID_KFS = "DEMREVID_KFS_NA"
-end
-if initial(g2.FFLAS)
-g2.FFLAS = "FFLAS_NA"
-end
-if initial(g2.FFLAS_SUBSET)
-g2.FFLAS_SUBSET = "FFLAS_SUBSET_NA"
-end
-if initial(g2.MATCONN)
-g2.MATCONN = "MATCONN_NA"
-end
-if initial(g2.TIME)
-g2.TIME = "TIME_NA"
-end
-if initial(g2.PRODUCT_TYPE)
-g2.PRODUCT_TYPE = "PRODUCT_TYPE_NA"
-end
-if initial(g2.GEO_DRIVERS)
-g2.GEO_DRIVERS = "GDRVS_NA"
-end
-if initial(g2.DOC_TYP)
-g2.DOC_TYP = "DOC_TYP_NA"
-end
-if initial(g2.CONN_REG_SPLIT)
-g2.CONN_REG_SPLIT = "CONN_REG_SPLIT_NA"
-end
-if initial(g2.LFC_WIN_SUPPLIER)
-g2.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
-end
-if initial(g2.MAT_GROUP_ID)
-g2.MAT_GROUP_ID = "MAT_GROUP_ID_NA"
-end
-if initial(g2.REG_FFLAS_SERV)
-g2.REG_FFLAS_SERV = "REG_FFLAS_SERV_NA"
-end
-if initial(g2.UFB_DR_ID)
-g2.UFB_DR_ID = "UFB_DR_ID_NA"
-end
-if initial(g2.MATREMAP)
-g2.MATREMAP = "MATREMAP_NA"
-end
-if initial(g2.RSP_SERVICE_ID)
-g2.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
-end
-if initial(g2.REV_ID_GROUP)
-g2.REV_ID_GROUP = "REV_ID_GROUP_NA"
-end
-end
+defaults group1 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
 sort group1 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, MAT_GROUP_ID asc
-for replace3 in group1
-replace3.AUDITTRAIL = "DEMREVID_CALC"
-replace3.DEMREVID_KFS = "DEMREVID047"
+for replace2 in group1
+replace2.AUDITTRAIL = "DEMREVID_CALC"
+replace2.DEMREVID_KFS = "DEMREVID047"
 end
 show group1 as "RATIO_BASE_BEFORE_EXCLUSIONS"
-let raw4 = input("FFLASMATGROUPSID")
-let parts5 = split(raw4,",")
-table range6 columns ID member
-row range_row7 like range6
-for value8 in parts5
-let compact9 = ""
-let words10 = split(value8," ")
-for word11 in words10
-compact9 = concat(compact9,word11)
+let raw3 = input("FFLASMATGROUPSID")
+let parts4 = split(raw3,",")
+table range5 columns ID member
+row range_row6 like range5
+for value7 in parts4
+range_row6.ID = no_gaps(value7)
+append range5 row range_row6
 end
-range_row7.ID = compact9
-append range6 row range_row7
+sort range5 unstable by ID asc
+deduplicate range5 adjacent by ["ID"]
+let raw8 = input("FFLASMATGROUPS")
+if raw8 == "true"
+raw8 = "1"
 end
-sort range6 unstable by ID asc
-deduplicate range6 adjacent by ["ID"]
-let raw12 = input("FFLASMATGROUPS")
-if raw12 == "true"
-raw12 = "1"
+if raw8 == "false"
+raw8 = "0"
 end
-if raw12 == "false"
-raw12 = "0"
+let parts9 = split(raw8,",")
+table range10 columns ID member
+row range_row11 like range10
+for value12 in parts9
+range_row11.ID = no_gaps(value12)
+append range10 row range_row11
 end
-let parts13 = split(raw12,",")
-table range14 columns ID member
-row range_row15 like range14
-for value16 in parts13
-let compact17 = ""
-let words18 = split(value16," ")
-for word19 in words18
-compact17 = concat(compact17,word19)
-end
-range_row15.ID = compact17
-append range14 row range_row15
-end
-sort range14 unstable by ID asc
-deduplicate range14 adjacent by ["ID"]
+sort range10 unstable by ID asc
+deduplicate range10 adjacent by ["ID"]
 table positioned_flags columns POSITION integer, FLAG member
 row positioned_flag like positioned_flags
 let flag_position = 0
-for flag_value in range14
+for flag_value in range10
 flag_position = flag_position + 1
 positioned_flag.POSITION = integer(flag_position)
 positioned_flag.FLAG = flag_value.ID
@@ -120,12 +49,12 @@ end
 table skip_members columns ID member
 row skip_member like skip_members
 let skip_position = 0
-for skip_id in range6
+for skip_id in range5
 skip_position = skip_position + 1
-find found20 = positioned_flags where POSITION = integer(skip_position) search linear missing initial
-if found(found20)
-if not initial(found20.FLAG)
-if signed(found20.FLAG) != 0
+find found13 = positioned_flags where POSITION = integer(skip_position) search linear missing initial
+if found(found13)
+if not initial(found13.FLAG)
+if signed(found13.FLAG) != 0
 skip_member.ID = skip_id.ID
 append skip_members row skip_member
 end
@@ -133,162 +62,40 @@ end
 end
 end
 for base_row in group1
-find found21 = skip_members where ID = base_row.MAT_GROUP_ID search linear missing initial
-if found(found21)
-copy row22 = base_row
-row22.MAT_GROUP_ID = ""
-row22.DEMREVID_KFS = "DEMREVID052"
-row22.FFLAS = "FFLAS_NA"
-row22.SIGNEDDATA = 1
-find found23 = skipped_materials where TIME = row22.TIME and ACCOUNT = row22.ACCOUNT and MATCONN = row22.MATCONN search linear missing initial
-if not found(found23)
-append skipped_materials row row22
+find found14 = skip_members where ID = base_row.MAT_GROUP_ID search linear missing initial
+if found(found14)
+copy row15 = base_row
+row15.MAT_GROUP_ID = ""
+row15.DEMREVID_KFS = "DEMREVID052"
+row15.FFLAS = "FFLAS_NA"
+row15.SIGNEDDATA = 1
+find found16 = skipped_materials where TIME = row15.TIME and ACCOUNT = row15.ACCOUNT and MATCONN = row15.MATCONN search linear missing initial
+if not found(found16)
+append skipped_materials row row15
 end
 delete base_row
 end
 end
 show skipped_materials as "SKIPPED_MATERIAL_FLAGS"
 show group1 as "RATIO_BASE_AFTER_EXCLUSIONS"
-group group24 = group1 exclude ["MAT_GROUP_ID"]
-for g25 in group24
-if initial(g25.ACCOUNT)
-g25.ACCOUNT = "ACCOUNT_NA"
+group group17 = group1 exclude ["MAT_GROUP_ID"]
+defaults group17 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
+sort group17 unstable by MAT_GROUP_ID asc
+filter filtered18 = new_data as f19 where f19.DEMREVID_KFS == "DEMREVID023"
+group group20 = filtered18 include ["CATEGORY","TIME","ACCOUNT","MATCONN","FFLAS","MAT_GROUP_ID"]
+defaults group20 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
+sort group20 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, FFLAS asc, MAT_GROUP_ID asc
+for replace21 in group20
+replace21.AUDITTRAIL = "DEMREVID_CALC"
+replace21.DEMREVID_KFS = "DEMREVID047"
 end
-if initial(g25.AUDITTRAIL)
-g25.AUDITTRAIL = "AUDITTRAIL_NA"
-end
-if initial(g25.CATEGORY)
-g25.CATEGORY = "CATEGORY_NA"
-end
-if initial(g25.COSTCENTRE)
-g25.COSTCENTRE = "COSTCENTRE_NA"
-end
-if initial(g25.DEMREVID_KFS)
-g25.DEMREVID_KFS = "DEMREVID_KFS_NA"
-end
-if initial(g25.FFLAS)
-g25.FFLAS = "FFLAS_NA"
-end
-if initial(g25.FFLAS_SUBSET)
-g25.FFLAS_SUBSET = "FFLAS_SUBSET_NA"
-end
-if initial(g25.MATCONN)
-g25.MATCONN = "MATCONN_NA"
-end
-if initial(g25.TIME)
-g25.TIME = "TIME_NA"
-end
-if initial(g25.PRODUCT_TYPE)
-g25.PRODUCT_TYPE = "PRODUCT_TYPE_NA"
-end
-if initial(g25.GEO_DRIVERS)
-g25.GEO_DRIVERS = "GDRVS_NA"
-end
-if initial(g25.DOC_TYP)
-g25.DOC_TYP = "DOC_TYP_NA"
-end
-if initial(g25.CONN_REG_SPLIT)
-g25.CONN_REG_SPLIT = "CONN_REG_SPLIT_NA"
-end
-if initial(g25.LFC_WIN_SUPPLIER)
-g25.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
-end
-if initial(g25.MAT_GROUP_ID)
-g25.MAT_GROUP_ID = "MAT_GROUP_ID_NA"
-end
-if initial(g25.REG_FFLAS_SERV)
-g25.REG_FFLAS_SERV = "REG_FFLAS_SERV_NA"
-end
-if initial(g25.UFB_DR_ID)
-g25.UFB_DR_ID = "UFB_DR_ID_NA"
-end
-if initial(g25.MATREMAP)
-g25.MATREMAP = "MATREMAP_NA"
-end
-if initial(g25.RSP_SERVICE_ID)
-g25.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
-end
-if initial(g25.REV_ID_GROUP)
-g25.REV_ID_GROUP = "REV_ID_GROUP_NA"
-end
-end
-sort group24 unstable by MAT_GROUP_ID asc
-filter filtered26 = new_data as f27 where f27.DEMREVID_KFS == "DEMREVID023"
-group group28 = filtered26 include ["CATEGORY","TIME","ACCOUNT","MATCONN","FFLAS","MAT_GROUP_ID"]
-for g29 in group28
-if initial(g29.ACCOUNT)
-g29.ACCOUNT = "ACCOUNT_NA"
-end
-if initial(g29.AUDITTRAIL)
-g29.AUDITTRAIL = "AUDITTRAIL_NA"
-end
-if initial(g29.CATEGORY)
-g29.CATEGORY = "CATEGORY_NA"
-end
-if initial(g29.COSTCENTRE)
-g29.COSTCENTRE = "COSTCENTRE_NA"
-end
-if initial(g29.DEMREVID_KFS)
-g29.DEMREVID_KFS = "DEMREVID_KFS_NA"
-end
-if initial(g29.FFLAS)
-g29.FFLAS = "FFLAS_NA"
-end
-if initial(g29.FFLAS_SUBSET)
-g29.FFLAS_SUBSET = "FFLAS_SUBSET_NA"
-end
-if initial(g29.MATCONN)
-g29.MATCONN = "MATCONN_NA"
-end
-if initial(g29.TIME)
-g29.TIME = "TIME_NA"
-end
-if initial(g29.PRODUCT_TYPE)
-g29.PRODUCT_TYPE = "PRODUCT_TYPE_NA"
-end
-if initial(g29.GEO_DRIVERS)
-g29.GEO_DRIVERS = "GDRVS_NA"
-end
-if initial(g29.DOC_TYP)
-g29.DOC_TYP = "DOC_TYP_NA"
-end
-if initial(g29.CONN_REG_SPLIT)
-g29.CONN_REG_SPLIT = "CONN_REG_SPLIT_NA"
-end
-if initial(g29.LFC_WIN_SUPPLIER)
-g29.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
-end
-if initial(g29.MAT_GROUP_ID)
-g29.MAT_GROUP_ID = "MAT_GROUP_ID_NA"
-end
-if initial(g29.REG_FFLAS_SERV)
-g29.REG_FFLAS_SERV = "REG_FFLAS_SERV_NA"
-end
-if initial(g29.UFB_DR_ID)
-g29.UFB_DR_ID = "UFB_DR_ID_NA"
-end
-if initial(g29.MATREMAP)
-g29.MATREMAP = "MATREMAP_NA"
-end
-if initial(g29.RSP_SERVICE_ID)
-g29.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
-end
-if initial(g29.REV_ID_GROUP)
-g29.REV_ID_GROUP = "REV_ID_GROUP_NA"
-end
-end
-sort group28 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, FFLAS asc, MAT_GROUP_ID asc
-for replace30 in group28
-replace30.AUDITTRAIL = "DEMREVID_CALC"
-replace30.DEMREVID_KFS = "DEMREVID047"
-end
-index ix31 = group28 by ["TIME","ACCOUNT","MATCONN"] many
-show group28 as "FFLAS_REVENUE_NUMERATORS"
-for denominator in group24 copy
+index ix22 = group20 by ["TIME","ACCOUNT","MATCONN"] many
+show group20 as "FFLAS_REVENUE_NUMERATORS"
+for denominator in group17 copy
 if not initial(denominator.SIGNEDDATA)
 native remainder = denominator.SIGNEDDATA
-match matches32 = ix31 where TIME = denominator.TIME and ACCOUNT = denominator.ACCOUNT and MATCONN = denominator.MATCONN
-for numerator in matches32 copy
+match matches23 = ix22 where TIME = denominator.TIME and ACCOUNT = denominator.ACCOUNT and MATCONN = denominator.MATCONN
+for numerator in matches23 copy
 remainder = remainder - numerator.SIGNEDDATA
 numerator.SIGNEDDATA = numerator.SIGNEDDATA / denominator.SIGNEDDATA
 append fflas_ratios row numerator
@@ -296,9 +103,9 @@ end
 if not initial(remainder)
 denominator.SIGNEDDATA = remainder / denominator.SIGNEDDATA
 denominator.FFLAS = "FFLASNON"
-find found33 = fflas_ratios where ACCOUNT = denominator.ACCOUNT and AUDITTRAIL = denominator.AUDITTRAIL and CATEGORY = denominator.CATEGORY and COSTCENTRE = denominator.COSTCENTRE and DEMREVID_KFS = denominator.DEMREVID_KFS and FFLAS = denominator.FFLAS and FFLAS_SUBSET = denominator.FFLAS_SUBSET and MATCONN = denominator.MATCONN and TIME = denominator.TIME and PRODUCT_TYPE = denominator.PRODUCT_TYPE and GEO_DRIVERS = denominator.GEO_DRIVERS and DOC_TYP = denominator.DOC_TYP and CONN_REG_SPLIT = denominator.CONN_REG_SPLIT and LFC_WIN_SUPPLIER = denominator.LFC_WIN_SUPPLIER and MAT_GROUP_ID = denominator.MAT_GROUP_ID and REG_FFLAS_SERV = denominator.REG_FFLAS_SERV and UFB_DR_ID = denominator.UFB_DR_ID and MATREMAP = denominator.MATREMAP and RSP_SERVICE_ID = denominator.RSP_SERVICE_ID and REV_ID_GROUP = denominator.REV_ID_GROUP search linear missing initial
-if found(found33)
-found33.SIGNEDDATA = found33.SIGNEDDATA + denominator.SIGNEDDATA
+find found24 = fflas_ratios where ACCOUNT = denominator.ACCOUNT and AUDITTRAIL = denominator.AUDITTRAIL and CATEGORY = denominator.CATEGORY and COSTCENTRE = denominator.COSTCENTRE and DEMREVID_KFS = denominator.DEMREVID_KFS and FFLAS = denominator.FFLAS and FFLAS_SUBSET = denominator.FFLAS_SUBSET and MATCONN = denominator.MATCONN and TIME = denominator.TIME and PRODUCT_TYPE = denominator.PRODUCT_TYPE and GEO_DRIVERS = denominator.GEO_DRIVERS and DOC_TYP = denominator.DOC_TYP and CONN_REG_SPLIT = denominator.CONN_REG_SPLIT and LFC_WIN_SUPPLIER = denominator.LFC_WIN_SUPPLIER and MAT_GROUP_ID = denominator.MAT_GROUP_ID and REG_FFLAS_SERV = denominator.REG_FFLAS_SERV and UFB_DR_ID = denominator.UFB_DR_ID and MATREMAP = denominator.MATREMAP and RSP_SERVICE_ID = denominator.RSP_SERVICE_ID and REV_ID_GROUP = denominator.REV_ID_GROUP search linear missing initial
+if found(found24)
+found24.SIGNEDDATA = found24.SIGNEDDATA + denominator.SIGNEDDATA
 else
 append fflas_ratios row denominator
 end
@@ -306,145 +113,23 @@ end
 end
 end
 show fflas_ratios as "RATIOS_BEFORE_ROUNDING"
-group group34 = fflas_ratios exclude ["FFLAS","MAT_GROUP_ID"]
-for g35 in group34
-if initial(g35.ACCOUNT)
-g35.ACCOUNT = "ACCOUNT_NA"
-end
-if initial(g35.AUDITTRAIL)
-g35.AUDITTRAIL = "AUDITTRAIL_NA"
-end
-if initial(g35.CATEGORY)
-g35.CATEGORY = "CATEGORY_NA"
-end
-if initial(g35.COSTCENTRE)
-g35.COSTCENTRE = "COSTCENTRE_NA"
-end
-if initial(g35.DEMREVID_KFS)
-g35.DEMREVID_KFS = "DEMREVID_KFS_NA"
-end
-if initial(g35.FFLAS)
-g35.FFLAS = "FFLAS_NA"
-end
-if initial(g35.FFLAS_SUBSET)
-g35.FFLAS_SUBSET = "FFLAS_SUBSET_NA"
-end
-if initial(g35.MATCONN)
-g35.MATCONN = "MATCONN_NA"
-end
-if initial(g35.TIME)
-g35.TIME = "TIME_NA"
-end
-if initial(g35.PRODUCT_TYPE)
-g35.PRODUCT_TYPE = "PRODUCT_TYPE_NA"
-end
-if initial(g35.GEO_DRIVERS)
-g35.GEO_DRIVERS = "GDRVS_NA"
-end
-if initial(g35.DOC_TYP)
-g35.DOC_TYP = "DOC_TYP_NA"
-end
-if initial(g35.CONN_REG_SPLIT)
-g35.CONN_REG_SPLIT = "CONN_REG_SPLIT_NA"
-end
-if initial(g35.LFC_WIN_SUPPLIER)
-g35.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
-end
-if initial(g35.MAT_GROUP_ID)
-g35.MAT_GROUP_ID = "MAT_GROUP_ID_NA"
-end
-if initial(g35.REG_FFLAS_SERV)
-g35.REG_FFLAS_SERV = "REG_FFLAS_SERV_NA"
-end
-if initial(g35.UFB_DR_ID)
-g35.UFB_DR_ID = "UFB_DR_ID_NA"
-end
-if initial(g35.MATREMAP)
-g35.MATREMAP = "MATREMAP_NA"
-end
-if initial(g35.RSP_SERVICE_ID)
-g35.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
-end
-if initial(g35.REV_ID_GROUP)
-g35.REV_ID_GROUP = "REV_ID_GROUP_NA"
-end
-end
-sort group34 unstable by FFLAS asc, MAT_GROUP_ID asc
-filter filtered36 = group34 as f37 where f37.SIGNEDDATA != 1
+group group25 = fflas_ratios exclude ["FFLAS","MAT_GROUP_ID"]
+defaults group25 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
+sort group25 unstable by FFLAS asc, MAT_GROUP_ID asc
+filter filtered26 = group25 as f27 where f27.SIGNEDDATA != 1
 sort fflas_ratios unstable by TIME asc, ACCOUNT asc, MATCONN asc
-for ratio_sum in filtered36
-find found38 = fflas_ratios where TIME = ratio_sum.TIME and ACCOUNT = ratio_sum.ACCOUNT and MATCONN = ratio_sum.MATCONN search binary missing initial
-if found(found38)
+for ratio_sum in filtered26
+find found28 = fflas_ratios where TIME = ratio_sum.TIME and ACCOUNT = ratio_sum.ACCOUNT and MATCONN = ratio_sum.MATCONN search binary missing initial
+if found(found28)
 let balance = signed(1 - ratio_sum.SIGNEDDATA)
-found38.SIGNEDDATA = found38.SIGNEDDATA + balance
+found28.SIGNEDDATA = found28.SIGNEDDATA + balance
 end
 end
 append fflas_ratios from skipped_materials
 show fflas_ratios as "RATIOS_AND_FLAGS"
 append new_data from fflas_ratios
 publish new_data as "NEW_DATA"
-group group39 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
-for g40 in group39
-if initial(g40.ACCOUNT)
-g40.ACCOUNT = "ACCOUNT_NA"
-end
-if initial(g40.AUDITTRAIL)
-g40.AUDITTRAIL = "AUDITTRAIL_NA"
-end
-if initial(g40.CATEGORY)
-g40.CATEGORY = "CATEGORY_NA"
-end
-if initial(g40.COSTCENTRE)
-g40.COSTCENTRE = "COSTCENTRE_NA"
-end
-if initial(g40.DEMREVID_KFS)
-g40.DEMREVID_KFS = "DEMREVID_KFS_NA"
-end
-if initial(g40.FFLAS)
-g40.FFLAS = "FFLAS_NA"
-end
-if initial(g40.FFLAS_SUBSET)
-g40.FFLAS_SUBSET = "FFLAS_SUBSET_NA"
-end
-if initial(g40.MATCONN)
-g40.MATCONN = "MATCONN_NA"
-end
-if initial(g40.TIME)
-g40.TIME = "TIME_NA"
-end
-if initial(g40.PRODUCT_TYPE)
-g40.PRODUCT_TYPE = "PRODUCT_TYPE_NA"
-end
-if initial(g40.GEO_DRIVERS)
-g40.GEO_DRIVERS = "GDRVS_NA"
-end
-if initial(g40.DOC_TYP)
-g40.DOC_TYP = "DOC_TYP_NA"
-end
-if initial(g40.CONN_REG_SPLIT)
-g40.CONN_REG_SPLIT = "CONN_REG_SPLIT_NA"
-end
-if initial(g40.LFC_WIN_SUPPLIER)
-g40.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
-end
-if initial(g40.MAT_GROUP_ID)
-g40.MAT_GROUP_ID = "MAT_GROUP_ID_NA"
-end
-if initial(g40.REG_FFLAS_SERV)
-g40.REG_FFLAS_SERV = "REG_FFLAS_SERV_NA"
-end
-if initial(g40.UFB_DR_ID)
-g40.UFB_DR_ID = "UFB_DR_ID_NA"
-end
-if initial(g40.MATREMAP)
-g40.MATREMAP = "MATREMAP_NA"
-end
-if initial(g40.RSP_SERVICE_ID)
-g40.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
-end
-if initial(g40.REV_ID_GROUP)
-g40.REV_ID_GROUP = "REV_ID_GROUP_NA"
-end
-end
-sort group39 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc
-show group39 as "CONTROL_TOTALS"
+group group29 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
+defaults group29 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
+sort group29 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc
+show group29 as "CONTROL_TOTALS"

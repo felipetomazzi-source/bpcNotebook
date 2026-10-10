@@ -17,15 +17,26 @@ comparison.explanation='Compare every native dimension and exact seven-decimal a
 comparison.source=comparison.source.replace("io->compare_results( name = 'REPLACEMENT' original = original-replacement notebook = <replacement> )","zcl_bn_table=>compare_ordered( io = io name = 'REPLACEMENT' original = original-replacement notebook = <replacement> )")
 .replace("io->compare_results( name = 'DELTA' original = original-delta notebook = <delta> )","zcl_bn_table=>compare_ordered( io = io name = 'DELTA' original = original-delta notebook = <delta> )");
 const order='account audittrail category costcentre demrevid_kfs fflas fflas_subset matconn time product_type geo_drivers doc_typ conn_reg_split lfc_win_supplier mat_group_id reg_fflas_serv ufb_dr_id matremap rsp_service_id rev_id_group signeddata';
-const dynamicOrder=order.toUpperCase().split(' ').map(name=>`( name = '${name}' )`).join(' ');
-comparison.source=comparison.source.replace('DATA(replacement_comparison)',`SORT original-replacement BY ${order}.\nSORT original-delta BY ${order}.\nzcl_bn_table=>sort( EXPORTING io = io order = VALUE #( ${dynamicOrder} ) CHANGING rows = <replacement> ).\nzcl_bn_table=>sort( EXPORTING io = io order = VALUE #( ${dynamicOrder} ) CHANGING rows = <delta> ).\nDATA(replacement_comparison)`);
+const dynamicOrder=order.toUpperCase().split(' ').map(name=>`( name = '${name}' )`).join('\n');
+const formattedOrder=order.split(' ').join('\n');
+comparison.source=comparison.source.replace('DATA(replacement_comparison)',`SORT original-replacement BY\n${formattedOrder}.\nSORT original-delta BY\n${formattedOrder}.\nzcl_bn_table=>sort( EXPORTING io = io stable = abap_false order = VALUE #(\n${dynamicOrder}\n) CHANGING rows = <replacement> ).\nzcl_bn_table=>sort( EXPORTING io = io stable = abap_false order = VALUE #(\n${dynamicOrder}\n) CHANGING rows = <delta> ).\nDATA(replacement_comparison)`);
 comparison.source=comparison.source.replaceAll('STEPWISE_DIFFERENCE','SCRIPT_DIFFERENCE').replaceAll('stepwise','Script');
 definition.cells.push(comparison);
 fs.writeFileSync(path.join(__dirname,'validation.draft.json'),JSON.stringify(definition,null,2)+'\n');
 // Real-data comparison: one authorized read frozen as native fixtures for both paths.
 const live=JSON.parse(JSON.stringify(definition));live.title='DEMREVID003 - Script live-data comparison';
-live.cells[0].source=`DATA(adapter) = io->reference_model( ).
-DATA(source) = adapter->read_data( max_rows = CONV i( io->input( 'READ_LIMIT' ) ) ).
+live.cells[0].source=`" Read live facts with a separate secured adapter before entering fixture mode.
+" Only backend-frozen base IDs are used; TIME is not expanded here.
+DATA(periods) = io->range( 'TIME' ).
+DATA(references) = io->range( 'REFERENCE_TIME' ).
+APPEND LINES OF references TO periods.
+SORT periods. DELETE ADJACENT DUPLICATES FROM periods.
+DATA(filters) = VALUE zcl_bn_bpc=>tt_filters(
+ ( dimension = 'CATEGORY' members = VALUE #( ( CONV string( io->member( 'CATEGORY' ) ) ) ) )
+ ( dimension = 'TIME' members = CORRESPONDING #( periods ) ) ).
+DATA(adapter) = NEW zcl_bn_bpc( environment = CONV string( io->environment )
+ model = CONV string( io->model ) ).
+DATA(source) = adapter->read_data( filters = filters max_rows = CONV i( io->input( 'READ_LIMIT' ) ) ).
 FIELD-SYMBOLS <source> TYPE STANDARD TABLE. ASSIGN source->* TO <source>.
 IF <source> IS INITIAL. RAISE EXCEPTION TYPE zcx_bn EXPORTING code = 'EMPTY_COMPARISON' detail = 'Live input is empty'. ENDIF.
 io->enable_fixtures( VALUE #( ( environment = io->environment model = io->model rows = source ) ) ).

@@ -1,74 +1,13 @@
-script version 2
+script version 2 compact
 dataset input_data = "step_01" named "INPUT_DATA"
 dataset new_data = "step_05" named "NEW_DATA"
 filter filtered1 = input_data as f2 where f2.DEMREVID_KFS == "DEMREVID019" and is_in(f2.DOC_TYP, ["RS","AD","AC"]) and f2.UFB_DR_ID != "UFBDRID006" and f2.UFB_DR_ID != "UFB_DR_ID_NA"
 group group3 = filtered1 exclude ["DOC_TYP","UFB_DR_ID","LFC_WIN_SUPPLIER"]
-for g4 in group3
-if initial(g4.ACCOUNT)
-g4.ACCOUNT = "ACCOUNT_NA"
-end
-if initial(g4.AUDITTRAIL)
-g4.AUDITTRAIL = "AUDITTRAIL_NA"
-end
-if initial(g4.CATEGORY)
-g4.CATEGORY = "CATEGORY_NA"
-end
-if initial(g4.COSTCENTRE)
-g4.COSTCENTRE = "COSTCENTRE_NA"
-end
-if initial(g4.DEMREVID_KFS)
-g4.DEMREVID_KFS = "DEMREVID_KFS_NA"
-end
-if initial(g4.FFLAS)
-g4.FFLAS = "FFLAS_NA"
-end
-if initial(g4.FFLAS_SUBSET)
-g4.FFLAS_SUBSET = "FFLAS_SUBSET_NA"
-end
-if initial(g4.MATCONN)
-g4.MATCONN = "MATCONN_NA"
-end
-if initial(g4.TIME)
-g4.TIME = "TIME_NA"
-end
-if initial(g4.PRODUCT_TYPE)
-g4.PRODUCT_TYPE = "PRODUCT_TYPE_NA"
-end
-if initial(g4.GEO_DRIVERS)
-g4.GEO_DRIVERS = "GDRVS_NA"
-end
-if initial(g4.DOC_TYP)
-g4.DOC_TYP = "DOC_TYP_NA"
-end
-if initial(g4.CONN_REG_SPLIT)
-g4.CONN_REG_SPLIT = "CONN_REG_SPLIT_NA"
-end
-if initial(g4.LFC_WIN_SUPPLIER)
-g4.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
-end
-if initial(g4.MAT_GROUP_ID)
-g4.MAT_GROUP_ID = "MAT_GROUP_ID_NA"
-end
-if initial(g4.REG_FFLAS_SERV)
-g4.REG_FFLAS_SERV = "REG_FFLAS_SERV_NA"
-end
-if initial(g4.UFB_DR_ID)
-g4.UFB_DR_ID = "UFB_DR_ID_NA"
-end
-if initial(g4.MATREMAP)
-g4.MATREMAP = "MATREMAP_NA"
-end
-if initial(g4.RSP_SERVICE_ID)
-g4.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
-end
-if initial(g4.REV_ID_GROUP)
-g4.REV_ID_GROUP = "REV_ID_GROUP_NA"
-end
-end
+defaults group3 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
 sort group3 unstable by DOC_TYP asc, UFB_DR_ID asc, LFC_WIN_SUPPLIER asc
-for replace5 in group3
-replace5.DEMREVID_KFS = "DEMREVID016"
-replace5.AUDITTRAIL = "DEMREVID_CALC"
+for replace4 in group3
+replace4.DEMREVID_KFS = "DEMREVID016"
+replace4.AUDITTRAIL = "DEMREVID_CALC"
 end
 dataset conn_reg_split = "step_01" named "CONN_REG_SPLIT"
 dataset l1_l2_mapping = "step_01" named "L1_L2_MAPPING"
@@ -76,148 +15,82 @@ dataset mat_group_mapping = "step_01" named "MAT_GROUP_MAPPING"
 dataset product_members = "step_01" named "PRODUCT_MEMBERS"
 dataset material_members = "step_01" named "MATERIAL_MEMBERS"
 dataset group_members = "step_01" named "GROUP_MEMBERS"
-filter filtered6 = input_data as f7 where f7.DEMREVID_KFS == "DEMREVID036"
-filter filtered8 = input_data as f9 where f9.DEMREVID_KFS == "DEMREVID037"
-filter filtered10 = input_data as f11 where f11.DEMREVID_KFS == "DEMREVID014"
-sort filtered6 unstable by TIME asc, ACCOUNT asc, MATCONN asc
-sort filtered8 unstable by TIME asc, MATCONN asc, MAT_GROUP_ID asc
-sort filtered10 unstable by TIME asc, MATCONN asc
-for revenue12 in group3
-find found13 = filtered10 where TIME = revenue12.TIME and MATCONN = revenue12.MATCONN search binary missing initial
+filter filtered5 = input_data as f6 where f6.DEMREVID_KFS == "DEMREVID036"
+filter filtered7 = input_data as f8 where f8.DEMREVID_KFS == "DEMREVID037"
+filter filtered9 = input_data as f10 where f10.DEMREVID_KFS == "DEMREVID014"
+sort filtered5 unstable by TIME asc, ACCOUNT asc, MATCONN asc
+sort filtered7 unstable by TIME asc, MATCONN asc, MAT_GROUP_ID asc
+sort filtered9 unstable by TIME asc, MATCONN asc
+index ix14 = product_members by ["ID"] many
+index ix21 = material_members by ["ID"] many
+index ix25 = group_members by ["ID"] many
+for revenue11 in group3
+find found12 = filtered9 where TIME = revenue11.TIME and MATCONN = revenue11.MATCONN search binary missing initial
+if found(found12)
+lookup found13 = ix14 where ID = concat("PRODUCT_TYPE_", numeric_text(found12.SIGNEDDATA,3)) policy first missing initial
 if found(found13)
-let mapped15 = ""
-for product14 in product_members
-if matches(product14.ID, "PRODUCT_TYPE_+++")
-if integer(slice(product14.ID, 13, 3)) == integer(found13.SIGNEDDATA)
-mapped15 = text(product14.ID)
-break
-end
-end
-end
-if mapped15 != ""
-revenue12.PRODUCT_TYPE = mapped15
+revenue11.PRODUCT_TYPE = found13.ID
 else
-revenue12.PRODUCT_TYPE = found13.PRODUCT_TYPE
+revenue11.PRODUCT_TYPE = found12.PRODUCT_TYPE
 end
 end
-find found16 = product_members where ID = revenue12.PRODUCT_TYPE search linear missing initial
-revenue12.REV_ID_GROUP = found16.REV_ID_GROUP
-find found17 = conn_reg_split where TIME = revenue12.TIME and ACCOUNT = revenue12.ACCOUNT search binary missing initial
+lookup found15 = ix14 where ID = revenue11.PRODUCT_TYPE policy first missing initial
+revenue11.REV_ID_GROUP = found15.REV_ID_GROUP
+find found16 = conn_reg_split where TIME = revenue11.TIME and ACCOUNT = revenue11.ACCOUNT search binary missing initial
+if found(found16)
+revenue11.CONN_REG_SPLIT = found16.CONN_REG_SPLIT
+end
+find found17 = l1_l2_mapping where TIME = revenue11.TIME and ACCOUNT = revenue11.ACCOUNT search binary missing initial
 if found(found17)
-revenue12.CONN_REG_SPLIT = found17.CONN_REG_SPLIT
+revenue11.FFLAS_SUBSET = found17.FFLAS_SUBSET
 end
-find found18 = l1_l2_mapping where TIME = revenue12.TIME and ACCOUNT = revenue12.ACCOUNT search binary missing initial
+find found18 = filtered5 where TIME = revenue11.TIME and ACCOUNT = revenue11.ACCOUNT and MATCONN = revenue11.MATCONN search binary missing initial
 if found(found18)
-revenue12.FFLAS_SUBSET = found18.FFLAS_SUBSET
-end
-find found19 = filtered6 where TIME = revenue12.TIME and ACCOUNT = revenue12.ACCOUNT and MATCONN = revenue12.MATCONN search binary missing initial
+revenue11.MATREMAP = found18.MATREMAP
+else
+find found19 = filtered5 where TIME = revenue11.TIME and ACCOUNT = "ACCOUNT_NA" and MATCONN = revenue11.MATCONN search binary missing initial
 if found(found19)
-revenue12.MATREMAP = found19.MATREMAP
+revenue11.MATREMAP = found19.MATREMAP
 else
-find found20 = filtered6 where TIME = revenue12.TIME and ACCOUNT = "ACCOUNT_NA" and MATCONN = revenue12.MATCONN search binary missing initial
-if found(found20)
-revenue12.MATREMAP = found20.MATREMAP
+if revenue11.MATCONN == "MATCONN_NA"
+revenue11.MATREMAP = "MATREMAP_NA"
 else
-if revenue12.MATCONN == "MATCONN_NA"
-revenue12.MATREMAP = "MATREMAP_NA"
-else
-revenue12.MATREMAP = revenue12.MATCONN
+revenue11.MATREMAP = revenue11.MATCONN
 end
 end
 end
-if revenue12.PRODUCT_TYPE == "PRODUCT_TYPE_NA" and revenue12.MATREMAP != "MATREMAP_NA"
-find found21 = material_members where ID = revenue12.MATREMAP search linear missing initial
-revenue12.PRODUCT_TYPE = found21.PRODUCT_TYPE
+if revenue11.PRODUCT_TYPE == "PRODUCT_TYPE_NA" and revenue11.MATREMAP != "MATREMAP_NA"
+lookup found20 = ix21 where ID = revenue11.MATREMAP policy first missing initial
+revenue11.PRODUCT_TYPE = found20.PRODUCT_TYPE
 end
-if revenue12.MATREMAP != "MATREMAP_NA"
-find found22 = mat_group_mapping where TIME = revenue12.TIME and MATCONN = revenue12.MATREMAP and ACCOUNT = "ACCOUNT_NA" search binary missing initial
+if revenue11.MATREMAP != "MATREMAP_NA"
+find found22 = mat_group_mapping where TIME = revenue11.TIME and MATCONN = revenue11.MATREMAP and ACCOUNT = "ACCOUNT_NA" search binary missing initial
 if found(found22)
-revenue12.MAT_GROUP_ID = found22.MAT_GROUP_ID
+revenue11.MAT_GROUP_ID = found22.MAT_GROUP_ID
 end
 else
-find found23 = mat_group_mapping where TIME = revenue12.TIME and MATCONN = "MATCONN_NA" and ACCOUNT = revenue12.ACCOUNT search binary missing initial
+find found23 = mat_group_mapping where TIME = revenue11.TIME and MATCONN = "MATCONN_NA" and ACCOUNT = revenue11.ACCOUNT search binary missing initial
 if found(found23)
-revenue12.MAT_GROUP_ID = found23.MAT_GROUP_ID
+revenue11.MAT_GROUP_ID = found23.MAT_GROUP_ID
 end
 end
-find found24 = group_members where ID = revenue12.MAT_GROUP_ID search linear missing initial
+lookup found24 = ix25 where ID = revenue11.MAT_GROUP_ID policy first missing initial
 if not initial(found24.REV_ID_GROUP)
-revenue12.REV_ID_GROUP = found24.REV_ID_GROUP
+revenue11.REV_ID_GROUP = found24.REV_ID_GROUP
 end
-find found25 = filtered8 where TIME = revenue12.TIME and MATCONN = "MATCONN_NA" and MAT_GROUP_ID = revenue12.MAT_GROUP_ID search binary missing initial
-if found(found25)
-revenue12.REG_FFLAS_SERV = found25.REG_FFLAS_SERV
-else
-find found26 = filtered8 where TIME = revenue12.TIME and MATCONN = revenue12.MATREMAP search binary missing initial
+find found26 = filtered7 where TIME = revenue11.TIME and MATCONN = "MATCONN_NA" and MAT_GROUP_ID = revenue11.MAT_GROUP_ID search binary missing initial
 if found(found26)
-revenue12.REG_FFLAS_SERV = found26.REG_FFLAS_SERV
+revenue11.REG_FFLAS_SERV = found26.REG_FFLAS_SERV
+else
+find found27 = filtered7 where TIME = revenue11.TIME and MATCONN = revenue11.MATREMAP search binary missing initial
+if found(found27)
+revenue11.REG_FFLAS_SERV = found27.REG_FFLAS_SERV
 end
 end
 end
 append new_data from group3
 publish new_data as "NEW_DATA"
-group group27 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
-for g28 in group27
-if initial(g28.ACCOUNT)
-g28.ACCOUNT = "ACCOUNT_NA"
-end
-if initial(g28.AUDITTRAIL)
-g28.AUDITTRAIL = "AUDITTRAIL_NA"
-end
-if initial(g28.CATEGORY)
-g28.CATEGORY = "CATEGORY_NA"
-end
-if initial(g28.COSTCENTRE)
-g28.COSTCENTRE = "COSTCENTRE_NA"
-end
-if initial(g28.DEMREVID_KFS)
-g28.DEMREVID_KFS = "DEMREVID_KFS_NA"
-end
-if initial(g28.FFLAS)
-g28.FFLAS = "FFLAS_NA"
-end
-if initial(g28.FFLAS_SUBSET)
-g28.FFLAS_SUBSET = "FFLAS_SUBSET_NA"
-end
-if initial(g28.MATCONN)
-g28.MATCONN = "MATCONN_NA"
-end
-if initial(g28.TIME)
-g28.TIME = "TIME_NA"
-end
-if initial(g28.PRODUCT_TYPE)
-g28.PRODUCT_TYPE = "PRODUCT_TYPE_NA"
-end
-if initial(g28.GEO_DRIVERS)
-g28.GEO_DRIVERS = "GDRVS_NA"
-end
-if initial(g28.DOC_TYP)
-g28.DOC_TYP = "DOC_TYP_NA"
-end
-if initial(g28.CONN_REG_SPLIT)
-g28.CONN_REG_SPLIT = "CONN_REG_SPLIT_NA"
-end
-if initial(g28.LFC_WIN_SUPPLIER)
-g28.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
-end
-if initial(g28.MAT_GROUP_ID)
-g28.MAT_GROUP_ID = "MAT_GROUP_ID_NA"
-end
-if initial(g28.REG_FFLAS_SERV)
-g28.REG_FFLAS_SERV = "REG_FFLAS_SERV_NA"
-end
-if initial(g28.UFB_DR_ID)
-g28.UFB_DR_ID = "UFB_DR_ID_NA"
-end
-if initial(g28.MATREMAP)
-g28.MATREMAP = "MATREMAP_NA"
-end
-if initial(g28.RSP_SERVICE_ID)
-g28.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
-end
-if initial(g28.REV_ID_GROUP)
-g28.REV_ID_GROUP = "REV_ID_GROUP_NA"
-end
-end
-sort group27 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc
-show group27 as "CONTROL_TOTALS"
+group group28 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
+defaults group28 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
+sort group28 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc
+show group28 as "CONTROL_TOTALS"

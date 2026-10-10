@@ -1,4 +1,4 @@
-script version 2
+script version 2 compact
 dataset new_data = "step_07" named "NEW_DATA"
 dataset sap_revenues = "step_02" named "SAP_REVENUES"
 dataset rsp_split_ratios = "step_05" named "RSP_SPLIT_RATIOS"
@@ -18,67 +18,6 @@ end
 end
 publish new_data as "NEW_DATA"
 group group8 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
-for g9 in group8
-if initial(g9.ACCOUNT)
-g9.ACCOUNT = "ACCOUNT_NA"
-end
-if initial(g9.AUDITTRAIL)
-g9.AUDITTRAIL = "AUDITTRAIL_NA"
-end
-if initial(g9.CATEGORY)
-g9.CATEGORY = "CATEGORY_NA"
-end
-if initial(g9.COSTCENTRE)
-g9.COSTCENTRE = "COSTCENTRE_NA"
-end
-if initial(g9.DEMREVID_KFS)
-g9.DEMREVID_KFS = "DEMREVID_KFS_NA"
-end
-if initial(g9.FFLAS)
-g9.FFLAS = "FFLAS_NA"
-end
-if initial(g9.FFLAS_SUBSET)
-g9.FFLAS_SUBSET = "FFLAS_SUBSET_NA"
-end
-if initial(g9.MATCONN)
-g9.MATCONN = "MATCONN_NA"
-end
-if initial(g9.TIME)
-g9.TIME = "TIME_NA"
-end
-if initial(g9.PRODUCT_TYPE)
-g9.PRODUCT_TYPE = "PRODUCT_TYPE_NA"
-end
-if initial(g9.GEO_DRIVERS)
-g9.GEO_DRIVERS = "GDRVS_NA"
-end
-if initial(g9.DOC_TYP)
-g9.DOC_TYP = "DOC_TYP_NA"
-end
-if initial(g9.CONN_REG_SPLIT)
-g9.CONN_REG_SPLIT = "CONN_REG_SPLIT_NA"
-end
-if initial(g9.LFC_WIN_SUPPLIER)
-g9.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
-end
-if initial(g9.MAT_GROUP_ID)
-g9.MAT_GROUP_ID = "MAT_GROUP_ID_NA"
-end
-if initial(g9.REG_FFLAS_SERV)
-g9.REG_FFLAS_SERV = "REG_FFLAS_SERV_NA"
-end
-if initial(g9.UFB_DR_ID)
-g9.UFB_DR_ID = "UFB_DR_ID_NA"
-end
-if initial(g9.MATREMAP)
-g9.MATREMAP = "MATREMAP_NA"
-end
-if initial(g9.RSP_SERVICE_ID)
-g9.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
-end
-if initial(g9.REV_ID_GROUP)
-g9.REV_ID_GROUP = "REV_ID_GROUP_NA"
-end
-end
+defaults group8 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
 sort group8 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc
 show group8 as "CONTROL_TOTALS"

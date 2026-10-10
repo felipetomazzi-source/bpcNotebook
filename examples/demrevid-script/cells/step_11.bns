@@ -1,208 +1,25 @@
-script version 2
+script version 2 compact
 dataset new_data = "step_10" named "NEW_DATA"
 filter filtered1 = new_data as f2 where f2.DEMREVID_KFS == "DEMREVID023"
 group group3 = filtered1 exclude ["GEO_DRIVERS","FFLAS"]
-for g4 in group3
-if initial(g4.ACCOUNT)
-g4.ACCOUNT = "ACCOUNT_NA"
-end
-if initial(g4.AUDITTRAIL)
-g4.AUDITTRAIL = "AUDITTRAIL_NA"
-end
-if initial(g4.CATEGORY)
-g4.CATEGORY = "CATEGORY_NA"
-end
-if initial(g4.COSTCENTRE)
-g4.COSTCENTRE = "COSTCENTRE_NA"
-end
-if initial(g4.DEMREVID_KFS)
-g4.DEMREVID_KFS = "DEMREVID_KFS_NA"
-end
-if initial(g4.FFLAS)
-g4.FFLAS = "FFLAS_NA"
-end
-if initial(g4.FFLAS_SUBSET)
-g4.FFLAS_SUBSET = "FFLAS_SUBSET_NA"
-end
-if initial(g4.MATCONN)
-g4.MATCONN = "MATCONN_NA"
-end
-if initial(g4.TIME)
-g4.TIME = "TIME_NA"
-end
-if initial(g4.PRODUCT_TYPE)
-g4.PRODUCT_TYPE = "PRODUCT_TYPE_NA"
-end
-if initial(g4.GEO_DRIVERS)
-g4.GEO_DRIVERS = "GDRVS_NA"
-end
-if initial(g4.DOC_TYP)
-g4.DOC_TYP = "DOC_TYP_NA"
-end
-if initial(g4.CONN_REG_SPLIT)
-g4.CONN_REG_SPLIT = "CONN_REG_SPLIT_NA"
-end
-if initial(g4.LFC_WIN_SUPPLIER)
-g4.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
-end
-if initial(g4.MAT_GROUP_ID)
-g4.MAT_GROUP_ID = "MAT_GROUP_ID_NA"
-end
-if initial(g4.REG_FFLAS_SERV)
-g4.REG_FFLAS_SERV = "REG_FFLAS_SERV_NA"
-end
-if initial(g4.UFB_DR_ID)
-g4.UFB_DR_ID = "UFB_DR_ID_NA"
-end
-if initial(g4.MATREMAP)
-g4.MATREMAP = "MATREMAP_NA"
-end
-if initial(g4.RSP_SERVICE_ID)
-g4.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
-end
-if initial(g4.REV_ID_GROUP)
-g4.REV_ID_GROUP = "REV_ID_GROUP_NA"
-end
-end
+defaults group3 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
 sort group3 unstable by GEO_DRIVERS asc, FFLAS asc
 sort group3 unstable by TIME asc, ACCOUNT asc, MATCONN asc
-filter filtered5 = filtered1 as f6 where f6.FFLAS == "FFLASPQ"
-group group7 = filtered5 exclude ["GEO_DRIVERS"]
-for g8 in group7
-if initial(g8.ACCOUNT)
-g8.ACCOUNT = "ACCOUNT_NA"
+filter filtered4 = filtered1 as f5 where f5.FFLAS == "FFLASPQ"
+group group6 = filtered4 exclude ["GEO_DRIVERS"]
+defaults group6 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
+sort group6 unstable by GEO_DRIVERS asc
+sort group6 unstable by TIME asc, ACCOUNT asc, MATCONN asc
+for divide7 in group6
+find found8 = group3 where TIME = divide7.TIME and ACCOUNT = divide7.ACCOUNT and MATCONN = divide7.MATCONN search binary missing initial
+divide divide7.SIGNEDDATA by found8.SIGNEDDATA using float onzero keep
 end
-if initial(g8.AUDITTRAIL)
-g8.AUDITTRAIL = "AUDITTRAIL_NA"
+for replace9 in group6
+replace9.DEMREVID_KFS = "DEMREVID025"
 end
-if initial(g8.CATEGORY)
-g8.CATEGORY = "CATEGORY_NA"
-end
-if initial(g8.COSTCENTRE)
-g8.COSTCENTRE = "COSTCENTRE_NA"
-end
-if initial(g8.DEMREVID_KFS)
-g8.DEMREVID_KFS = "DEMREVID_KFS_NA"
-end
-if initial(g8.FFLAS)
-g8.FFLAS = "FFLAS_NA"
-end
-if initial(g8.FFLAS_SUBSET)
-g8.FFLAS_SUBSET = "FFLAS_SUBSET_NA"
-end
-if initial(g8.MATCONN)
-g8.MATCONN = "MATCONN_NA"
-end
-if initial(g8.TIME)
-g8.TIME = "TIME_NA"
-end
-if initial(g8.PRODUCT_TYPE)
-g8.PRODUCT_TYPE = "PRODUCT_TYPE_NA"
-end
-if initial(g8.GEO_DRIVERS)
-g8.GEO_DRIVERS = "GDRVS_NA"
-end
-if initial(g8.DOC_TYP)
-g8.DOC_TYP = "DOC_TYP_NA"
-end
-if initial(g8.CONN_REG_SPLIT)
-g8.CONN_REG_SPLIT = "CONN_REG_SPLIT_NA"
-end
-if initial(g8.LFC_WIN_SUPPLIER)
-g8.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
-end
-if initial(g8.MAT_GROUP_ID)
-g8.MAT_GROUP_ID = "MAT_GROUP_ID_NA"
-end
-if initial(g8.REG_FFLAS_SERV)
-g8.REG_FFLAS_SERV = "REG_FFLAS_SERV_NA"
-end
-if initial(g8.UFB_DR_ID)
-g8.UFB_DR_ID = "UFB_DR_ID_NA"
-end
-if initial(g8.MATREMAP)
-g8.MATREMAP = "MATREMAP_NA"
-end
-if initial(g8.RSP_SERVICE_ID)
-g8.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
-end
-if initial(g8.REV_ID_GROUP)
-g8.REV_ID_GROUP = "REV_ID_GROUP_NA"
-end
-end
-sort group7 unstable by GEO_DRIVERS asc
-sort group7 unstable by TIME asc, ACCOUNT asc, MATCONN asc
-for divide9 in group7
-find found10 = group3 where TIME = divide9.TIME and ACCOUNT = divide9.ACCOUNT and MATCONN = divide9.MATCONN search binary missing initial
-divide divide9.SIGNEDDATA by found10.SIGNEDDATA using float onzero keep
-end
-for replace11 in group7
-replace11.DEMREVID_KFS = "DEMREVID025"
-end
-append new_data from group7
+append new_data from group6
 publish new_data as "NEW_DATA"
-group group12 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
-for g13 in group12
-if initial(g13.ACCOUNT)
-g13.ACCOUNT = "ACCOUNT_NA"
-end
-if initial(g13.AUDITTRAIL)
-g13.AUDITTRAIL = "AUDITTRAIL_NA"
-end
-if initial(g13.CATEGORY)
-g13.CATEGORY = "CATEGORY_NA"
-end
-if initial(g13.COSTCENTRE)
-g13.COSTCENTRE = "COSTCENTRE_NA"
-end
-if initial(g13.DEMREVID_KFS)
-g13.DEMREVID_KFS = "DEMREVID_KFS_NA"
-end
-if initial(g13.FFLAS)
-g13.FFLAS = "FFLAS_NA"
-end
-if initial(g13.FFLAS_SUBSET)
-g13.FFLAS_SUBSET = "FFLAS_SUBSET_NA"
-end
-if initial(g13.MATCONN)
-g13.MATCONN = "MATCONN_NA"
-end
-if initial(g13.TIME)
-g13.TIME = "TIME_NA"
-end
-if initial(g13.PRODUCT_TYPE)
-g13.PRODUCT_TYPE = "PRODUCT_TYPE_NA"
-end
-if initial(g13.GEO_DRIVERS)
-g13.GEO_DRIVERS = "GDRVS_NA"
-end
-if initial(g13.DOC_TYP)
-g13.DOC_TYP = "DOC_TYP_NA"
-end
-if initial(g13.CONN_REG_SPLIT)
-g13.CONN_REG_SPLIT = "CONN_REG_SPLIT_NA"
-end
-if initial(g13.LFC_WIN_SUPPLIER)
-g13.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
-end
-if initial(g13.MAT_GROUP_ID)
-g13.MAT_GROUP_ID = "MAT_GROUP_ID_NA"
-end
-if initial(g13.REG_FFLAS_SERV)
-g13.REG_FFLAS_SERV = "REG_FFLAS_SERV_NA"
-end
-if initial(g13.UFB_DR_ID)
-g13.UFB_DR_ID = "UFB_DR_ID_NA"
-end
-if initial(g13.MATREMAP)
-g13.MATREMAP = "MATREMAP_NA"
-end
-if initial(g13.RSP_SERVICE_ID)
-g13.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
-end
-if initial(g13.REV_ID_GROUP)
-g13.REV_ID_GROUP = "REV_ID_GROUP_NA"
-end
-end
-sort group12 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc
-show group12 as "CONTROL_TOTALS"
+group group10 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
+defaults group10 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
+sort group10 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc
+show group10 as "CONTROL_TOTALS"

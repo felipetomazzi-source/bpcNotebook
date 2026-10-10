@@ -1,161 +1,39 @@
-script version 2
+script version 2 compact
 dataset new_data = "step_17" named "NEW_DATA"
 dataset input_data = "step_01" named "INPUT_DATA"
 filter filtered1 = new_data as f2 where f2.DEMREVID_KFS == "DEMREVID023"
 group group3 = filtered1 exclude ["ACCOUNT","AUDITTRAIL","GEO_DRIVERS","CONN_REG_SPLIT","RSP_SERVICE_ID","REV_ID_GROUP","MATCONN"]
-for g4 in group3
-if initial(g4.ACCOUNT)
-g4.ACCOUNT = "ACCOUNT_NA"
-end
-if initial(g4.AUDITTRAIL)
-g4.AUDITTRAIL = "AUDITTRAIL_NA"
-end
-if initial(g4.CATEGORY)
-g4.CATEGORY = "CATEGORY_NA"
-end
-if initial(g4.COSTCENTRE)
-g4.COSTCENTRE = "COSTCENTRE_NA"
-end
-if initial(g4.DEMREVID_KFS)
-g4.DEMREVID_KFS = "DEMREVID_KFS_NA"
-end
-if initial(g4.FFLAS)
-g4.FFLAS = "FFLAS_NA"
-end
-if initial(g4.FFLAS_SUBSET)
-g4.FFLAS_SUBSET = "FFLAS_SUBSET_NA"
-end
-if initial(g4.MATCONN)
-g4.MATCONN = "MATCONN_NA"
-end
-if initial(g4.TIME)
-g4.TIME = "TIME_NA"
-end
-if initial(g4.PRODUCT_TYPE)
-g4.PRODUCT_TYPE = "PRODUCT_TYPE_NA"
-end
-if initial(g4.GEO_DRIVERS)
-g4.GEO_DRIVERS = "GDRVS_NA"
-end
-if initial(g4.DOC_TYP)
-g4.DOC_TYP = "DOC_TYP_NA"
-end
-if initial(g4.CONN_REG_SPLIT)
-g4.CONN_REG_SPLIT = "CONN_REG_SPLIT_NA"
-end
-if initial(g4.LFC_WIN_SUPPLIER)
-g4.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
-end
-if initial(g4.MAT_GROUP_ID)
-g4.MAT_GROUP_ID = "MAT_GROUP_ID_NA"
-end
-if initial(g4.REG_FFLAS_SERV)
-g4.REG_FFLAS_SERV = "REG_FFLAS_SERV_NA"
-end
-if initial(g4.UFB_DR_ID)
-g4.UFB_DR_ID = "UFB_DR_ID_NA"
-end
-if initial(g4.MATREMAP)
-g4.MATREMAP = "MATREMAP_NA"
-end
-if initial(g4.RSP_SERVICE_ID)
-g4.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
-end
-if initial(g4.REV_ID_GROUP)
-g4.REV_ID_GROUP = "REV_ID_GROUP_NA"
-end
-end
+defaults group3 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
 sort group3 unstable by ACCOUNT asc, AUDITTRAIL asc, GEO_DRIVERS asc, CONN_REG_SPLIT asc, RSP_SERVICE_ID asc, REV_ID_GROUP asc, MATCONN asc
+for replace4 in group3
+replace4.DEMREVID_KFS = "DEMREVID038"
+replace4.AUDITTRAIL = "DEMREVID_CALC"
+end
 for replace5 in group3
-replace5.DEMREVID_KFS = "DEMREVID038"
-replace5.AUDITTRAIL = "DEMREVID_CALC"
-end
-for replace6 in group3
-if replace6.FFLAS == "FFLASPQ"
-replace6.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
+if replace5.FFLAS == "FFLASPQ"
+replace5.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
 end
 end
-group group7 = group3 all
-copy transposed_revenues = group7
+group group6 = group3 all
+copy transposed_revenues = group6
 copy reporting_aux = transposed_revenues
-for replace8 in reporting_aux
-if replace8.MAT_GROUP_ID != "MAT_GROUP_ID_NA"
-replace8.MATREMAP = "MATREMAP_NA"
+for replace7 in reporting_aux
+if replace7.MAT_GROUP_ID != "MAT_GROUP_ID_NA"
+replace7.MATREMAP = "MATREMAP_NA"
 end
 end
-group group9 = reporting_aux all
-filter filtered10 = input_data as f11 where f11.DEMREVID_KFS == "DEMREVID034"
-for visible in group9
-find found12 = filtered10 where MAT_GROUP_ID = visible.MAT_GROUP_ID search linear missing initial
-if found(found12)
+group group8 = reporting_aux all
+filter filtered9 = input_data as f10 where f10.DEMREVID_KFS == "DEMREVID034"
+for visible in group8
+find found11 = filtered9 where MAT_GROUP_ID = visible.MAT_GROUP_ID search linear missing initial
+if found(found11)
 delete visible
 end
 end
-append new_data from group9
+append new_data from group8
 publish new_data as "NEW_DATA"
 publish transposed_revenues as "TRANSPOSED_REVENUES"
-group group13 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
-for g14 in group13
-if initial(g14.ACCOUNT)
-g14.ACCOUNT = "ACCOUNT_NA"
-end
-if initial(g14.AUDITTRAIL)
-g14.AUDITTRAIL = "AUDITTRAIL_NA"
-end
-if initial(g14.CATEGORY)
-g14.CATEGORY = "CATEGORY_NA"
-end
-if initial(g14.COSTCENTRE)
-g14.COSTCENTRE = "COSTCENTRE_NA"
-end
-if initial(g14.DEMREVID_KFS)
-g14.DEMREVID_KFS = "DEMREVID_KFS_NA"
-end
-if initial(g14.FFLAS)
-g14.FFLAS = "FFLAS_NA"
-end
-if initial(g14.FFLAS_SUBSET)
-g14.FFLAS_SUBSET = "FFLAS_SUBSET_NA"
-end
-if initial(g14.MATCONN)
-g14.MATCONN = "MATCONN_NA"
-end
-if initial(g14.TIME)
-g14.TIME = "TIME_NA"
-end
-if initial(g14.PRODUCT_TYPE)
-g14.PRODUCT_TYPE = "PRODUCT_TYPE_NA"
-end
-if initial(g14.GEO_DRIVERS)
-g14.GEO_DRIVERS = "GDRVS_NA"
-end
-if initial(g14.DOC_TYP)
-g14.DOC_TYP = "DOC_TYP_NA"
-end
-if initial(g14.CONN_REG_SPLIT)
-g14.CONN_REG_SPLIT = "CONN_REG_SPLIT_NA"
-end
-if initial(g14.LFC_WIN_SUPPLIER)
-g14.LFC_WIN_SUPPLIER = "LFC_WIN_SUPPLIER_NA"
-end
-if initial(g14.MAT_GROUP_ID)
-g14.MAT_GROUP_ID = "MAT_GROUP_ID_NA"
-end
-if initial(g14.REG_FFLAS_SERV)
-g14.REG_FFLAS_SERV = "REG_FFLAS_SERV_NA"
-end
-if initial(g14.UFB_DR_ID)
-g14.UFB_DR_ID = "UFB_DR_ID_NA"
-end
-if initial(g14.MATREMAP)
-g14.MATREMAP = "MATREMAP_NA"
-end
-if initial(g14.RSP_SERVICE_ID)
-g14.RSP_SERVICE_ID = "RSP_SERVICE_ID_NA"
-end
-if initial(g14.REV_ID_GROUP)
-g14.REV_ID_GROUP = "REV_ID_GROUP_NA"
-end
-end
-sort group13 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc
-show group13 as "CONTROL_TOTALS"
+group group12 = new_data include ["CATEGORY","TIME","ACCOUNT","MATCONN","AUDITTRAIL","DEMREVID_KFS"]
+defaults group12 with ACCOUNT "ACCOUNT_NA", AUDITTRAIL "AUDITTRAIL_NA", CATEGORY "CATEGORY_NA", COSTCENTRE "COSTCENTRE_NA", DEMREVID_KFS "DEMREVID_KFS_NA", FFLAS "FFLAS_NA", FFLAS_SUBSET "FFLAS_SUBSET_NA", MATCONN "MATCONN_NA", TIME "TIME_NA", PRODUCT_TYPE "PRODUCT_TYPE_NA", GEO_DRIVERS "GDRVS_NA", DOC_TYP "DOC_TYP_NA", CONN_REG_SPLIT "CONN_REG_SPLIT_NA", LFC_WIN_SUPPLIER "LFC_WIN_SUPPLIER_NA", MAT_GROUP_ID "MAT_GROUP_ID_NA", REG_FFLAS_SERV "REG_FFLAS_SERV_NA", UFB_DR_ID "UFB_DR_ID_NA", MATREMAP "MATREMAP_NA", RSP_SERVICE_ID "RSP_SERVICE_ID_NA", REV_ID_GROUP "REV_ID_GROUP_NA"
+sort group12 unstable by CATEGORY asc, TIME asc, ACCOUNT asc, MATCONN asc, AUDITTRAIL asc, DEMREVID_KFS asc
+show group12 as "CONTROL_TOTALS"

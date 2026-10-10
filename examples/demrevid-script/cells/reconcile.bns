@@ -1,4 +1,4 @@
-script version 2
+script version 2 compact
 dataset new_data = "step_20" named "NEW_DATA"
 dataset output_data = "step_01" named "OUTPUT_DATA"
 copy final_replacement = new_data
