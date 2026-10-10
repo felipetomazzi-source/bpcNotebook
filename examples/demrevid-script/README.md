@@ -57,3 +57,5 @@ The comparison harness now retains complete fact tables and 14 authorized dimens
 The original's optional metadata reader is deployed through `codex/SSNG-3218-notebook-metadata-validation` in the Chorus ABAP repository. Its normal business path and `ZCL_BPC_DEMREVID_CALC_003` business source remain unchanged. That DEV branch retains the previously deployed NPL baseline, including its existing temporary BW enrichment workaround; review that baseline separately before any customer transport. `original-metadata-deployment.json` records source readback.
 
 Before any posting migration, restricted-user authorization and caller posting/rollback acceptance remain required. The original's old-output read scope includes `TIME_NA`; the notebook's strict posting scope must explicitly account for any legacy clears there. No production LGF or posting handler has been replaced.
+
+Display values are now capped at 4,096 characters and cell previews at eight MiB, including historical outputs. This keeps metadata packet previews manageable while preserving complete native datasets and exact financial amounts. See `docs/preview-bounds.md` for the display contract.
