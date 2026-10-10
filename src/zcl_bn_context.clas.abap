@@ -190,6 +190,8 @@ CLASS zcl_bn_context IMPLEMENTATION.
   ENDMETHOD.
   METHOD bpc_dimension.
     check_logic_model( model_name ).
+    " Stored member properties are calculation reference inputs, not historical values.
+    check_data_snapshot( ).
     adapter = NEW zcl_bn_bpc( environment = CONV #( environment )
       model = COND #( WHEN model_name IS INITIAL THEN CONV string( model ) ELSE model_name )
       dimension = name inputs = mt_inputs scope = mt_scope diagnostics = me ).
