@@ -1,6 +1,7 @@
 script version 2
 reference model source_model = DEMREVID
 data raw_source = source_model limit 1000000
+assert count(raw_source) <= number(input("READ_LIMIT")) message "Complete source exceeds configured READ_LIMIT"
 project complete_source_data = raw_source fields ["ACCOUNT","AUDITTRAIL","CATEGORY","COSTCENTRE","DEMREVID_KFS","FFLAS","FFLAS_SUBSET","MATCONN","TIME","PRODUCT_TYPE","GEO_DRIVERS","DOC_TYP","CONN_REG_SPLIT","LFC_WIN_SUPPLIER","MAT_GROUP_ID","REG_FFLAS_SERV","UFB_DR_ID","MATREMAP","RSP_SERVICE_ID","REV_ID_GROUP","SIGNEDDATA"]
 dimension dim_product_members = DEMREVID-PRODUCT_TYPE
 members product_members = dim_product_members
