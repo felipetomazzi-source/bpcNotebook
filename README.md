@@ -9,14 +9,14 @@ A standalone SAPUI5 notebook for ABAP calculations with versioned source, typed 
 
 ```powershell
 npm start
-# Open http://127.0.0.1:4173 → Open allocation demo → Run all
+# Open http://127.0.0.1:4173 → New notebook → add cells → Save version
 npm test
 npm run pack:sap
 ```
 
 The local service **simulates two demo cell bodies**. The SAP DEV version is deployed on the connected ABAP system, client **001**, with access enabled for **DEVELOPER**. The browser allocation demo completed as a real SAP background job and produced CC100 = **66,000**. The completed allocation integration is on `main` and is pulled through SAP abapGit using transport `NPLK900126`. All **56** repository artifacts pass actual SAP import/serialization comparison. Automated dangerous ABAP Unit tests remain blocked by the client risk policy. Production execution remains blocked.
 
-[Open the deployed SAP notebook](http://vhcalnplci:8000/sap/bc/ui5_ui5/sap/zbpc_notebook/index.html?sap-client=001). Log in as DEVELOPER, choose **Open allocation demo**, select the environment/model, choose **CATEGORY** and **TIME**, then **Save version → Run all** and select **allocate**.
+[Open the deployed SAP notebook](http://vhcalnplci:8000/sap/bc/ui5_ui5/sap/zbpc_notebook/index.html?sap-client=001). Log in as DEVELOPER, open an existing notebook or choose **New notebook**, select its parameters, then **Save version → Run all** and select **allocate**.
 
 - [Design and runtime contract](docs/DESIGN.md)
 - [Installation and remaining production requirements](docs/INSTALL.md)
@@ -25,6 +25,7 @@ The local service **simulates two demo cell bodies**. The SAP DEV version is dep
 - [Notebook Script v2: generic native tables, lookup and allocation contracts](docs/notebook-script-v2.md)
 - [Notebook handlers in BPC Script Logic](docs/notebook-script-logic.md)
 - [Notebook deletion and loading performance](docs/notebook-management.md)
+- The **Steps** list uses standard UI5 selection highlighting and wraps complete step titles. The full selected title also appears above the step. Switching steps keeps editor drafts intact. The retired allocation demo button is no longer shown.
 - Each cell has **Pretty print**: native SAP ABAP formatting or Notebook Script indentation. Formatting edits the draft; **Save version** persists it. ABAP formatting uses the same SAP system's ADT service and requires ADT access.
 - **Export JSON** downloads the whole current notebook, including unsaved author code, ABAP/Script languages, ordered steps, explanations, dependencies, input definitions and selections. UTF-8 format `bpc-notebook`, version `1`, retains exact author text and line endings. Origin revision and unsaved status are recorded; execution datasets, results, history, ownership and handler bindings are excluded.
 - **Import JSON** in the workspace creates a new notebook at revision 1. Choose an authorized target environment/model and an available technical name; imported definitions pass the normal SAP save, compiler, member and authorization checks. Resolved periods are recomputed by SAP. Import never overwrites an existing notebook, executes code or enables posting. Maximum 8 MB JSON file, 30 steps and 50 inputs; the compiled import must fit the existing SAP 2 MB request limit. A JSON draft containing invalid Script can be exported for backup, but must be corrected before importing.
