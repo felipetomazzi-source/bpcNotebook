@@ -138,3 +138,4 @@ CLASS zcl_bn_dm_process IMPLEMENTATION.
     CLEAR: e_t_variante, e_serial.
   ENDMETHOD.
 ENDCLASS.
+
